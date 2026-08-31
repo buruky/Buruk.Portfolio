@@ -84,6 +84,16 @@ export default function ProjectCard({ project }: { project: Project }) {
               Code &#8599;
             </a>
           )}
+          {!project.paperUrl && project.videoUrl && (
+            <a
+              href={project.videoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
+            >
+              Watch demo &#8599;
+            </a>
+          )}
         </div>
 
         {project.demoLogin && (

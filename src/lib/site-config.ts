@@ -10,6 +10,7 @@ export type Project = {
   liveUrl: string | null;
   repoUrl: string | null;
   paperUrl?: string | null;
+  videoUrl?: string | null;
   screenshot?: string;
   screenshotFit?: "cover" | "contain";
   screenshotPosition?: "top" | "center" | "bottom";
@@ -73,6 +74,7 @@ export const projects: Project[] = [
     role: "Freelance / commissioned developer",
     liveUrl: null,
     repoUrl: null,
+    videoUrl: "https://youtu.be/1d_7n7E3ABo",
     screenshot: "/images/screenshots/ecc.png",
     screenshotPlaceholder: "[SCREENSHOT: ECC Case Management App]",
   },
