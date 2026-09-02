@@ -10,7 +10,7 @@ import {
 } from "@/lib/site-config";
 import { hasPublicFile } from "@/lib/media";
 import { FileIcon } from "@/components/icons";
-import ProjectCard from "@/components/ProjectCard";
+import ProjectsSection from "@/components/ProjectsSection";
 
 const lanes: { name: keyof typeof laneColors; blurb: string }[] = [
   {
@@ -30,6 +30,10 @@ const lanes: { name: keyof typeof laneColors; blurb: string }[] = [
 export default function Home() {
   const hasHeroPhoto = hasPublicFile("images/city-bg.jpg");
   const hasProfilePhoto = hasPublicFile("images/profile.jpg");
+  const projectsWithScreenshots = projects.map((project) => ({
+    ...project,
+    hasScreenshot: Boolean(project.screenshot) && hasPublicFile(project.screenshot!.replace(/^\//, "")),
+  }));
 
   return (
     <>
@@ -121,10 +125,8 @@ export default function Home() {
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
             Projects
           </h2>
-          <div className="mt-2 divide-y divide-border">
-            {projects.map((project) => (
-              <ProjectCard key={project.slug} project={project} />
-            ))}
+          <div className="mt-6">
+            <ProjectsSection projects={projectsWithScreenshots} />
           </div>
         </section>
 

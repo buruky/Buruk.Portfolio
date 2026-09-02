@@ -93,20 +93,6 @@ export const projects: Project[] = [
     screenshotPlaceholder: "[SCREENSHOT: Fabriq dashboard]",
   },
   {
-    slug: "beaches-and-barrels",
-    name: "Beaches and Barrels — Python Dungeon Crawler Game",
-    lane: "Full Stack",
-    description:
-      "A beach-themed dungeon crawler set in Crabstone Castle, a magical sand castle with dynamically shifting rooms — battle sea creatures, collect power-ups, and survive escalating challenges.",
-    techStack: ["Python"],
-    role: "Head Developer",
-    liveUrl: null,
-    repoUrl: "https://github.com/buruky/Beaches-N-Barrels",
-    screenshot: "/images/screenshots/beaches-and-barrels.png",
-    screenshotPosition: "bottom",
-    screenshotPlaceholder: "[SCREENSHOT: Beaches and Barrels gameplay]",
-  },
-  {
     slug: "between-worlds",
     name: "Between Worlds — JavaScript Side Scroller",
     lane: "Full Stack",
@@ -118,6 +104,19 @@ export const projects: Project[] = [
     repoUrl: "https://github.com/buruky/Between-Worlds",
     screenshot: "/images/screenshots/between-worlds.png",
     screenshotPlaceholder: "[SCREENSHOT: Between Worlds gameplay]",
+  },
+  {
+    slug: "always-with-compassion",
+    name: "Always With Compassion",
+    lane: "Full Stack",
+    description:
+      "A commissioned website for Always With Compassion, an adult family home.",
+    techStack: ["React", "React Router", "Tailwind CSS"],
+    role: "Freelance / commissioned developer",
+    liveUrl: "https://alwayswithcompassion.com/",
+    repoUrl: "https://github.com/buruky/CFHome",
+    screenshot: "/images/screenshots/always-with-compassion.png",
+    screenshotPlaceholder: "[SCREENSHOT: Always With Compassion homepage]",
   },
   {
     slug: "quantum-computing-research",
@@ -150,17 +149,18 @@ export const projects: Project[] = [
     screenshotPlaceholder: "[SCREENSHOT or write-up link: NASA GRACE Research]",
   },
   {
-    slug: "always-with-compassion",
-    name: "Always With Compassion",
+    slug: "beaches-and-barrels",
+    name: "Beaches and Barrels — Python Dungeon Crawler Game",
     lane: "Full Stack",
     description:
-      "A commissioned website for Always With Compassion, an adult family home.",
-    techStack: ["React", "React Router", "Tailwind CSS"],
-    role: "Freelance / commissioned developer",
-    liveUrl: "https://alwayswithcompassion.com/",
-    repoUrl: "https://github.com/buruky/CFHome",
-    screenshot: "/images/screenshots/always-with-compassion.png",
-    screenshotPlaceholder: "[SCREENSHOT: Always With Compassion homepage]",
+      "A beach-themed dungeon crawler set in Crabstone Castle, a magical sand castle with dynamically shifting rooms — battle sea creatures, collect power-ups, and survive escalating challenges.",
+    techStack: ["Python"],
+    role: "Head Developer",
+    liveUrl: null,
+    repoUrl: "https://github.com/buruky/Beaches-N-Barrels",
+    screenshot: "/images/screenshots/beaches-and-barrels.png",
+    screenshotPosition: "bottom",
+    screenshotPlaceholder: "[SCREENSHOT: Beaches and Barrels gameplay]",
   },
 ];
 

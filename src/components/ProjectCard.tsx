@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { Project, laneColors } from "@/lib/site-config";
-import { hasPublicFile } from "@/lib/media";
 
 const positionClass = {
   top: "object-top",
@@ -8,9 +7,13 @@ const positionClass = {
   bottom: "object-bottom",
 };
 
-export default function ProjectCard({ project }: { project: Project }) {
-  const hasScreenshot = Boolean(project.screenshot) && hasPublicFile(project.screenshot!.replace(/^\//, ""));
-
+export default function ProjectCard({
+  project,
+  hasScreenshot,
+}: {
+  project: Project;
+  hasScreenshot: boolean;
+}) {
   return (
     <article className="py-10">
       <div className="relative flex aspect-19/8 items-center justify-center overflow-hidden border border-border bg-[#f0e9df] px-3 text-center text-xs text-muted">
