@@ -17,8 +17,8 @@ export default function ProjectCard({
   return (
     <article className="py-10">
       <div
-        className={`relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-[#f0e9df] px-3 text-center text-xs text-muted ${
-          project.demoVideo ? "aspect-video" : "aspect-19/8"
+        className={`relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-[#f0e9df] text-center text-xs text-muted ${
+          project.demoVideo ? "aspect-video" : "aspect-19/8 px-3"
         }`}
       >
         {project.demoVideo ? (
