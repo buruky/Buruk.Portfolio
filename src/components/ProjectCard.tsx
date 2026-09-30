@@ -26,7 +26,7 @@ export default function ProjectCard({
             controls
             preload="metadata"
             poster={project.screenshot}
-            className="h-full w-full object-cover"
+            className="h-full w-full rounded-2xl object-cover"
           >
             <source src={project.demoVideo} type="video/mp4" />
           </video>
