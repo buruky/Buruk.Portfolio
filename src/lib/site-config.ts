@@ -11,6 +11,7 @@ export type Project = {
   repoUrl: string | null;
   paperUrl?: string | null;
   videoUrl?: string | null;
+  demoVideo?: string;
   screenshot?: string;
   screenshotFit?: "cover" | "contain";
   screenshotPosition?: "top" | "center" | "bottom";
@@ -70,11 +71,12 @@ export const projects: Project[] = [
     lane: "Salesforce/CRM",
     description:
       "A Salesforce Lightning case management app (ECC Manager) with a System Health dashboard that visualizes case pipeline stages — from Initiation through Closed — and flags bottlenecks by case status.",
-    techStack: ["Salesforce"],
+    techStack: ["Apex", "LWC", "Flows", "Approval Processes"],
     role: "Freelance / commissioned developer",
     liveUrl: null,
     repoUrl: null,
     videoUrl: "https://youtu.be/1d_7n7E3ABo",
+    demoVideo: "/videos/ecc-demo.mp4",
     screenshot: "/images/screenshots/ecc.png",
     screenshotPlaceholder: "[SCREENSHOT: ECC Case Management App]",
   },

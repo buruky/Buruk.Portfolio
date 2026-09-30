@@ -17,7 +17,16 @@ export default function ProjectCard({
   return (
     <article className="py-10">
       <div className="relative flex aspect-19/8 items-center justify-center overflow-hidden border border-border bg-[#f0e9df] px-3 text-center text-xs text-muted">
-        {hasScreenshot ? (
+        {project.demoVideo ? (
+          <video
+            controls
+            preload="metadata"
+            poster={project.screenshot}
+            className="h-full w-full object-cover"
+          >
+            <source src={project.demoVideo} type="video/mp4" />
+          </video>
+        ) : hasScreenshot ? (
           <Image
             src={project.screenshot!}
             alt={`${project.name} screenshot`}
@@ -94,7 +103,7 @@ export default function ProjectCard({
               rel="noreferrer"
               className="text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
             >
-              Watch demo &#8599;
+              In-depth guide &#8599;
             </a>
           )}
         </div>
