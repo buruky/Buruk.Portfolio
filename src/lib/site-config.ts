@@ -70,7 +70,7 @@ export const projects: Project[] = [
     name: "ECC Salesforce Case Management App",
     lane: "Salesforce/CRM",
     description:
-      "A Salesforce Lightning case management app (ECC Manager) with a System Health dashboard that visualizes case pipeline stages — from Initiation through Closed — and flags bottlenecks by case status.",
+      "A Salesforce Lightning case management app (ECC Manager) built for a Washington nonprofit, now headed to the Salesforce AppExchange. An Apex service layer aggregates case records by pipeline stage — Initiation through Closed — and feeds a custom LWC System Health dashboard: a Pipeline Overview funnel, a Bottleneck View that flags cases stalled past their expected case age, and Data Quality Flags for missing or invalid fields. Record-triggered Flows and Approval Processes route cases needing supervisor sign-off and keep case status updated automatically.",
     techStack: ["Apex", "LWC", "Flows", "Approval Processes"],
     role: "Freelance / commissioned developer",
     liveUrl: null,
