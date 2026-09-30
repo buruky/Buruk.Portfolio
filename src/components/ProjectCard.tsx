@@ -16,13 +16,17 @@ export default function ProjectCard({
 }) {
   return (
     <article className="py-10">
-      <div className="relative flex aspect-19/8 items-center justify-center overflow-hidden border border-border bg-[#f0e9df] px-3 text-center text-xs text-muted">
+      <div
+        className={`relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-[#f0e9df] px-3 text-center text-xs text-muted ${
+          project.demoVideo ? "aspect-video" : "aspect-19/8"
+        }`}
+      >
         {project.demoVideo ? (
           <video
             controls
             preload="metadata"
             poster={project.screenshot}
-            className="h-full w-full object-contain"
+            className="h-full w-full object-cover"
           >
             <source src={project.demoVideo} type="video/mp4" />
           </video>
