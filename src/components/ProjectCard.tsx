@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Project, laneColors } from "@/lib/site-config";
+import DemoVideoPlayer from "./DemoVideoPlayer";
 
 const positionClass = {
   top: "object-top",
@@ -22,14 +23,7 @@ export default function ProjectCard({
         }`}
       >
         {project.demoVideo ? (
-          <video
-            controls
-            preload="metadata"
-            poster={project.screenshot}
-            className="h-full w-full rounded-2xl object-cover"
-          >
-            <source src={project.demoVideo} type="video/mp4" />
-          </video>
+          <DemoVideoPlayer src={project.demoVideo} poster={project.screenshot} />
         ) : hasScreenshot ? (
           <Image
             src={project.screenshot!}
