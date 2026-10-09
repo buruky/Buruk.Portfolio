@@ -92,6 +92,7 @@ export const projects: Project[] = [
     liveUrl: "https://fabriq-blue.vercel.app/",
     repoUrl: "https://github.com/buruky/Fabriq",
     screenshot: "/images/screenshots/fabriq.png",
+    screenshotAspect: "video",
     demoLogin: { email: "johndoe@test.com", password: "123456" },
     screenshotPlaceholder: "[SCREENSHOT: Fabriq dashboard]",
   },
@@ -121,6 +122,7 @@ export const projects: Project[] = [
     liveUrl: "https://alwayswithcompassion.com/",
     repoUrl: "https://github.com/buruky/CFHome",
     screenshot: "/images/screenshots/always-with-compassion.png",
+    screenshotAspect: "video",
     screenshotPlaceholder: "[SCREENSHOT: Always With Compassion homepage]",
   },
   {
