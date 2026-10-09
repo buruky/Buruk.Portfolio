@@ -1,9 +1,11 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default function NotFound() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col items-start px-6 py-28">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted">404</p>
+      <Logo size="lg" />
+      <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-muted">404</p>
       <h1 className="mt-4 font-serif text-4xl italic text-foreground">
         This page wandered off.
       </h1>

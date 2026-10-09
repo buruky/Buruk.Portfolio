@@ -7,9 +7,24 @@
   --border: rgba(43, 36, 32, 0.14);
   --accent: #a94a2a;
   --accent-hover: #833820;
+  --surface: #f0e9df;
   --lane-salesforce: #3f6690;
   --lane-fullstack: #a94a2a;
   --lane-data: #4b6b3f;
+}
+
+:root[data-theme="dark"] {
+  --background: #18140f;
+  --foreground: #f1ebe1;
+  --muted: #a89d8e;
+  --border: rgba(241, 235, 225, 0.12);
+  --accent: #e2794f;
+  --accent-hover: #ef9168;
+  --surface: #242019;
+  --lane-salesforce: #7aa7dc;
+  --lane-fullstack: #e2794f;
+  --lane-data: #85b172;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -19,6 +34,7 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-surface: var(--surface);
   --color-lane-salesforce: var(--lane-salesforce);
   --color-lane-fullstack: var(--lane-fullstack);
   --color-lane-data: var(--lane-data);
@@ -40,6 +56,18 @@ body {
   background-size: 48px 48px;
   background-attachment: fixed;
   color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+:root[data-theme="dark"] body {
+  background-image:
+    linear-gradient(to right, rgba(241, 235, 225, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(241, 235, 225, 0.045) 1px, transparent 1px);
+}
+
+:root[data-theme="dark"] .grain-overlay {
+  opacity: 0.05;
+  mix-blend-mode: overlay;
 }
 
 @keyframes marquee {

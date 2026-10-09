@@ -99,7 +99,12 @@ export default function DemoVideoPlayer({
         preload="metadata"
         playsInline
         onClick={togglePlay}
-        className="h-full w-full cursor-pointer rounded-2xl object-cover"
+        className="h-full w-full cursor-pointer object-cover"
+      />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/70 to-transparent"
       />
 
       {!playing && (
@@ -109,7 +114,7 @@ export default function DemoVideoPlayer({
           aria-label="Play video"
           className="absolute inset-0 flex items-center justify-center"
         >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full border border-white/25 bg-black/40 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-transform duration-200 hover:scale-105">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full border border-white/25 bg-black/50 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-transform duration-200 hover:scale-105">
             <svg viewBox="0 0 24 24" className="ml-1 h-7 w-7 fill-white">
               <path d="M8 5v14l11-7z" />
             </svg>
@@ -117,7 +122,7 @@ export default function DemoVideoPlayer({
         </button>
       )}
 
-      <div className="pointer-events-auto absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-full border border-white/20 bg-black/45 px-3 py-2 shadow-[0_4px_24px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+      <div className="pointer-events-auto absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-full border border-white/20 bg-black/60 px-3 py-2 shadow-[0_4px_24px_rgba(0,0,0,0.4)] backdrop-blur-xl">
         <button
           type="button"
           onClick={togglePlay}

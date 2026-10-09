@@ -18,6 +18,7 @@ import ScrambleText from "@/components/ScrambleText";
 import MagneticButton from "@/components/MagneticButton";
 import StatCounter from "@/components/StatCounter";
 import SkillsMarquee from "@/components/SkillsMarquee";
+import SkillsGrid from "@/components/SkillsGrid";
 import CornerBrackets from "@/components/CornerBrackets";
 
 const lanes: { name: keyof typeof laneColors; blurb: string }[] = [
@@ -103,7 +104,7 @@ export default function Home() {
               <MagneticButton strength={10}>
                 <Link
                   href="#projects"
-                  className="inline-block rounded-sm bg-[#faf7f2] px-5 py-2.5 text-sm font-medium text-foreground shadow-[0_4px_16px_rgba(28,23,18,0.25)] transition-all duration-200 hover:bg-[#e8b98e] hover:shadow-[0_8px_24px_rgba(28,23,18,0.3)] active:scale-[0.98]"
+                  className="inline-block rounded-sm bg-[#faf7f2] px-5 py-2.5 text-sm font-medium text-[#2b2420] shadow-[0_4px_16px_rgba(28,23,18,0.25)] transition-all duration-200 hover:bg-[#e8b98e] hover:shadow-[0_8px_24px_rgba(28,23,18,0.3)] active:scale-[0.98]"
                 >
                   View Projects
                 </Link>
@@ -120,11 +121,11 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="border-b border-border bg-[#f0e9df]/60 py-4">
+      <div className="border-b border-border bg-surface/60 py-4">
         <SkillsMarquee skills={allSkills} />
       </div>
 
-      <div className="mx-auto max-w-3xl px-6">
+      <div className="mx-auto max-w-6xl px-6 sm:px-10">
         <Reveal>
           <section className="py-14 text-center">
             <p className="mx-auto max-w-xl text-base leading-relaxed text-muted sm:text-lg">
@@ -139,25 +140,24 @@ export default function Home() {
         </Reveal>
 
         <Reveal>
-          <section className="border-t border-border py-14">
-            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted">
-              Three lanes
-            </h2>
-            <div className="mt-6 divide-y divide-border">
+          <section className="border-t border-border py-16">
+            <h2 className="font-serif text-3xl italic text-foreground sm:text-4xl">Three lanes</h2>
+            <div className="mt-8 grid gap-5 sm:grid-cols-3">
               {lanes.map((lane) => (
-                <div key={lane.name} className="group relative flex flex-col gap-1 py-5 pl-4 sm:flex-row sm:gap-8">
+                <div
+                  key={lane.name}
+                  className="group relative overflow-hidden rounded-2xl border border-border p-6 transition-colors duration-300 hover:border-accent/30"
+                >
                   <span
-                    className={`absolute left-0 top-5 bottom-5 w-0.5 origin-top scale-y-0 bg-current transition-transform duration-300 group-hover:scale-y-100 ${laneColors[lane.name]}`}
+                    className={`absolute inset-x-0 top-0 h-0.5 w-0 bg-current transition-all duration-300 group-hover:w-full ${laneColors[lane.name]}`}
                   />
-                  <p className={`w-48 shrink-0 font-mono text-sm font-medium ${laneColors[lane.name]}`}>
+                  <p className={`font-mono text-xs font-medium uppercase tracking-widest ${laneColors[lane.name]}`}>
                     {lane.name}
                   </p>
-                  <p className="text-sm leading-relaxed text-muted">
-                    {lane.blurb}{" "}
-                    <span className="font-mono text-foreground/60">
-                      ({projects.filter((p) => p.lane === lane.name).length} project
-                      {projects.filter((p) => p.lane === lane.name).length === 1 ? "" : "s"})
-                    </span>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{lane.blurb}</p>
+                  <p className="mt-4 font-mono text-xs text-foreground/60">
+                    {projects.filter((p) => p.lane === lane.name).length} project
+                    {projects.filter((p) => p.lane === lane.name).length === 1 ? "" : "s"}
                   </p>
                 </div>
               ))}
@@ -165,40 +165,20 @@ export default function Home() {
           </section>
         </Reveal>
 
-        <section id="projects" className="border-t border-border py-14">
+        <section id="projects" className="border-t border-border py-16">
           <Reveal>
-            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted">
-              Projects
-            </h2>
+            <h2 className="font-serif text-3xl italic text-foreground sm:text-4xl">Projects</h2>
           </Reveal>
-          <div className="mt-6">
+          <div className="mt-8">
             <ProjectsSection projects={projectsWithScreenshots} />
           </div>
         </section>
 
         <Reveal>
-          <section className="border-t border-border py-14">
-            <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted">
-              Skills
-            </h2>
-            <div className="mt-6 space-y-5">
-              {skillGroups.map((group) => (
-                <div key={group.category}>
-                  <p className="font-mono text-xs uppercase tracking-wide text-foreground/60">
-                    {group.category}
-                  </p>
-                  <ul className="mt-2 flex flex-wrap gap-1.5">
-                    {group.skills.map((skill) => (
-                      <li
-                        key={skill}
-                        className="rounded-sm border border-border px-2 py-0.5 font-mono text-[11px] text-muted"
-                      >
-                        {skill}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+          <section className="border-t border-border py-16">
+            <h2 className="font-serif text-3xl italic text-foreground sm:text-4xl">Skills</h2>
+            <div className="mt-8">
+              <SkillsGrid />
             </div>
           </section>
         </Reveal>
