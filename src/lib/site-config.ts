@@ -105,6 +105,7 @@ export const projects: Project[] = [
     liveUrl: "https://ku1imrk04.github.io/TCSS491-Between-Worlds/",
     repoUrl: "https://github.com/buruky/Between-Worlds",
     screenshot: "/images/screenshots/between-worlds.png",
+    screenshotPosition: "bottom",
     screenshotPlaceholder: "[SCREENSHOT: Between Worlds gameplay]",
   },
   {
