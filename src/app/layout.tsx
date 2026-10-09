@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BackToTop from "@/components/BackToTop";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,10 +21,28 @@ const fraunces = Fraunces({
   style: ["normal", "italic"],
 });
 
+const title = "Buruk Yimesgen — Software Engineer / Salesforce Developer / Data Scientist";
+const description =
+  "Portfolio of Buruk Yimesgen: Salesforce/CRM development, full stack engineering, and data science & quantum research projects.";
+
 export const metadata: Metadata = {
-  title: "Buruk Yimesgen — Software Engineer / Salesforce Developer / Data Scientist",
-  description:
-    "Portfolio of Buruk Yimesgen: Salesforce/CRM development, full stack engineering, and data science & quantum research projects.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  title: {
+    default: title,
+    template: "%s — Buruk Yimesgen",
+  },
+  description,
+  openGraph: {
+    title,
+    description,
+    type: "website",
+    siteName: "Buruk Yimesgen",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -33,9 +52,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        <div className="grain-overlay" aria-hidden="true" />
         <Navbar />
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1">
+          {children}
+        </main>
         <Footer />
+        <BackToTop />
       </body>
     </html>
   );

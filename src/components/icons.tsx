@@ -41,3 +41,28 @@ export function ExternalLinkIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function ArrowUpIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function CopyIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <rect x="8.75" y="8.75" width="11.5" height="11.5" rx="1.75" />
+      <path d="M15.25 8.75V5.75A1.75 1.75 0 0 0 13.5 4H5.75A1.75 1.75 0 0 0 4 5.75v7.75c0 .966.784 1.75 1.75 1.75h3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M4.75 12.75 9.5 17.5 19.25 6.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

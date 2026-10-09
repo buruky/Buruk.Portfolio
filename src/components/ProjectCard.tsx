@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
+import { motion, useMotionTemplate, useMotionValue, useReducedMotion } from "motion/react";
 import { Project, laneColors } from "@/lib/site-config";
 import DemoVideoPlayer from "./DemoVideoPlayer";
+import CornerBrackets from "./CornerBrackets";
 
 const positionClass = {
   top: "object-top",
@@ -15,13 +19,40 @@ export default function ProjectCard({
   project: Project;
   hasScreenshot: boolean;
 }) {
+  const reduce = useReducedMotion();
+  const mouseX = useMotionValue(50);
+  const mouseY = useMotionValue(50);
+  const spotlight = useMotionTemplate`radial-gradient(260px circle at ${mouseX}px ${mouseY}px, rgba(169,74,42,0.16), transparent 72%)`;
+
+  const handlePointerMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  };
+
   return (
-    <article className="py-10">
-      <div
-        className={`relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-[#f0e9df] text-center text-xs text-muted ${
+    <motion.article
+      className="py-10"
+      initial={reduce ? false : { opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <motion.div
+        onPointerMove={reduce ? undefined : handlePointerMove}
+        whileHover={reduce ? undefined : { y: -4 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className={`group relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-[#f0e9df] text-center text-xs text-muted shadow-[0_1px_2px_rgba(43,36,32,0.06)] transition-shadow duration-300 hover:border-accent/40 hover:shadow-[0_18px_40px_rgba(43,36,32,0.14)] ${
           project.demoVideo ? "aspect-video" : "aspect-19/8 px-3"
         }`}
       >
+        {!reduce && (
+          <motion.div
+            style={{ background: spotlight }}
+            className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          />
+        )}
+        <CornerBrackets color="var(--accent)" />
         {project.demoVideo ? (
           <DemoVideoPlayer src={project.demoVideo} poster={project.screenshot} />
         ) : hasScreenshot ? (
@@ -32,18 +63,18 @@ export default function ProjectCard({
             sizes="(min-width: 768px) 768px, 100vw"
             className={
               project.screenshotFit === "contain"
-                ? "object-contain p-4"
-                : `object-cover ${positionClass[project.screenshotPosition ?? "top"]}`
+                ? "object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02]"
+                : `object-cover transition-transform duration-500 group-hover:scale-[1.03] ${positionClass[project.screenshotPosition ?? "top"]}`
             }
           />
         ) : (
           project.screenshotPlaceholder
         )}
-      </div>
+      </motion.div>
 
       <div className="mt-5">
         <p
-          className={`text-xs font-medium uppercase tracking-widest ${laneColors[project.lane]}`}
+          className={`font-mono text-xs font-medium uppercase tracking-widest ${laneColors[project.lane]}`}
         >
           {project.lane}
         </p>
@@ -52,16 +83,20 @@ export default function ProjectCard({
           {project.description}
         </p>
 
-        <dl className="mt-4 space-y-1 text-sm text-muted">
-          <div>
-            <dt className="inline text-foreground/70">Tech: </dt>
-            <dd className="inline">{project.techStack.join(", ")}</dd>
-          </div>
-          <div>
-            <dt className="inline text-foreground/70">Role: </dt>
-            <dd className="inline">{project.role}</dd>
-          </div>
-        </dl>
+        <ul className="mt-4 flex flex-wrap gap-1.5">
+          {project.techStack.map((tech) => (
+            <li
+              key={tech}
+              className="rounded-sm border border-border px-2 py-0.5 font-mono text-[11px] text-muted"
+            >
+              {tech}
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-3 font-mono text-xs text-muted">
+          <span className="text-foreground/60">role/</span> {project.role}
+        </p>
 
         <div className="mt-4 flex gap-5 text-sm">
           {project.paperUrl && (
@@ -69,9 +104,10 @@ export default function ProjectCard({
               href={project.paperUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
+              className="group inline-flex items-center gap-1 text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
             >
-              Read the paper &#8599;
+              Read the paper
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
             </a>
           )}
           {!project.paperUrl && project.liveUrl && (
@@ -79,9 +115,10 @@ export default function ProjectCard({
               href={project.liveUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
+              className="group inline-flex items-center gap-1 text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
             >
-              Live site &#8599;
+              Live site
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
             </a>
           )}
           {!project.paperUrl && project.repoUrl && (
@@ -89,9 +126,10 @@ export default function ProjectCard({
               href={project.repoUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
+              className="group inline-flex items-center gap-1 text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
             >
-              Code &#8599;
+              Code
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
             </a>
           )}
           {!project.paperUrl && project.videoUrl && (
@@ -99,9 +137,10 @@ export default function ProjectCard({
               href={project.videoUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
+              className="group inline-flex items-center gap-1 text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
             >
-              In-depth guide &#8599;
+              In-depth guide
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
             </a>
           )}
         </div>
@@ -113,6 +152,6 @@ export default function ProjectCard({
           </p>
         )}
       </div>
-    </article>
+    </motion.article>
   );
 }
