@@ -100,9 +100,7 @@ export default function ProjectCard({
         <div className="mt-auto flex flex-wrap gap-5 pt-5 text-sm">
           {project.paperUrl && (
             <a
-              href={project.paperUrl}
-              target="_blank"
-              rel="noreferrer"
+              href={`/papers/${project.slug}`}
               className="group inline-flex items-center gap-1 text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
             >
               Read the paper
