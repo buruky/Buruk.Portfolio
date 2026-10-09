@@ -65,7 +65,13 @@ export default function Home() {
           <Reveal>
             <div className="group relative h-40 w-40 overflow-hidden rounded-full border-4 border-[#faf7f2] shadow-[0_12px_32px_rgba(28,23,18,0.45)] sm:h-52 sm:w-52">
               {hasProfilePhoto ? (
-                <Image src={profile.photo} alt={profile.name} fill className="object-cover" />
+                <Image
+                  src={profile.photo}
+                  alt={profile.name}
+                  fill
+                  sizes="(min-width: 640px) 13rem, 10rem"
+                  className="object-cover"
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-[#e7dfd1] px-2 text-center text-[10px] text-muted">
                   [YOUR PHOTO]
