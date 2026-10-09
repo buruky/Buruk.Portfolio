@@ -15,6 +15,7 @@ export type Project = {
   screenshot?: string;
   screenshotFit?: "cover" | "contain";
   screenshotPosition?: "top" | "center" | "bottom";
+  screenshotAspect?: "wide" | "video";
   screenshotPlaceholder: string;
   demoLogin?: { email: string; password: string };
 };
@@ -163,6 +164,7 @@ export const projects: Project[] = [
     repoUrl: "https://github.com/buruky/Beaches-N-Barrels",
     screenshot: "/images/screenshots/beaches-and-barrels.png",
     screenshotPosition: "bottom",
+    screenshotAspect: "video",
     screenshotPlaceholder: "[SCREENSHOT: Beaches and Barrels gameplay]",
   },
 ];

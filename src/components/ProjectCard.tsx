@@ -42,7 +42,9 @@ export default function ProjectCard({
       <motion.div
         onPointerMove={reduce ? undefined : handlePointerMove}
         className={`group relative flex items-center justify-center overflow-hidden rounded-xl border border-border bg-surface text-center text-xs text-muted ${
-          project.demoVideo ? "aspect-video" : "aspect-19/8 px-3"
+          project.demoVideo || project.screenshotAspect === "video"
+            ? "aspect-video"
+            : "aspect-19/8 px-3"
         }`}
       >
         {!reduce && (
