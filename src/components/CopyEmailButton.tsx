@@ -36,7 +36,7 @@ export default function CopyEmailButton({
       <span>{email}</span>
       <span
         className={`flex items-center gap-1 text-xs transition-opacity ${
-          copied ? "text-accent opacity-100" : "text-muted opacity-0 group-hover:opacity-100"
+          copied ? "text-accent opacity-100" : "text-muted opacity-60 sm:opacity-0 sm:group-hover:opacity-100"
         }`}
       >
         {copied ? (

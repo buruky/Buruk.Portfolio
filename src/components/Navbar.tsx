@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, useScroll, useTransform } from "motion/react";
+import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
 import { profile } from "@/lib/site-config";
-import { GitHubIcon, LinkedInIcon } from "@/components/icons";
+import { GitHubIcon, LinkedInIcon, MenuIcon, CloseIcon } from "@/components/icons";
 import { useTheme } from "@/components/useTheme";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -24,6 +24,12 @@ const navLinks = [
 export default function Navbar() {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState("home");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setMobileOpen(false);
+  }
   const theme = useTheme();
   const { scrollY, scrollYProgress } = useScroll();
   const navBackgroundLight = useTransform(scrollY, [0, 80], [`rgba(${NAV_COLORS.light.bg}, 0)`, `rgba(${NAV_COLORS.light.bg}, 0.92)`]);
@@ -73,7 +79,8 @@ export default function Navbar() {
           <Logo className="transition-transform duration-200 group-hover:scale-110" />
           <span className="font-serif text-lg italic text-foreground">Buruk Yimesgen</span>
         </Link>
-        <nav className="flex items-center gap-6">
+
+        <nav className="hidden items-center gap-6 md:flex">
           <ul className="flex items-center gap-7 text-sm tracking-wide text-muted">
             {navLinks.map((link) => (
               <li key={link.href} className="relative">
@@ -101,7 +108,7 @@ export default function Navbar() {
               target="_blank"
               rel="noreferrer"
               aria-label="GitHub"
-              className="text-muted transition-all hover:-translate-y-0.5 hover:text-foreground"
+              className="-m-1.5 p-1.5 text-muted transition-all hover:-translate-y-0.5 hover:text-foreground"
             >
               <GitHubIcon className="h-4.25 w-4.25" />
             </a>
@@ -110,14 +117,75 @@ export default function Navbar() {
               target="_blank"
               rel="noreferrer"
               aria-label="LinkedIn"
-              className="text-muted transition-all hover:-translate-y-0.5 hover:text-foreground"
+              className="-m-1.5 p-1.5 text-muted transition-all hover:-translate-y-0.5 hover:text-foreground"
             >
               <LinkedInIcon className="h-4.25 w-4.25" />
             </a>
             <ThemeToggle />
           </div>
         </nav>
+
+        <button
+          type="button"
+          onClick={() => setMobileOpen((open) => !open)}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
+          className="-m-2 flex h-9 w-9 items-center justify-center p-2 text-foreground md:hidden"
+        >
+          {mobileOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+        </button>
       </div>
+
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden border-t border-border bg-background md:hidden"
+          >
+            <ul className="flex flex-col px-6 py-4 text-base sm:px-10">
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={`block py-3 transition-colors ${
+                      isActive(link) ? "font-medium text-accent" : "text-foreground"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-center gap-5 border-t border-border px-6 py-4 sm:px-10">
+              <a
+                href={profile.github}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="GitHub"
+                className="-m-1.5 p-1.5 text-muted transition-colors hover:text-foreground"
+              >
+                <GitHubIcon className="h-5 w-5" />
+              </a>
+              <a
+                href={profile.linkedin}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="LinkedIn"
+                className="-m-1.5 p-1.5 text-muted transition-colors hover:text-foreground"
+              >
+                <LinkedInIcon className="h-5 w-5" />
+              </a>
+              <div className="ml-auto">
+                <ThemeToggle />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         style={{ scaleX: scrollYProgress }}
         className="absolute inset-x-0 bottom-0 h-px origin-left bg-accent"
