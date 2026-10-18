@@ -18,6 +18,7 @@ const NAV_COLORS = {
 const navLinks = [
   { href: "/", label: "Home", section: "home" },
   { href: "/#projects", label: "Projects", section: "projects" },
+  { href: "/#bk-web-studios", label: "BK Web Studios", section: "bk-web-studios" },
   { href: "/about", label: "About", section: null },
 ];
 
@@ -42,7 +43,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (pathname !== "/") return;
-    const sections = ["home", "projects"]
+    const sections = ["home", "projects", "bk-web-studios"]
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
     if (sections.length === 0) return;

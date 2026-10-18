@@ -38,6 +38,15 @@ export const currentRole: { title: string; company: string; logo: string } | nul
 
 export const heroPhoto = "/images/city-bg.jpg";
 
+export const bkWebStudios = {
+  name: "BK Web Studios",
+  tagline: "Website design for small businesses",
+  description:
+    "BK Web Studios is my freelance studio building clean, fast websites for small businesses and local organizations.",
+  logo: "/images/bk-web-studios-logo.png",
+  businessCardUrl: "https://buruky.github.io/BuildsByBuruk/",
+};
+
 export const education = {
   school: "University of Washington Tacoma",
   degree: "B.S., Computer Science & Systems and Mathematics (double major)",
@@ -112,20 +121,6 @@ export const projects: Project[] = [
     screenshotPlaceholder: "[SCREENSHOT: Between Worlds gameplay]",
   },
   {
-    slug: "always-with-compassion",
-    name: "Always With Compassion",
-    lane: "Full Stack",
-    description:
-      "A commissioned website for Always With Compassion, an adult family home.",
-    techStack: ["React", "React Router", "Tailwind CSS"],
-    role: "Freelance / commissioned developer",
-    liveUrl: "https://alwayswithcompassion.com/",
-    repoUrl: "https://github.com/buruky/CFHome",
-    screenshot: "/images/screenshots/always-with-compassion.png",
-    screenshotAspect: "video",
-    screenshotPlaceholder: "[SCREENSHOT: Always With Compassion homepage]",
-  },
-  {
     slug: "quantum-computing-research",
     name: "Quantum Computing Research",
     lane: "Data Science & Research",
@@ -169,6 +164,23 @@ export const projects: Project[] = [
     screenshotPosition: "bottom",
     screenshotAspect: "video",
     screenshotPlaceholder: "[SCREENSHOT: Beaches and Barrels gameplay]",
+  },
+];
+
+export const clientSites: Project[] = [
+  {
+    slug: "always-with-compassion",
+    name: "Always With Compassion",
+    lane: "Full Stack",
+    description:
+      "A commissioned website for Always With Compassion, an adult family home.",
+    techStack: ["React", "React Router", "Tailwind CSS"],
+    role: "Freelance / commissioned developer",
+    liveUrl: "https://alwayswithcompassion.com/",
+    repoUrl: "https://github.com/buruky/CFHome",
+    screenshot: "/images/screenshots/always-with-compassion.png",
+    screenshotAspect: "video",
+    screenshotPlaceholder: "[SCREENSHOT: Always With Compassion homepage]",
   },
 ];
 

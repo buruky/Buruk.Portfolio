@@ -8,6 +8,7 @@ import {
   currentRole,
   heroPhoto,
   education,
+  bkWebStudios,
 } from "@/lib/site-config";
 import { hasPublicFile } from "@/lib/media";
 import { FileIcon } from "@/components/icons";
@@ -141,6 +142,42 @@ export default function Home() {
               <StatCounter value={projects.length} label="Projects shipped" />
               <StatCounter value={2} label="Majors" />
               <StatCounter value={parseFloat(education.gpa)} decimals={2} label="GPA" />
+            </div>
+          </section>
+        </Reveal>
+
+        <Reveal>
+          <section id="bk-web-studios" className="border-t border-border py-16">
+            <div className="rounded-2xl border border-accent/30 bg-surface p-8 sm:p-12">
+              <p className="font-mono text-xs font-semibold uppercase tracking-widest text-accent">
+                Side Business
+              </p>
+              <h2 className="mt-3 font-serif text-4xl italic text-foreground sm:text-5xl">
+                {bkWebStudios.name}
+              </h2>
+              <p className="mt-2 text-base font-medium text-foreground/80">{bkWebStudios.tagline}</p>
+              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">{bkWebStudios.description}</p>
+              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <MagneticButton strength={10}>
+                  <Link
+                    href="/bk-web-studios"
+                    className="inline-block rounded-sm bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-accent"
+                  >
+                    View client sites &rarr;
+                  </Link>
+                </MagneticButton>
+                <a
+                  href={bkWebStudios.businessCardUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex items-center gap-1 text-sm font-medium text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
+                >
+                  Digital business card
+                  <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                    &#8599;
+                  </span>
+                </a>
+              </div>
             </div>
           </section>
         </Reveal>
