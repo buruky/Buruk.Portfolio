@@ -24,7 +24,7 @@ export const profile = {
   name: "Buruk Yimesgen",
   tagline: "Software Engineer / Salesforce Developer / Data Scientist",
   bio:
-    "I'm a recent Computer Science & Systems and Mathematics double major graduate from the University of Washington Tacoma (June 2026, 3.70 GPA). My work spans Salesforce/CRM development, full stack engineering, and data science, including research in quantum computing and NASA GRACE climate data. I'm looking for entry-level Software Engineer, Data Science, or Salesforce/CRM Developer roles.",
+    "I'm a recent Computer Science & Systems and Mathematics double major graduate from the University of Washington Tacoma (June 2026, 3.6 GPA). My work spans Salesforce/CRM development, full stack engineering, and data science, including research in quantum computing and NASA GRACE climate data. I'm looking for entry-level Software Engineer, Data Science, or Salesforce/CRM Developer roles.",
   email: "burukyimesgen@gmail.com",
   github: "https://github.com/buruky",
   linkedin: "https://www.linkedin.com/in/Buruk-Yimesgen/",
@@ -50,7 +50,7 @@ export const bkWebStudios = {
 export const education = {
   school: "University of Washington Tacoma",
   degree: "B.S., Computer Science & Systems and Mathematics (double major)",
-  gpa: "3.70",
+  gpa: "3.6",
   honors: "Dean's List",
   graduation: "June 2026",
 };
