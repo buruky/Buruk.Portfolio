@@ -59,7 +59,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-linear-to-t from-[#1c1712]/85 via-[#1c1712]/25 to-[#1c1712]/10" />
         <div
           aria-hidden="true"
-          className="scan-sweep pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-linear-to-b from-[#e8b98e]/25 via-[#e8b98e]/5 to-transparent"
+          className="scan-sweep pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-linear-to-b from-transparent via-[#e8b98e]/20 to-transparent"
         />
 
         <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-3 px-6 py-10 text-center">
