@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   profile,
@@ -11,16 +10,13 @@ import {
   bkWebStudios,
 } from "@/lib/site-config";
 import { hasPublicFile } from "@/lib/media";
-import { FileIcon } from "@/components/icons";
 import ProjectsSection from "@/components/ProjectsSection";
 import Reveal from "@/components/Reveal";
-import HeroParallax from "@/components/HeroParallax";
-import ScrambleText from "@/components/ScrambleText";
+import HeroStage from "@/components/HeroStage";
 import MagneticButton from "@/components/MagneticButton";
 import StatCounter from "@/components/StatCounter";
 import SkillsMarquee from "@/components/SkillsMarquee";
 import SkillsGrid from "@/components/SkillsGrid";
-import CornerBrackets from "@/components/CornerBrackets";
 
 const lanes: { name: keyof typeof laneColors; blurb: string }[] = [
   {
@@ -38,8 +34,8 @@ const lanes: { name: keyof typeof laneColors; blurb: string }[] = [
 ];
 
 export default function Home() {
-  const hasHeroPhoto = hasPublicFile("images/city-bg.jpg");
   const hasProfilePhoto = hasPublicFile("images/profile.jpg");
+  const hasHeroPhoto = hasPublicFile("images/city-bg.jpg");
   const projectsWithScreenshots = projects.map((project) => ({
     ...project,
     hasScreenshot: Boolean(project.screenshot) && hasPublicFile(project.screenshot!.replace(/^\//, "")),
@@ -48,85 +44,16 @@ export default function Home() {
 
   return (
     <>
-      <section id="home" className="relative flex min-h-[85dvh] max-h-210 w-full items-center overflow-hidden">
-        {hasHeroPhoto ? (
-          <HeroParallax src={heroPhoto} alt="" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#e7dfd1] text-sm text-muted">
-            [BACKGROUND PHOTO: your city]
-          </div>
-        )}
-        <div className="absolute inset-0 bg-linear-to-t from-[#1c1712]/85 via-[#1c1712]/25 to-[#1c1712]/10" />
-        <div
-          aria-hidden="true"
-          className="scan-sweep pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-linear-to-b from-transparent via-[#e8b98e]/20 to-transparent"
-        />
-
-        <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-3 px-6 py-10 text-center">
-          <Reveal>
-            <div className="group relative h-40 w-40 overflow-hidden rounded-full border-4 border-[#faf7f2] shadow-[0_12px_32px_rgba(28,23,18,0.45)] sm:h-52 sm:w-52">
-              {hasProfilePhoto ? (
-                <Image
-                  src={profile.photo}
-                  alt={profile.name}
-                  fill
-                  sizes="(min-width: 640px) 13rem, 10rem"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-[#e7dfd1] px-2 text-center text-[10px] text-muted">
-                  [YOUR PHOTO]
-                </div>
-              )}
-              <CornerBrackets color="#e8b98e" inset="inset-1" />
-            </div>
-          </Reveal>
-
-          {currentRole && (
-            <Reveal delay={0.08}>
-              <div className="flex items-center gap-2 text-sm text-[#faf7f2]/85">
-                {currentRole.logo && (
-                  <span className="relative h-5 w-5 overflow-hidden rounded-sm">
-                    <Image src={currentRole.logo} alt={currentRole.company} fill className="object-contain" />
-                  </span>
-                )}
-                <span>
-                  {currentRole.title} @ {currentRole.company}
-                </span>
-              </div>
-            </Reveal>
-          )}
-
-          <Reveal delay={0.14}>
-            <h1 className="font-serif text-5xl text-[#faf7f2] sm:text-6xl">{profile.name}</h1>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p className="font-mono text-sm tracking-tight text-[#e8b98e] sm:text-base">
-              <ScrambleText text={profile.tagline} delay={0.6} />
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.28}>
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-              <MagneticButton strength={10}>
-                <Link
-                  href="#projects"
-                  className="inline-block rounded-sm bg-[#faf7f2] px-5 py-2.5 text-sm font-medium text-[#2b2420] shadow-[0_4px_16px_rgba(28,23,18,0.25)] transition-all duration-200 hover:bg-[#e8b98e] hover:shadow-[0_8px_24px_rgba(28,23,18,0.3)] active:scale-[0.98]"
-                >
-                  View Projects
-                </Link>
-              </MagneticButton>
-              <a
-                href={profile.resumeUrl}
-                className="flex items-center gap-2 text-sm font-medium text-[#faf7f2] transition-all duration-200 hover:-translate-y-0.5 hover:text-[#e8b98e] active:translate-y-0"
-              >
-                <FileIcon className="h-4 w-4" />
-                Resume
-              </a>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <HeroStage
+        name={profile.name}
+        tagline={profile.tagline}
+        photoSrc={profile.photo}
+        hasProfilePhoto={hasProfilePhoto}
+        heroPhoto={heroPhoto}
+        hasHeroPhoto={hasHeroPhoto}
+        currentRole={currentRole}
+        resumeUrl={profile.resumeUrl}
+      />
 
       <div className="border-b border-border bg-surface/60 py-4">
         <SkillsMarquee skills={allSkills} />

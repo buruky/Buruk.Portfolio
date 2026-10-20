@@ -83,6 +83,48 @@ body {
   animation: marquee 32s linear infinite;
 }
 
+@keyframes liquid-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(6%, 8%) scale(1.08);
+  }
+}
+
+@keyframes liquid-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-8%, -5%) scale(1.05);
+  }
+}
+
+@keyframes liquid-drift-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(5%, -6%) scale(1.1);
+  }
+}
+
+.liquid-blob-a {
+  animation: liquid-drift-a 22s ease-in-out infinite;
+}
+
+.liquid-blob-b {
+  animation: liquid-drift-b 26s ease-in-out infinite;
+}
+
+.liquid-blob-c {
+  animation: liquid-drift-c 30s ease-in-out infinite;
+}
+
 @keyframes scan {
   from {
     transform: translateY(-100%);
@@ -112,6 +154,12 @@ body {
   .scan-sweep {
     animation: none;
     display: none;
+  }
+
+  .liquid-blob-a,
+  .liquid-blob-b,
+  .liquid-blob-c {
+    animation: none;
   }
 }
 
