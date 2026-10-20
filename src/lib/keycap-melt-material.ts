@@ -8,7 +8,7 @@ export function createMeltMaterial(color: string, edgeColor: string) {
     roughness: 0.55,
     clearcoat: 0.25,
     clearcoatRoughness: 0.4,
-    metalness: 0.02,
+    metalness: 0.2,
   });
   const progress = { value: 0 };
   const edge = { value: new THREE.Color(edgeColor) };

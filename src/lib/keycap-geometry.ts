@@ -15,16 +15,23 @@ const DEFAULTS = {
   width: 1,
   depth: 1,
   height: 0.62,
-  radius: 0.1,
-  segments: 32,
-  topScale: 0.72,
+  // small radius + straight taper reads as molded keycap plastic; larger values go soft and pillowy
+  radius: 0.04,
+  segments: 64,
+  topScale: 0.8,
   dishDepth: 0.085,
 };
 
-// the dish height the cap top and the legend decal share
+// rounded-square norm: 1 along the top face's edges, so the dish follows the square
+// out to the corners instead of carving a circle into it
+const DISH_SQUARENESS = 4;
+
+// the dish height the cap top and the legend decal share; the squared falloff
+// meets the rim with zero slope, so there's no crease line around the dish
 function dishAt(x: number, z: number, footprint: number, dishDepth: number) {
-  const r = Math.min(Math.sqrt(x * x + z * z) / footprint, 1);
-  return dishDepth * (1 - r * r);
+  const p = DISH_SQUARENESS;
+  const r = Math.min(Math.pow(Math.abs(x) ** p + Math.abs(z) ** p, 1 / p) / footprint, 1);
+  return dishDepth * (1 - r * r) ** 2;
 }
 
 // a subdivided box with its own corner rounding: three's RoundedBoxGeometry
@@ -51,7 +58,7 @@ export function buildKeycapGeometry(shape: KeycapShape = {}): THREE.BufferGeomet
     if (offset.lengthSq() > 0) v.copy(c).add(offset.setLength(radius));
 
     const t = THREE.MathUtils.clamp((v.y + halfH) / height, 0, 1);
-    const taper = THREE.MathUtils.lerp(1, topScale, Math.pow(t, 1.5));
+    const taper = THREE.MathUtils.lerp(1, topScale, t);
     v.x *= taper;
     v.z *= taper;
 
