@@ -22,6 +22,14 @@ const BAIL_MS = 2500;
 const SAFETY_MS = 15000;
 const HIDDEN = { opacity: 0, y: 18 };
 const SHOWN = { opacity: 1, y: 0 };
+// a soft-edged gradient mask slid down over the photo and buttons, so it fills in top-down like the melt
+const REVEAL_MASK = {
+  maskImage: "linear-gradient(to bottom, #000 40%, transparent 60%)",
+  maskSize: "100% 250%",
+  maskRepeat: "no-repeat",
+};
+const REVEAL_HIDDEN = { maskPosition: "0% 100%", filter: "blur(8px)" };
+const REVEAL_SHOWN = { maskPosition: "0% 0%", filter: "blur(0px)" };
 
 const KeycapScene = dynamic(() => import("@/components/KeycapScene"), { ssr: false });
 
@@ -59,6 +67,7 @@ export default function HeroStage({
   const introRunning = introWanted && !introDone;
   const lettersHidden = introRunning && !melting;
   const revealed = mounted && !introRunning;
+  const photoShown = revealed || melting;
 
   const getTargets = () =>
     Array.from(h1Ref.current?.querySelectorAll("[data-letter]") ?? []).map((el) => el.getBoundingClientRect());
@@ -81,6 +90,16 @@ export default function HeroStage({
     });
     return () => clearTimeout(t);
   }, []);
+
+  // the navbar (in the layout) stays hidden by CSS until this is set
+  useEffect(() => {
+    if (!revealed) return;
+    const root = document.documentElement;
+    root.dataset.intro = "done";
+    return () => {
+      delete root.dataset.intro;
+    };
+  }, [revealed]);
 
   useEffect(() => {
     if (!introRunning) return;
@@ -118,20 +137,29 @@ export default function HeroStage({
       />
 
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center gap-3 px-6 py-10 text-center">
+        {/* the photo pours in top-down as the keycaps melt, instead of popping in after them */}
         <motion.div
           initial={HIDDEN}
-          animate={revealed ? SHOWN : HIDDEN}
-          transition={{ duration: 0.6, ease: EASE_OUT }}
-          className="group relative h-40 w-40 overflow-hidden rounded-full border-4 border-[#faf7f2] shadow-[0_12px_32px_rgba(28,23,18,0.45)] sm:h-52 sm:w-52"
+          animate={photoShown ? SHOWN : HIDDEN}
+          transition={{ duration: 0.9, delay: melting ? LETTER_REVEAL_AT / 1000 : 0, ease: EASE_OUT }}
+          className="rounded-full shadow-[0_12px_32px_rgba(28,23,18,0.45)]"
         >
-          {hasProfilePhoto ? (
-            <Image src={photoSrc} alt={name} fill sizes="(min-width: 640px) 13rem, 10rem" className="object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[#e7dfd1] px-2 text-center text-[10px] text-muted">
-              [YOUR PHOTO]
-            </div>
-          )}
-          <CornerBrackets color="#e8b98e" inset="inset-1" />
+          <motion.div
+            initial={REVEAL_HIDDEN}
+            animate={photoShown ? REVEAL_SHOWN : REVEAL_HIDDEN}
+            transition={{ duration: 1.1, delay: melting ? LETTER_REVEAL_AT / 1000 : 0, ease: EASE_OUT }}
+            style={REVEAL_MASK}
+            className="group relative h-40 w-40 overflow-hidden rounded-full border-4 border-[#faf7f2] sm:h-52 sm:w-52"
+          >
+            {hasProfilePhoto ? (
+              <Image src={photoSrc} alt={name} fill sizes="(min-width: 640px) 13rem, 10rem" className="object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-[#e7dfd1] px-2 text-center text-[10px] text-muted">
+                [YOUR PHOTO]
+              </div>
+            )}
+            <CornerBrackets color="#e8b98e" inset="inset-1" />
+          </motion.div>
         </motion.div>
 
         {currentRole && (
@@ -192,11 +220,13 @@ export default function HeroStage({
           {revealed ? <ScrambleText text={tagline} delay={0.1} /> : tagline}
         </motion.p>
 
+        {/* padded out (and pulled back with negative margins) so the mask doesn't crop the button shadows */}
         <motion.div
-          initial={HIDDEN}
-          animate={revealed ? SHOWN : HIDDEN}
-          transition={{ duration: 0.6, delay: 0.24, ease: EASE_OUT }}
-          className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-3"
+          initial={{ ...HIDDEN, ...REVEAL_HIDDEN }}
+          animate={photoShown ? { ...SHOWN, ...REVEAL_SHOWN } : { ...HIDDEN, ...REVEAL_HIDDEN }}
+          transition={{ duration: 1.1, delay: (melting ? LETTER_REVEAL_AT / 1000 : 0) + 0.24, ease: EASE_OUT }}
+          style={REVEAL_MASK}
+          className="-mx-8 mt-[-1.25rem] -mb-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 p-8"
         >
           <MagneticButton strength={10}>
             <Link

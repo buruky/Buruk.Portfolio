@@ -23,7 +23,7 @@ import {
 
 const PALETTE = { body: "#5a4636", legend: "#faf7f2", edge: "#e8b98e" };
 const FOV = 35;
-const INTRO_ELEVATION = THREE.MathUtils.degToRad(32);
+const INTRO_ELEVATION = THREE.MathUtils.degToRad(50);
 const DOCK_ELEVATION = THREE.MathUtils.degToRad(72);
 // how much taller a key's on-screen footprint is than its width, seen from DOCK_ELEVATION
 const FOOTPRINT = Math.sin(DOCK_ELEVATION) + 0.62 * Math.cos(DOCK_ELEVATION);

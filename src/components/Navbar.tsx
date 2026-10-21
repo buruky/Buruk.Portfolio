@@ -70,7 +70,7 @@ export default function Navbar() {
   return (
     <motion.header
       style={{ backgroundColor: navBackground, borderColor: navBorder, backdropFilter: navBlur }}
-      className="sticky top-0 z-50 border-b"
+      className="site-header sticky top-0 z-50 border-b"
     >
       <a href="#main-content" className="skip-link fixed left-1/2 top-4 z-100 -translate-x-1/2 rounded-sm bg-accent px-4 py-2 text-sm font-medium text-background">
         Skip to content

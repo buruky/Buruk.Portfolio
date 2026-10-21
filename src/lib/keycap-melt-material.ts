@@ -60,6 +60,14 @@ if (uMelt > 0.0) {
 }`
       )
       .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+// fine surface grain: jitter the normal with high-frequency noise
+vec3 grainP = vMeltLocal * 140.0;
+vec3 grain = vec3(meltNoise(grainP), meltNoise(grainP + 17.0), meltNoise(grainP + 31.0)) - 0.5;
+normal = normalize(normal + grain * 0.15);`
+      )
+      .replace(
         "#include <emissivemap_fragment>",
         "#include <emissivemap_fragment>\ntotalEmissiveRadiance += uMeltEdge * meltGlow * 1.8;"
       );

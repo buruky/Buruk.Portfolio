@@ -19,18 +19,14 @@ const DEFAULTS = {
   radius: 0.04,
   segments: 64,
   topScale: 0.8,
-  dishDepth: 0.085,
+  dishDepth: 0.05,
 };
 
-// rounded-square norm: 1 along the top face's edges, so the dish follows the square
-// out to the corners instead of carving a circle into it
-const DISH_SQUARENESS = 4;
-
-// the dish height the cap top and the legend decal share; the squared falloff
-// meets the rim with zero slope, so there's no crease line around the dish
-function dishAt(x: number, z: number, footprint: number, dishDepth: number) {
-  const p = DISH_SQUARENESS;
-  const r = Math.min(Math.pow(Math.abs(x) ** p + Math.abs(z) ** p, 1 / p) / footprint, 1);
+// the dish height the cap top and the legend decal share; cylindrical like a real
+// keycap, so only the left and right edges rise. The squared falloff meets the rim
+// with zero slope, so there's no crease line along it
+function dishAt(x: number, _z: number, footprint: number, dishDepth: number) {
+  const r = Math.min(Math.abs(x) / footprint, 1);
   return dishDepth * (1 - r * r) ** 2;
 }
 
