@@ -44,7 +44,7 @@ export const bkWebStudios = {
   description:
     "BK Web Studios is my freelance studio building clean, fast websites for small businesses and local organizations.",
   logo: "/images/bk-web-studios-logo.png",
-  businessCardUrl: "https://buruky.github.io/BuildsByBuruk/",
+  siteUrl: "https://www.bkwebstudios.com/",
 };
 
 export const education = {

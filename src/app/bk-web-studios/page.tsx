@@ -38,12 +38,12 @@ export default function BkWebStudiosPage() {
         </div>
         <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">{bkWebStudios.description}</p>
         <a
-          href={bkWebStudios.businessCardUrl}
+          href={bkWebStudios.siteUrl}
           target="_blank"
           rel="noreferrer"
           className="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
         >
-          Digital business card
+          Book a website at bkwebstudios.com
           <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
             &#8599;
           </span>
