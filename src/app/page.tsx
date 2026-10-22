@@ -93,17 +93,16 @@ export default function Home() {
                     View client sites &rarr;
                   </Link>
                 </MagneticButton>
-                <a
-                  href={bkWebStudios.siteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group inline-flex items-center gap-1 text-sm font-medium text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
-                >
-                  Book a website at bkwebstudios.com
-                  <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                    &#8599;
-                  </span>
-                </a>
+                <MagneticButton strength={10}>
+                  <a
+                    href={bkWebStudios.siteUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-block rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
+                  >
+                    Book your own &#8599;
+                  </a>
+                </MagneticButton>
               </div>
             </div>
           </section>
