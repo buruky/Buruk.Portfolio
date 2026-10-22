@@ -42,7 +42,7 @@ export const bkWebStudios = {
   name: "BK Web Studios",
   tagline: "Website design for small businesses",
   description:
-    "BK Web Studios is my freelance studio building clean, fast websites for small businesses and local organizations.",
+    "BK Web Studios is the web design studio I founded, building clean, fast websites for small businesses and local organizations.",
   logo: "/images/bk-web-studios-logo.png",
   siteUrl: "https://www.bkwebstudios.com/",
 };

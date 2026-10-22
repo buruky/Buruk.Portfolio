@@ -77,7 +77,7 @@ export default function Home() {
           <section id="bk-web-studios" className="border-t border-border py-16">
             <div className="rounded-2xl border border-accent/30 bg-surface p-8 sm:p-12">
               <p className="font-mono text-xs font-semibold uppercase tracking-widest text-accent">
-                Side Business
+                Founder &amp; Lead Developer
               </p>
               <h2 className="mt-3 font-serif text-4xl italic text-foreground sm:text-5xl">
                 {bkWebStudios.name}
