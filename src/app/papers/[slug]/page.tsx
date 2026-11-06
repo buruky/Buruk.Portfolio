@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { projects, laneColors } from "@/lib/site-config";
 import { FileIcon, ExternalLinkIcon } from "@/components/icons";
 import Reveal from "@/components/Reveal";
@@ -35,12 +36,12 @@ export default async function PaperPage({
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 sm:px-10">
       <Reveal>
-        <a
+        <Link
           href="/#projects"
           className="font-mono text-xs uppercase tracking-widest text-muted transition-colors hover:text-accent"
         >
           ← Back to projects
-        </a>
+        </Link>
 
         <p className={`mt-6 font-mono text-xs font-medium uppercase tracking-widest ${laneColors[paper.lane]}`}>
           {paper.lane}
@@ -78,7 +79,8 @@ export default async function PaperPage({
           </a>
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-surface">
+        {/* phones mostly can't render PDFs in <object>; they use the "Open full PDF" button above */}
+        <div className="mt-10 hidden overflow-hidden rounded-2xl border border-border bg-surface md:block">
           <object
             data={paper.paperUrl!}
             type="application/pdf"

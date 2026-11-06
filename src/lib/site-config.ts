@@ -5,6 +5,8 @@ export type Project = {
   name: string;
   lane: Lane;
   description: string;
+  // short card blurb; the full description still shows on the paper page
+  summary?: string;
   techStack: string[];
   role: string;
   liveUrl: string | null;
@@ -20,11 +22,20 @@ export type Project = {
   demoLogin?: { email: string; password: string };
 };
 
+// Vercel sets VERCEL_PROJECT_PRODUCTION_URL automatically; elsewhere set NEXT_PUBLIC_SITE_URL
+export const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
 export const profile = {
   name: "Buruk Yimesgen",
   tagline: "Software Engineer / Salesforce Developer / Data Scientist",
   bio:
     "I'm a recent Computer Science & Systems and Mathematics double major graduate from the University of Washington Tacoma (June 2026, 3.6 GPA). My work spans Salesforce/CRM development, full stack engineering, and data science, including research in quantum computing and NASA GRACE climate data. I'm looking for entry-level Software Engineer, Data Science, or Salesforce/CRM Developer roles.",
+  intro:
+    "Recent UW Tacoma Computer Science & Mathematics graduate working across Salesforce/CRM, full stack, and data science. Looking for entry-level Software Engineer, Data Science, or Salesforce/CRM Developer roles.",
   email: "burukyimesgen@gmail.com",
   github: "https://github.com/buruky",
   linkedin: "https://www.linkedin.com/in/Buruk-Yimesgen/",
@@ -58,19 +69,19 @@ export const education = {
 export const skillGroups: { category: string; skills: string[] }[] = [
   {
     category: "Languages",
-    skills: ["Java", "Python", "HTML", "CSS", "R", "SQL"],
+    skills: ["Java", "Python", "JavaScript", "HTML", "CSS", "R", "SQL"],
   },
   {
     category: "Web & Tools",
-    skills: ["React", "Node.js", "Docker", "Git"],
+    skills: ["React", "Next.js", "Node.js", "Tailwind CSS", "Docker", "Git", "OpenAI API"],
   },
   {
     category: "Salesforce",
-    skills: ["Apex", "LWC", "Visualforce", "SOQL", "NPSP"],
+    skills: ["Apex", "LWC", "Visualforce", "SOQL", "NPSP", "Flows", "Approval Processes"],
   },
   {
     category: "Data Science",
-    skills: ["scikit-learn"],
+    skills: ["scikit-learn", "XGBoost", "Deep Neural Networks", "GLM"],
   },
 ];
 
@@ -126,6 +137,8 @@ export const projects: Project[] = [
     lane: "Data Science & Research",
     description:
       "Quantum computing is a developing technology that has the potential to change several aspects of computing as we know it. In this paper, we introduce several essential components of quantum computing such as qubits, superposition, and entanglement. In addition, we discuss two examples of quantum computing: quantum teleportation and Grover's Algorithm. Our coverage of quantum teleportation provides an example of a property of quantum computing that is impossible using classical computing. In addition to this property, we cover Grover's Algorithm which is a key advancement in quantum computing, providing quadratic speedup for unstructured search problems compared to classical algorithms. We explain the algorithm's principles, including amplitude amplification and the role of the oracle. Our findings underscore the significant potential of quantum computing in solving complex problems more efficiently than classical methods.",
+    summary:
+      "An introduction to qubits, superposition, and entanglement, walking through quantum teleportation and Grover's Algorithm and its quadratic speedup for unstructured search.",
     techStack: ["Quantum Computing Theory", "Linear Algebra"],
     role: "Co-author (with Malaya Jove; advised by Dr. Ryan Card)",
     liveUrl: null,
@@ -141,6 +154,8 @@ export const projects: Project[] = [
     lane: "Data Science & Research",
     description:
       "This study uses statistical and machine learning techniques to impute missing data from GRACE (Gravity Recovery and Climate Experiment) terrestrial water storage (TWS) datasets. We examined information from 2 of the 62 watersheds across the globe, taking into account variables such as temperature, precipitation, evapotranspiration, NDVI, and ENSO. Creating models to predict TWS and efficiently impute missing values was our aim. We investigated techniques including Extreme Gradient Boosting (XGBoost), Deep Neural Networks (DNN), Generalized Linear Models (GLM), and mean/median imputation. Mean Squared Error (MSE) was used to assess these models' performance to choose the most effective method for precise forecasting and imputation.",
+    summary:
+      "Using XGBoost, deep neural networks, and GLMs to predict and impute missing NASA GRACE terrestrial water storage data from climate variables across two global watersheds.",
     techStack: ["R", "XGBoost", "Deep Neural Networks", "GLM"],
     role: "Co-author (with Jenna Weldon; advised by Tamer Elbayoumi, mentored by Brett Hunter)",
     liveUrl: null,

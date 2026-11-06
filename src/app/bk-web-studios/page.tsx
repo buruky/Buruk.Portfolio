@@ -7,6 +7,7 @@ import Reveal from "@/components/Reveal";
 
 export const metadata: Metadata = {
   title: bkWebStudios.name,
+  description: bkWebStudios.description,
 };
 
 export default function BkWebStudiosPage() {
@@ -20,13 +21,11 @@ export default function BkWebStudiosPage() {
     <div className="mx-auto max-w-6xl px-6 py-16 sm:px-10">
       <Reveal>
         <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-border bg-surface text-center text-[10px] text-muted">
-            {hasLogo ? (
+          {hasLogo && (
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-border bg-surface">
               <Image src={bkWebStudios.logo} alt={bkWebStudios.name} width={80} height={80} className="object-contain" />
-            ) : (
-              "[LOGO]"
-            )}
-          </div>
+            </div>
+          )}
           <div>
             <h1 className="font-serif text-4xl italic leading-[1.1] text-foreground sm:text-5xl">
               {bkWebStudios.name}
@@ -43,14 +42,14 @@ export default function BkWebStudiosPage() {
           rel="noreferrer"
           className="mt-6 inline-block rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
         >
-          Book your own &#8599;
+          Book a free call &#8599;
         </a>
       </Reveal>
 
       <Reveal>
         <section className="mt-14 border-t border-border pt-10">
           <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted">
-            Sites I&apos;ve built
+            Client work
           </h2>
           <div className="mt-6 grid gap-6">
             {sitesWithScreenshots.map((site) => (

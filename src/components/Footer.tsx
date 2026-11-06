@@ -6,6 +6,7 @@ import Logo from "@/components/Logo";
 
 const links = [
   { href: "/", label: "Home" },
+  { href: "/#bk-web-studios", label: "BK Web Studios" },
   { href: "/#projects", label: "Projects" },
   { href: "/about", label: "About" },
 ];

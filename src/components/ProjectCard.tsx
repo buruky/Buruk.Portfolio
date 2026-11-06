@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion } from "motion/react";
 import { Project, laneColors } from "@/lib/site-config";
 import DemoVideoPlayer from "./DemoVideoPlayer";
@@ -22,7 +23,7 @@ export default function ProjectCard({
   const reduce = useReducedMotion();
   const mouseX = useMotionValue(50);
   const mouseY = useMotionValue(50);
-  const spotlight = useMotionTemplate`radial-gradient(260px circle at ${mouseX}px ${mouseY}px, rgba(169,74,42,0.16), transparent 72%)`;
+  const spotlight = useMotionTemplate`radial-gradient(260px circle at ${mouseX}px ${mouseY}px, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%)`;
 
   const handlePointerMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -32,10 +33,9 @@ export default function ProjectCard({
 
   return (
     <motion.article
-      className="relative flex h-full flex-col rounded-2xl border border-border bg-background p-5 shadow-[0_1px_2px_rgba(43,36,32,0.06)] transition-[border-color,box-shadow] duration-300 hover:border-accent/30 hover:shadow-[0_20px_48px_rgba(43,36,32,0.12)] sm:p-6"
+      className="relative flex h-full flex-col rounded-2xl border border-border bg-background p-5 shadow-[0_1px_2px] shadow-ink/6 transition-[border-color,box-shadow] duration-300 hover:border-accent/30 hover:shadow-[0_20px_48px] hover:shadow-ink/12 sm:p-6"
       initial={reduce ? false : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      whileHover={reduce ? undefined : { y: -4 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
     >
@@ -55,7 +55,7 @@ export default function ProjectCard({
         )}
         <CornerBrackets color="var(--accent)" />
         {project.demoVideo ? (
-          <DemoVideoPlayer src={project.demoVideo} />
+          <DemoVideoPlayer src={project.demoVideo} poster={hasScreenshot ? project.screenshot : undefined} />
         ) : hasScreenshot ? (
           <Image
             src={project.screenshot!}
@@ -64,8 +64,8 @@ export default function ProjectCard({
             sizes="(min-width: 768px) 768px, 100vw"
             className={
               project.screenshotFit === "contain"
-                ? "object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02]"
-                : `object-cover transition-transform duration-500 group-hover:scale-[1.03] ${positionClass[project.screenshotPosition ?? "top"]}`
+                ? "object-contain p-4"
+                : `object-cover ${positionClass[project.screenshotPosition ?? "top"]}`
             }
           />
         ) : (
@@ -81,7 +81,7 @@ export default function ProjectCard({
         </p>
         <h3 className="mt-2 font-serif text-2xl text-foreground">{project.name}</h3>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
-          {project.description}
+          {project.summary ?? project.description}
         </p>
 
         <ul className="mt-4 flex flex-wrap gap-1.5">
@@ -101,13 +101,13 @@ export default function ProjectCard({
 
         <div className="mt-auto flex flex-wrap gap-5 pt-5 text-sm">
           {project.paperUrl && (
-            <a
+            <Link
               href={`/papers/${project.slug}`}
               className="group inline-flex items-center gap-1 text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
             >
               Read the paper
               <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
-            </a>
+            </Link>
           )}
           {!project.paperUrl && project.liveUrl && (
             <a

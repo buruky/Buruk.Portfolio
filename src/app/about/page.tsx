@@ -5,10 +5,10 @@ import { GitHubIcon, LinkedInIcon, FileIcon } from "@/components/icons";
 import CopyEmailButton from "@/components/CopyEmailButton";
 import CornerBrackets from "@/components/CornerBrackets";
 import Reveal from "@/components/Reveal";
-import SkillsGrid from "@/components/SkillsGrid";
 
 export const metadata: Metadata = {
   title: "About",
+  description: "Education, background, and contact details for Buruk Yimesgen.",
 };
 
 export default function AboutPage() {
@@ -86,16 +86,6 @@ export default function AboutPage() {
         </div>
       </Reveal>
 
-      <Reveal>
-        <section className="mt-14 border-t border-border pt-10">
-          <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted">
-            Skills
-          </h2>
-          <div className="mt-6">
-            <SkillsGrid />
-          </div>
-        </section>
-      </Reveal>
     </div>
   );
 }

@@ -249,7 +249,7 @@ export default function HeroStage({
       {/* CSS-gated so it covers first paint on desktop before JS decides; never shows on mobile or reduced motion */}
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-15 hidden bg-[#1c1712] motion-safe:md:block"
+        className="hero-cover pointer-events-none absolute inset-0 z-15 hidden bg-[#1c1712] motion-safe:md:block"
         initial={{ opacity: 0.92 }}
         animate={{ opacity: !mounted || lettersHidden ? 0.92 : 0 }}
         transition={{ duration: melting ? 1.1 : 0.6, ease: EASE_OUT }}

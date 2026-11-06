@@ -59,7 +59,8 @@ export default function DemoVideoPlayer({
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
-    if (video.paused) video.play();
+    // play() rejects when the browser blocks it; the pause listener keeps the UI in sync
+    if (video.paused) video.play().catch(() => {});
     else video.pause();
   };
 
@@ -84,7 +85,10 @@ export default function DemoVideoPlayer({
     if (document.fullscreenElement) {
       document.exitFullscreen();
     } else if (container.requestFullscreen) {
-      container.requestFullscreen();
+      container.requestFullscreen().catch(() => {});
+    } else {
+      // iPhone Safari only supports fullscreen on the <video> itself
+      (videoRef.current as HTMLVideoElement & { webkitEnterFullscreen?: () => void })?.webkitEnterFullscreen?.();
     }
   };
 

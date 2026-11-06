@@ -17,8 +17,8 @@ const NAV_COLORS = {
 
 const navLinks = [
   { href: "/", label: "Home", section: "home" },
-  { href: "/#projects", label: "Projects", section: "projects" },
   { href: "/#bk-web-studios", label: "BK Web Studios", section: "bk-web-studios" },
+  { href: "/#projects", label: "Projects", section: "projects" },
   { href: "/about", label: "About", section: null },
 ];
 
@@ -151,6 +151,8 @@ export default function Navbar() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    // hash links on "/" don't change pathname, so the effect above won't close the menu
+                    onClick={() => setMobileOpen(false)}
                     className={`block py-3 transition-colors ${
                       isActive(link) ? "font-medium text-accent" : "text-foreground"
                     }`}

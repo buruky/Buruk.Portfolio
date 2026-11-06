@@ -3,7 +3,6 @@ import {
   profile,
   projects,
   skillGroups,
-  laneColors,
   currentRole,
   heroPhoto,
   education,
@@ -17,21 +16,7 @@ import MagneticButton from "@/components/MagneticButton";
 import StatCounter from "@/components/StatCounter";
 import SkillsMarquee from "@/components/SkillsMarquee";
 import SkillsGrid from "@/components/SkillsGrid";
-
-const lanes: { name: keyof typeof laneColors; blurb: string }[] = [
-  {
-    name: "Salesforce/CRM",
-    blurb: "Building on the Salesforce platform — Apex, LWC, and NPSP-based case management.",
-  },
-  {
-    name: "Full Stack",
-    blurb: "End-to-end web apps and games, from UI to backend, with React and JavaScript/Python.",
-  },
-  {
-    name: "Data Science & Research",
-    blurb: "Applied research spanning quantum computing and NASA climate data analysis.",
-  },
-];
+import CopyEmailButton from "@/components/CopyEmailButton";
 
 export default function Home() {
   const hasProfilePhoto = hasPublicFile("images/profile.jpg");
@@ -63,10 +48,10 @@ export default function Home() {
         <Reveal>
           <section className="py-14 text-center">
             <p className="mx-auto max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-              {profile.bio}
+              {profile.intro}
             </p>
             <div className="mt-10 flex flex-wrap items-start justify-center gap-x-12 gap-y-6">
-              <StatCounter value={projects.length} label="Projects shipped" />
+              <StatCounter value={projects.length} label="Projects" />
               <StatCounter value={2} label="Majors" />
               <StatCounter value={parseFloat(education.gpa)} decimals={2} label="GPA" />
             </div>
@@ -86,50 +71,22 @@ export default function Home() {
               <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">{bkWebStudios.description}</p>
               <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
                 <MagneticButton strength={10}>
-                  <Link
-                    href="/bk-web-studios"
-                    className="inline-block rounded-sm bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-accent"
-                  >
-                    View client sites &rarr;
-                  </Link>
-                </MagneticButton>
-                <MagneticButton strength={10}>
                   <a
                     href={bkWebStudios.siteUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-block rounded-sm bg-accent px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-accent-hover"
                   >
-                    Book your own &#8599;
+                    Book a free call &#8599;
                   </a>
                 </MagneticButton>
-              </div>
-            </div>
-          </section>
-        </Reveal>
-
-        <Reveal>
-          <section className="border-t border-border py-16">
-            <h2 className="font-serif text-3xl italic text-foreground sm:text-4xl">Three lanes</h2>
-            <div className="mt-8 grid gap-5 sm:grid-cols-3">
-              {lanes.map((lane) => (
-                <div
-                  key={lane.name}
-                  className="group relative overflow-hidden rounded-2xl border border-border p-6 transition-colors duration-300 hover:border-accent/30"
+                <Link
+                  href="/bk-web-studios"
+                  className="text-sm font-medium text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"
                 >
-                  <span
-                    className={`absolute inset-x-0 top-0 h-0.5 w-0 bg-current transition-all duration-300 group-hover:w-full ${laneColors[lane.name]}`}
-                  />
-                  <p className={`font-mono text-xs font-medium uppercase tracking-widest ${laneColors[lane.name]}`}>
-                    {lane.name}
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-muted">{lane.blurb}</p>
-                  <p className="mt-4 font-mono text-xs text-foreground/60">
-                    {projects.filter((p) => p.lane === lane.name).length} project
-                    {projects.filter((p) => p.lane === lane.name).length === 1 ? "" : "s"}
-                  </p>
-                </div>
-              ))}
+                  View client sites &rarr;
+                </Link>
+              </div>
             </div>
           </section>
         </Reveal>
@@ -154,10 +111,22 @@ export default function Home() {
 
         <Reveal>
           <section className="border-t border-border py-14">
-            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted">
-                More on my background, education, and how to reach me.
-              </p>
+            <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="font-serif text-3xl italic text-foreground sm:text-4xl">Let&apos;s talk</h2>
+                <p className="mt-3 text-sm text-muted">
+                  Open to entry-level roles. Email is the fastest way to reach me.
+                </p>
+                <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+                  <a
+                    href={`mailto:${profile.email}`}
+                    className="inline-block rounded-sm bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-accent"
+                  >
+                    Email me
+                  </a>
+                  <CopyEmailButton email={profile.email} />
+                </div>
+              </div>
               <Link
                 href="/about"
                 className="group inline-flex items-center gap-1 text-sm font-medium text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent-hover"

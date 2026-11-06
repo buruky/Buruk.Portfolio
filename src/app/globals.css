@@ -9,8 +9,9 @@
   --accent-hover: #833820;
   --surface: #f0e9df;
   --lane-salesforce: #3f6690;
-  --lane-fullstack: #a94a2a;
+  --lane-fullstack: #7a4f8a;
   --lane-data: #4b6b3f;
+  --ink: #2b2420;
 }
 
 :root[data-theme="dark"] {
@@ -22,8 +23,9 @@
   --accent-hover: #ef9168;
   --surface: #242019;
   --lane-salesforce: #7aa7dc;
-  --lane-fullstack: #e2794f;
+  --lane-fullstack: #b994cc;
   --lane-data: #85b172;
+  --ink: #000;
   color-scheme: dark;
 }
 
@@ -38,6 +40,7 @@
   --color-lane-salesforce: var(--lane-salesforce);
   --color-lane-fullstack: var(--lane-fullstack);
   --color-lane-data: var(--lane-data);
+  --color-ink: var(--ink);
   --font-sans: var(--font-geist-sans);
   --font-serif: var(--font-fraunces);
   --font-mono: var(--font-geist-mono);
@@ -198,7 +201,8 @@ body {
   }
 }
 
-#projects {
+#projects,
+#bk-web-studios {
   scroll-margin-top: 5.5rem;
 }
 
