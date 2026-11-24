@@ -53,7 +53,7 @@ Claude uses its design and motion skills and research tools at each step, not ju
 
 - [x] **3.1 Intro, for real.** Port the Ge'ez prototype with the chosen fonts, colours and sounds.
 - [x] **3.2 Intro → nav.** The name shrinks into the logo, and ቡሩኽ becomes the monogram.
-- [ ] **3.3 After the name.** The motion piece that shows your different directions.
+- [x] **3.3 After the name.** "I build ____.": "I build" spans the screen with a blinking cursor; the line fills itself in and cycles through the topics (Salesforce, Full stack, Research, BK Web Studios), each fitted to one line with Anybody's width axis so nothing jumps. Topics are pill tabs with a progress bar; the active one has an arrow to its page. (Rejected: a row of folders.)
 - [ ] **3.4 The rest of home.** Ways into Work, About and BKWS.
 
 ## Phase 4: About, your story
