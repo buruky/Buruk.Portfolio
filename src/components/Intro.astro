@@ -1,0 +1,327 @@
+---
+// Home only, once per visit. ቡሩኽ waits with the Enter buttons (the click also unlocks sound),
+// then each letter cycles through its vowel forms, its sound (BU · RU · K) appears beneath it,
+// the Ge'ez drifts into the Latin syllables, and YIMESGEN slides out from behind BURUK.
+// Approved prototype: https://claude.ai/artifact/633aYbMJfikoh9BQiuhZs9
+---
+<div id="intro" class="intro" role="dialog" aria-modal="true" aria-labelledby="intro-label" hidden>
+  <div class="bg" data-bg aria-hidden="true"></div>
+  <p id="intro-label" class="sr-only">Buruk Yimesgen</p>
+  <div class="name" data-name aria-hidden="true">
+    <span class="row geez" data-geez lang="ti"></span>
+    <span class="row latin" data-latin></span>
+  </div>
+  <div class="fly" data-fly aria-hidden="true"></div>
+  <div class="btns" data-btns>
+    <button type="button" class="primary" data-enter="sound">Enter with sound</button>
+    <button type="button" data-enter="quiet">Enter quietly</button>
+  </div>
+  <button type="button" class="skip" data-skip hidden>Skip intro</button>
+</div>
+<script is:inline>
+  try {
+    if (!sessionStorage.getItem("bk-entered")) {
+      document.getElementById("intro").hidden = false;
+      document.documentElement.classList.add("intro-active", "intro-logo-hidden");
+    }
+  } catch (e) {}
+</script>
+
+<script>
+  import { setSound, unlock, play } from "@/lib/sound";
+
+  // Each Ge'ez letter: its fidel family (7 vowel forms), the form used in ቡሩኽ, and the Latin syllable it becomes.
+  const NAME = [
+    { fam: Array.from("በቡቢባቤብቦ"), t: 1, lat: "BU" },
+    { fam: Array.from("ረሩሪራሬርሮ"), t: 1, lat: "RU" },
+    { fam: Array.from("ኸኹኺኻኼኽኾ"), t: 5, lat: "K" },
+  ];
+  const LABEL_PX = 15;
+  const EO = "cubic-bezier(0.23, 1, 0.32, 1)";
+  const EIO = "cubic-bezier(0.77, 0, 0.175, 1)";
+
+  type Letter = { c: HTMLSpanElement; s: HTMLSpanElement; f: HTMLSpanElement; fam: string[]; t: number; labelT?: string; glyphT?: string };
+
+  function setup(root: HTMLElement) {
+    const nameEl = root.querySelector<HTMLElement>("[data-name]")!;
+    const geez = root.querySelector<HTMLElement>("[data-geez]")!;
+    const latin = root.querySelector<HTMLElement>("[data-latin]")!;
+    const fly = root.querySelector<HTMLElement>("[data-fly]")!;
+    const btns = root.querySelector<HTMLElement>("[data-btns]")!;
+    const skipBtn = root.querySelector<HTMLButtonElement>("[data-skip]")!;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timers: number[] = [];
+    let finished = false;
+
+    const L: Letter[] = NAME.map((n) => {
+      const c = document.createElement("span"); c.className = "c"; c.textContent = n.fam[n.t]; geez.append(c);
+      const s = document.createElement("span"); s.className = "s"; s.textContent = n.lat; latin.append(s);
+      const f = document.createElement("span"); f.className = "flier"; f.textContent = n.lat; fly.append(f);
+      return { c, s, f, fam: n.fam, t: n.t };
+    });
+    const lastwrap = document.createElement("span"); lastwrap.className = "lastwrap";
+    const last = document.createElement("span"); last.className = "last"; last.textContent = "YIMESGEN";
+    lastwrap.append(last); latin.append(lastwrap);
+
+    let shift = "none", scale = 1;
+    // Measure once fonts are ready: Ge'ez letters hold their family's widest form (no jitter while cycling);
+    // the full Latin name is laid out once and shifted so BURUK starts centred; labels get their flight paths.
+    function measure() {
+      // Measure with transitions off, so positions are read at their final values, not mid-animation.
+      nameEl.style.transition = "none"; latin.style.transition = "none";
+      const keepScale = nameEl.style.transform; nameEl.style.transform = "";
+      L.forEach((x) => {
+        x.c.style.width = "";
+        const shown = x.c.textContent; let max = 0;
+        x.fam.forEach((g) => { x.c.textContent = g; max = Math.max(max, x.c.getBoundingClientRect().width); });
+        x.c.textContent = shown; x.c.style.width = `${max}px`;
+      });
+      const fw = latin.getBoundingClientRect().width, lastW = lastwrap.getBoundingClientRect().width;
+      shift = `translateX(${lastW / 2}px)`;
+      scale = Math.min(1, (root.clientWidth - 32) / fw);
+      latin.style.transform = shift;
+      const st = root.getBoundingClientRect(), fs = parseFloat(getComputedStyle(nameEl).fontSize), k = LABEL_PX / fs;
+      L.forEach((x) => {
+        x.f.style.fontSize = `${fs}px`;
+        const r = x.s.getBoundingClientRect(), g = x.c.getBoundingClientRect();
+        const left = r.left - st.left, top = r.top - st.top;
+        x.f.style.left = `${left}px`; x.f.style.top = `${top}px`;
+        const restCx = left + r.width / 2, restCy = top + r.height / 2;
+        const labCx = g.left + g.width / 2 - st.left, labCy = g.bottom - st.top + 14 + (r.height * k) / 2;
+        x.labelT = `translate(${labCx - restCx}px, ${labCy - restCy}px) scale(${k})`;
+        x.glyphT = `translate(${r.left + r.width / 2 - (g.left + g.width / 2)}px, ${(r.top + r.height / 2 - (g.top + g.height / 2)) * 0.4}px) scale(.92)`;
+        if (!x.f.classList.contains("go")) x.f.style.transform = x.labelT;
+      });
+      nameEl.style.transform = keepScale;
+      void nameEl.offsetWidth;
+      requestAnimationFrame(() => { nameEl.style.transition = ""; latin.style.transition = ""; });
+    }
+
+    const later = (fn: () => void, ms: number) => { timers.push(window.setTimeout(fn, ms)); };
+
+    // 1. Each letter cycles through its vowel forms and locks; its sound appears beneath it.
+    function decode(done: () => void) {
+      let remaining = L.length;
+      L.forEach((x, i) => {
+        const steps = reduce ? 1 : 9 + i * 3;
+        let k = 0, idx = (((x.t - steps) % 7) + 7) % 7;
+        x.c.classList.add("spin");
+        const step = () => {
+          idx = (idx + 1) % 7; k++;
+          x.c.textContent = x.fam[idx];
+          if (!reduce) { x.c.classList.remove("bump"); void x.c.offsetWidth; x.c.classList.add("bump"); play("tick"); }
+          if (k >= steps) {
+            x.c.classList.remove("spin"); x.c.classList.add("locked"); play("lock");
+            x.f.classList.add("label");
+            if (--remaining === 0) later(done, reduce ? 200 : 350);
+            return;
+          }
+          const p = k / steps;
+          later(step, reduce ? 0 : 28 + 90 * p * p * p);
+        };
+        later(step, reduce ? 0 : i * 50);
+      });
+    }
+
+    // 2. Each Ge'ez letter drifts into its Latin spot and dissolves while its label grows into the syllable.
+    function morph() {
+      play("swell");
+      const stagger = reduce ? 0 : 100, dur = reduce ? 0 : 850;
+      L.forEach((x, i) => later(() => {
+        if (!reduce) x.c.style.transform = x.glyphT ?? "";
+        x.c.classList.add("out");
+        x.f.classList.remove("label"); x.f.classList.add("go"); x.f.style.transform = "none";
+      }, i * stagger));
+      later(() => L.forEach((x) => { x.s.classList.add("in"); x.f.classList.remove("go"); x.f.classList.add("done"); }), (L.length - 1) * stagger + dur + 20);
+      later(addLast, (L.length - 1) * stagger + dur + (reduce ? 0 : 250));
+    }
+
+    // 3. BURUK slides left as YIMESGEN rises out from behind it; the whole name scales to fit.
+    function addLast() {
+      play("yimesgen");
+      latin.style.transform = "none";
+      nameEl.style.transform = `scale(${scale})`;
+      lastwrap.classList.add("in");
+      later(() => end(), reduce ? 300 : 1000);
+    }
+
+    // Hand over: the finished name flies up and shrinks into the header logo while the page shows through.
+    function end(fast = false) {
+      if (finished) return;
+      finished = true;
+      timers.forEach(clearTimeout);
+      try { sessionStorage.setItem("bk-entered", "1"); } catch { /* ignore */ }
+      // Scrolling and the page unlock as the name starts to fly; the header joins once the logo has landed.
+      const unlockPage = () => {
+        document.documentElement.classList.remove("intro-active");
+        document.querySelector<HTMLElement>("#main")?.removeAttribute("inert");
+        root.style.pointerEvents = "none";
+      };
+      const unlockHeader = () => {
+        document.documentElement.classList.remove("intro-logo-hidden");
+        document.querySelector<HTMLElement>(".hdr")?.removeAttribute("inert");
+      };
+      if (reduce) {
+        unlockPage();
+        unlockHeader();
+        root.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: "ease" }).finished.then(() => { root.hidden = true; });
+        return;
+      }
+      const D = fast ? 600 : 950;
+      const bg = root.querySelector<HTMLElement>("[data-bg]")!;
+      const logo = document.querySelector<HTMLElement>(".hdr .logo");
+      const nameTarget = document.querySelector<HTMLElement>(".hdr .name");
+      const monoTarget = document.querySelector<HTMLElement>(".hdr .mono");
+
+      // A fixed-position copy of the name, laid over the original at exactly the same size.
+      const src = latin.getBoundingClientRect();
+      const fs = parseFloat(getComputedStyle(nameEl).fontSize) * scale;
+      const clone = document.createElement("div");
+      clone.className = "intro-flyname";
+      clone.setAttribute("aria-hidden", "true");
+      clone.innerHTML = 'BURUK<span style="padding-left:.24em">YIMESGEN</span>';
+      clone.style.cssText = `left:${src.left}px;top:${src.top}px;font-size:${fs}px;color:${getComputedStyle(root).color}`;
+      document.body.append(clone);
+      latin.style.visibility = "hidden";
+
+      // Fly to the header name; on phones (name hidden) fly to the ቡሩኽ monogram and turn into it.
+      const toName = !!nameTarget && nameTarget.getBoundingClientRect().width > 0;
+      const tgt = (toName ? nameTarget! : monoTarget ?? nameTarget)!.getBoundingClientRect();
+      const k = toName ? tgt.width / src.width : (tgt.height / src.height) * 1.1;
+      const dx = tgt.left - src.left;
+      const dy = tgt.top + tgt.height / 2 - (src.top + (src.height * k) / 2);
+      const fly = clone.animate(
+        [{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: `translate(${dx}px, ${dy}px) scale(${k})`, opacity: toName ? 1 : 0 }],
+        { duration: D, easing: EIO, fill: "forwards" },
+      );
+      bg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: D * 0.7, delay: D * 0.15, easing: EIO, fill: "forwards" });
+      skipBtn.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" });
+      document.dispatchEvent(new CustomEvent("bk:intro-reveal"));
+      unlockPage();
+
+      fly.finished.then(() => {
+        // The real logo takes over exactly where the copy landed.
+        unlockHeader();
+        logo?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: "ease" });
+        return clone.animate([{ opacity: toName ? 1 : 0 }, { opacity: 0 }], { duration: 160, easing: "ease", fill: "forwards" }).finished;
+      }).then(() => {
+        clone.remove();
+        root.hidden = true;
+      });
+    }
+
+    function skip() {
+      // Jump straight to the finished name, then leave.
+      timers.forEach(clearTimeout);
+      L.forEach((x) => { x.c.classList.add("out"); x.f.classList.add("done"); x.s.classList.add("in"); });
+      latin.style.transition = "none"; latin.style.transform = "none";
+      nameEl.style.transform = `scale(${scale})`;
+      lastwrap.classList.add("in", "instant");
+      end(true);
+    }
+
+    function start(withSound: boolean) {
+      if (withSound) { unlock(); setSound(true); play("enter"); } else setSound(false);
+      btns.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: EO, fill: "forwards" });
+      btns.inert = true;
+      skipBtn.hidden = false;
+      skipBtn.focus({ preventScroll: true });
+      later(() => decode(morph), reduce ? 0 : 150);
+    }
+
+    document.querySelectorAll<HTMLElement>("#main, .hdr").forEach((el) => (el.inert = true));
+    (document.fonts?.ready ?? Promise.resolve()).then(measure);
+    addEventListener("resize", () => { if (!finished) measure(); });
+    root.querySelectorAll<HTMLButtonElement>("[data-enter]").forEach((b) =>
+      b.addEventListener("click", () => start(b.dataset.enter === "sound"), { once: true }),
+    );
+    skipBtn.addEventListener("click", skip);
+    root.addEventListener("keydown", (e) => { if (e.key === "Escape" && !skipBtn.hidden) skip(); });
+    root.querySelector<HTMLButtonElement>(".primary")?.focus({ preventScroll: true });
+  }
+
+  document.addEventListener("astro:page-load", () => {
+    const root = document.getElementById("intro");
+    if (!root || root.hidden || root.dataset.bound) return;
+    root.dataset.bound = "1";
+    setup(root);
+  });
+</script>
+
+<style>
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    isolation: isolate;
+    color: var(--world-fg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(28px, 5vh, 48px);
+    overflow: hidden;
+    padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  }
+  .intro[hidden] { display: none; }
+  .bg { position: absolute; inset: 0; z-index: -1; background: var(--world-bg); }
+  /* The header logo waits while the intro runs; the flying name hands over to it. */
+  :global(html.intro-logo-hidden .hdr .logo) { opacity: 0; }
+  :global(.intro-flyname) {
+    position: fixed; z-index: 120; pointer-events: none; transform-origin: 0 0; white-space: nowrap;
+    font-family: var(--font-display); font-weight: 900; font-stretch: 118%; letter-spacing: -0.02em; line-height: 1.1;
+  }
+  :global(html.intro-active) { overflow: hidden; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .name { display: grid; place-items: center; font-size: clamp(64px, 16vw, 200px); line-height: 1.1; transition: transform 1.25s var(--ease-out); }
+  .row { grid-area: 1 / 1; white-space: nowrap; display: block; }
+  .geez { font-family: var(--font-geez); letter-spacing: 0.02em; }
+  :global(.intro .c) { display: inline-block; text-align: center; transition: opacity 0.85s var(--ease-in-out), filter 0.85s var(--ease-in-out), transform 0.95s var(--ease-in-out), color 0.5s; }
+  :global(.intro .c.spin) { color: color-mix(in srgb, var(--world-fg) 45%, transparent); }
+  :global(.intro .c.bump) { animation: intro-bump 0.12s ease-out; }
+  :global(.intro .c.locked) { animation: intro-lock 0.6s var(--ease-out); }
+  :global(.intro .c.out) { opacity: 0; filter: blur(10px); }
+  @keyframes intro-bump { from { translate: 0 -6%; } to { translate: 0 0; } }
+  @keyframes intro-lock { 30% { color: var(--world-accent); text-shadow: 0 0 0.3em color-mix(in srgb, var(--world-accent) 55%, transparent); } }
+
+  .latin { font-family: var(--font-display); font-weight: 900; font-stretch: 118%; letter-spacing: -0.02em; transition: transform 1.25s var(--ease-out); }
+  :global(.intro .s) { opacity: 0; }
+  :global(.intro .s.in) { opacity: 1; }
+  :global(.intro .lastwrap) { display: inline-block; vertical-align: top; padding-left: 0.24em; clip-path: inset(-30% 100% -30% 0); transition: clip-path 1.25s var(--ease-out); }
+  :global(.intro .last) { display: inline-block; transform: translateX(-35%); transition: transform 1.25s var(--ease-out); }
+  :global(.intro .lastwrap.in) { clip-path: inset(-30% -5% -30% 0); }
+  :global(.intro .lastwrap.in .last) { transform: none; }
+  :global(.intro .lastwrap.instant), :global(.intro .lastwrap.instant .last) { transition: none; }
+
+  .fly { position: absolute; inset: 0; pointer-events: none; }
+  :global(.intro .flier) {
+    position: absolute; left: 0; top: 0;
+    font-family: var(--font-display); font-weight: 900; font-stretch: 118%; letter-spacing: -0.02em; line-height: normal; white-space: nowrap;
+    transform-origin: 50% 50%; opacity: 0; color: color-mix(in srgb, var(--world-fg) 70%, transparent);
+  }
+  :global(.intro .flier.label) { opacity: 1; transition: opacity 0.45s var(--ease-out), transform 0.45s var(--ease-out); }
+  :global(.intro .flier.go) { opacity: 1; color: var(--world-fg); transition: transform 0.85s var(--ease-in-out), color 0.8s var(--ease-in-out); }
+  :global(.intro .flier.done) { opacity: 0; transition: none; }
+
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  button {
+    min-height: 48px; padding: 0 22px; border-radius: 999px;
+    border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+    background: transparent; color: inherit; font: 600 15px var(--font-body); cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--t-press) var(--ease-out), border-color var(--t-hover) ease;
+  }
+  button:active { transform: scale(0.97); }
+  .primary { background: var(--world-fg); color: var(--world-bg); border-color: var(--world-fg); }
+  .skip {
+    position: absolute;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    min-height: 44px; font-size: 14px; padding: 0 16px;
+  }
+  @media (hover: hover) and (pointer: fine) { button:hover { border-color: currentColor; } }
+  @media (prefers-reduced-motion: reduce) {
+    .name, .latin, :global(.intro .c), :global(.intro .lastwrap), :global(.intro .last), :global(.intro .flier.go) { transition-duration: 0.2s; }
+  }
+</style>

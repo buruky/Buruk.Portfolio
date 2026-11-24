@@ -1,10 +1,10 @@
 ---
 import Base from "@/layouts/Base.astro";
-import Gate from "@/components/Gate.astro";
+import Intro from "@/components/Intro.astro";
 import StandIn from "@/components/StandIn.astro";
 import site from "@/lib/site";
 ---
 <Base>
-  <Gate slot="before" />
+  <Intro slot="before" />
   <StandIn lines={["Good", "morning."]} note={site.profile.intro} />
 </Base>

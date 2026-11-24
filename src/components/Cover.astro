@@ -65,6 +65,8 @@
     ev.loader = async () => { await Promise.all([floodIn(to, later), load()]); };
   });
 
+  document.addEventListener("bk:intro-reveal", reveal);
+
   document.addEventListener("astro:page-load", () => {
     reveal();
     if (busy) void hideCover().then(finish);

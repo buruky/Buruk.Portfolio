@@ -51,8 +51,8 @@ Claude uses its design and motion skills and research tools at each step, not ju
 
 ## Phase 3: Home
 
-- [ ] **3.1 Intro, for real.** Port the Ge'ez prototype with the chosen fonts, colours and sounds.
-- [ ] **3.2 Intro → nav.** The name shrinks into the logo, and ቡሩኽ becomes the monogram.
+- [x] **3.1 Intro, for real.** Port the Ge'ez prototype with the chosen fonts, colours and sounds.
+- [x] **3.2 Intro → nav.** The name shrinks into the logo, and ቡሩኽ becomes the monogram.
 - [ ] **3.3 After the name.** The motion piece that shows your different directions.
 - [ ] **3.4 The rest of home.** Ways into Work, About and BKWS.
 
