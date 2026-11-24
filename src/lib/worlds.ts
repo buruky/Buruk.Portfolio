@@ -14,6 +14,12 @@ export const WORLD_BG: Record<World, string> = {
   sunset: "#b83a36", night: "#0b1433", midnight: "#070612", bkws: "#ede7dd",
 };
 
+/** The sound each world makes as you arrive (docs/sound-kit.md). */
+export const WORLD_SOUND = {
+  morning: "sunrise", noon: "blinds", afternoon: "paper", golden: "shadow", dusk: "shadow",
+  bkws: "crt", sunset: "iris", night: "dissolve", midnight: "tear",
+} as const satisfies Record<World, string>;
+
 const ROUTES: Array<[prefix: string, world: World]> = [
   ["/work", "noon"],
   ["/education", "afternoon"],

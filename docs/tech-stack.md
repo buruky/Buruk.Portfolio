@@ -11,7 +11,7 @@ Nothing is installed yet. Exact versions get pinned when we set up the project i
 | Smooth scroll | **Lenis** | Light, works with GSAP, keeps native scrolling underneath. Turned off for reduced motion. |
 | Shaders / glitch | **OGL** | A small WebGL library for grain, RGB split, the CRT look and the chapter 07 glitch. |
 | 3D (only if needed) | **Three.js**, loaded only on the page that uses it | Much bigger. Only worth it if we decide on a real 3D object. |
-| Sound | **Howler.js** | Small, plays short sound files, handles mobile audio quirks, packs many sounds into one file. |
+| Sound | **Web Audio API** (built into browsers), sounds generated live | Changed in step 2.3: the approved Glass kit is generated in the browser, so there are no audio files to download and no extra library. |
 | Styling | **Plain CSS** with design tokens | Full control for an unusual design. Colours, fonts and timings live in one tokens file. |
 | Language | **TypeScript** | You already use it. Catches mistakes in the animation code. |
 | Content | Keep **`content/site.json`**, plus **MDX** files for the long case studies | One source of truth stays. Long-form writing is easier to edit in MDX than in JSON. |
@@ -52,10 +52,12 @@ The trade-off is that animations must be cleaned up and restarted on each page c
 - Most of the effects you ticked are 2D shader work: grain, colour offset, glitch, the CRT screen into BKWS, and a shader background. OGL does these at a fraction of Three.js's size.
 - You also ticked "3D objects." If we pick one, Three.js loads **only on that page**, so the rest of the site stays light.
 
-### Howler.js for sound
+### Sound: generated live (changed in step 2.3)
 
-- Your sound brief is soft, clean and never overwhelming. That's best done with a small set of **designed sound files**, not generated beeps. The intro prototype's synthesised sounds were placeholders.
-- Howler is about 7 KB, handles iPhone audio unlocking, and can pack all the UI sounds into one file.
+- Originally planned: Howler.js playing short audio files.
+- Changed to: the Web Audio API generating the approved "Glass (original)" sounds live, from the same code as the draft kit (`src/lib/sound.ts`).
+- Why: zero audio downloads (good for phones), the exact sounds that were approved with nothing lost in conversion, one less library, and no licensing questions.
+- It still follows browser rules: nothing plays until the visitor taps "Enter with sound". After a reload, the first tap re-enables audio.
 
 ## Things this rules out (on purpose)
 

@@ -39,9 +39,8 @@ Draft to listen to: https://claude.ai/artifact/CddJTRFjsvB55ah7mtaLiA (variation
 - Sounds are synced to the visual moment they belong to.
 - The site must work equally well muted.
 
-## Producing the final files
+## How it's built
 
-The draft is synthesised in the browser. For the real site:
-1. Render each sound from the same synth settings into short audio files (`.webm`/Opus with an `.mp3` fallback), or rebuild them in a music app at higher quality.
-2. Pack the small UI sounds into one Howler.js sprite so they load as a single file.
-3. Free CC0 packs ([Kenney Interface Sounds](https://kenney.nl/assets/interface-sounds), [Kenney UI Audio](https://www.kenney.nl/assets/ui-audio)) are a fallback for any sound that's better recorded than synthesised (for example the paper swish).
+The sounds are generated live in the browser from `src/lib/sound.ts`, using the same Glass recipes as the draft kit. There are no audio files. Each world's arrival sound is mapped in `src/lib/worlds.ts` (`WORLD_SOUND`).
+
+If a sound ever needs to be recorded rather than generated (for example a real paper swish), free CC0 packs ([Kenney Interface Sounds](https://kenney.nl/assets/interface-sounds), [Kenney UI Audio](https://www.kenney.nl/assets/ui-audio)) are the fallback.

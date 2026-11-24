@@ -47,7 +47,7 @@ Claude uses its design and motion skills and research tools at each step, not ju
 
 - [x] **2.1 Project setup.** Content loads from `content/site.json`. A preview link you can open on your phone.
 - [x] **2.2 The shell.** Menu button, page transitions, sound toggle, skip-intro. Works on mobile from day one. Every page uses one shared colour flood for now; each page's unique entrance (docs/motion-language.md §4) is built in that page's step.
-- [ ] **2.3 Sound files.** Render the Glass kit (docs/sound-kit.md) into real audio files and connect them, so the menu, gate and transitions make sound.
+- [x] **2.3 Sound.** The Glass kit is generated live in the browser (no audio files) and connected: the Enter chord, the menu, the sound toggle, and each world's arrival sound.
 
 ## Phase 3: Home
 
