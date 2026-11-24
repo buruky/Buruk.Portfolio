@@ -2,6 +2,8 @@
 
 One step at a time. For each step, Claude builds or proposes one thing, you review it, and we only move on when you're happy. We work out the details of each step when we get to it, not before.
 
+**Where we are (2026-11-24):** Phases 0–2 done; Home steps 3.1–3.3 done (intro, intro → nav, "I build"). **Next up: 3.4, the rest of Home** (what's below "I build", plus the wind-through-grass pointer effect).
+
 **Status key:** `[ ]` not started · `[~]` in progress · `[x]` done
 
 **Where the brief lives:** your questionnaire answers and decisions are in Claude's memory. References are in [`content/inspo/`](content/inspo/README.md). The intro prototype is at https://claude.ai/artifact/633aYbMJfikoh9BQiuhZs9.
