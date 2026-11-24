@@ -1,0 +1,322 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #ebe7df;
+  font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.showcase {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 2rem;
+}
+
+/*
+  Everything inside the folder is laid out in Figma's native pixels (707×532 folder)
+  and scaled down as one piece by --s, so the numbers below match the Figma file.
+*/
+
+/* ---------- the button ---------- */
+
+.folder {
+  --s: 0.6;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  position: relative;
+  display: block;
+  width: calc(707px * var(--s));
+  height: calc(532px * var(--s));
+  /* room above for the files to rise into */
+  margin-top: calc(260px * var(--s));
+  border-radius: calc(46px * var(--s));
+  transition: scale 160ms var(--ease-out);
+}
+
+.folder:active {
+  scale: 0.97;
+}
+
+.folder:focus-visible {
+  outline: 3px solid #3a3330;
+  outline-offset: 10px;
+}
+
+@media (max-width: 560px) {
+  .folder {
+    --s: 0.45;
+  }
+}
+
+.folder-scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 707px;
+  height: 532px;
+  transform: scale(var(--s));
+  transform-origin: 0 0;
+  perspective: 1800px;
+  perspective-origin: 50% 100%;
+}
+
+.back-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 18px 30px rgb(80 60 20 / 0.18));
+}
+
+/* ---------- files ---------- */
+
+/* Tall window so files can rise above the folder but never poke out the bottom. */
+.files-clip {
+  position: absolute;
+  inset: -320px 0 0 0;
+  overflow: hidden;
+  /* keep the cards' own z-index from escaping in front of the glass */
+  isolation: isolate;
+}
+
+.file-card {
+  --x: 0px;
+  --rest: 0deg;
+  --fan: 0deg;
+  --peek: 0px;
+  position: absolute;
+  top: 375px;
+  left: var(--x);
+  display: flex;
+  flex-direction: column;
+  width: 220px;
+  padding: 10px 10px 14px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.08),
+    0 10px 28px rgb(60 45 20 / 0.18);
+  text-align: left;
+  rotate: var(--rest);
+  transition:
+    translate 460ms var(--ease-out),
+    rotate 460ms var(--ease-out);
+}
+
+.file-card img {
+  width: 100%;
+  height: 170px;
+  border-radius: 9px;
+  object-fit: cover;
+}
+
+/* portrait photo: keep the face in frame */
+.file-one img {
+  object-position: 50% 30%;
+}
+
+.file-two img {
+  object-position: 50% 75%;
+}
+
+.file-title {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #2b2523;
+}
+
+.file-detail {
+  margin-top: 2px;
+  font-size: 15px;
+  color: #8d8580;
+}
+
+.file-one {
+  --x: 45px;
+  --rest: -6deg;
+  --fan: -13deg;
+  --peek: -180px;
+}
+
+.file-two {
+  --x: 250px;
+  --rest: 1deg;
+  --fan: 2deg;
+  --peek: -205px;
+  z-index: 1;
+  transition-delay: 30ms;
+}
+
+.file-three {
+  --x: 450px;
+  --rest: 7deg;
+  --fan: 14deg;
+  --peek: -185px;
+  transition-delay: 60ms;
+}
+
+/* ---------- front glass ---------- */
+
+.front-glass {
+  position: absolute;
+  left: 1px;
+  bottom: 0;
+  width: 705.34px;
+  height: 410.757px;
+  transform-origin: 50% 100%;
+  transform: rotateX(-26deg);
+  transition: transform 460ms var(--ease-out);
+}
+
+.glass-blur {
+  position: absolute;
+  inset: 0;
+  clip-path: path(
+    "M0 45.6397C0 20.4341 20.4341 0 45.6397 0H244.795C298.732 0 302.881 66.385 356.819 66.385H659.701C684.906 66.385 705.34 86.8191 705.34 112.025V365.117C705.34 390.323 684.906 410.757 659.701 410.757H45.6397C20.4341 410.757 0 390.323 0 365.117V45.6397Z"
+  );
+  backdrop-filter: blur(10.37px);
+  -webkit-backdrop-filter: blur(10.37px);
+}
+
+.glass-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---------- open state: hover (real pointers only) and keyboard focus ---------- */
+
+@media (hover: hover) and (pointer: fine) {
+  .folder:hover .file-card {
+    translate: 0 var(--peek);
+    rotate: var(--fan);
+  }
+
+  .folder:hover .front-glass {
+    transform: rotateX(-36deg);
+  }
+}
+
+.folder:focus-visible .file-card {
+  translate: 0 var(--peek);
+  rotate: var(--fan);
+}
+
+.folder:focus-visible .front-glass {
+  transform: rotateX(-36deg);
+}
+
+.folder:active .file-card {
+  translate: 0 calc(var(--peek) * 0.6);
+  transition-duration: 160ms;
+  transition-delay: 0ms;
+}
+
+/* ---------- label + stickers (ride on the glass) ---------- */
+
+.folder-label {
+  position: absolute;
+  left: 44px;
+  bottom: 38px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.label-title {
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #2b2523;
+}
+
+.label-date {
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #8d8580;
+  font-variant-numeric: tabular-nums;
+}
+
+.stickers > * {
+  position: absolute;
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.16));
+}
+
+.star-sticker {
+  right: 64px;
+  top: 78px;
+  width: 142px;
+  height: 133px;
+  rotate: 10deg;
+}
+
+.star-backing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.star-art {
+  position: absolute;
+  inset: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  object-fit: contain;
+}
+
+.mushroom-sticker {
+  left: 330px;
+  top: 150px;
+  width: 128px;
+  rotate: -12deg;
+}
+
+.nineties-sticker {
+  right: 26px;
+  bottom: 14px;
+  width: 182px;
+  rotate: 6deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folder,
+  .file-card,
+  .front-glass {
+    transition: none;
+  }
+}
