@@ -1,0 +1,5 @@
+/* Self-hosted fonts (step 1.1). */
+@import "@fontsource-variable/anybody/standard.css";        /* display: width 50–150, weight 100–900 */
+@import "@fontsource-variable/hanken-grotesk/wght.css";     /* body */
+@import "@fontsource-variable/martian-mono/standard.css";   /* small labels, numbers */
+@import "@fontsource/abyssinica-sil/ethiopic-400.css";      /* Ge'ez: ቡሩኽ */

@@ -1,0 +1,12 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist", "playground"],
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "paths": {
+      "@content/*": ["./content/*"],
+      "@/*": ["./src/*"]
+    }
+  }
+}

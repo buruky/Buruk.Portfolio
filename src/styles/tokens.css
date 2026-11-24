@@ -1,0 +1,53 @@
+/*
+  Design tokens. Every colour, font and motion value on the site comes from here.
+  Colour: "time of day" worlds (step 1.2). Motion: docs/motion-language.md (step 1.3).
+*/
+:root {
+  /* Type */
+  --font-display: "Anybody Variable", "Arial Narrow", sans-serif;
+  --font-body: "Hanken Grotesk Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Martian Mono Variable", ui-monospace, Menlo, monospace;
+  --font-geez: "Abyssinica SIL", "Nyala", serif;
+
+  /* Story thread */
+  --thread: #ff4a3d;
+
+  /* Motion: curves */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Motion: durations */
+  --t-press: 120ms;
+  --t-hover: 160ms;
+  --t-ui: 220ms;
+  --t-panel: 320ms;
+  --t-reveal: 700ms;
+  --t-stagger: 40ms;
+  --t-flood: 450ms;
+  --t-glitch: 400ms;
+
+  /* Default world: morning */
+  --world-bg: #2f5d3a;
+  --world-fg: #eef6e4;
+  --world-accent: #f2d36b;
+}
+
+/* Each page sets data-world on <html>; its colours follow. */
+[data-world="morning"]   { --world-bg: #2f5d3a; --world-fg: #eef6e4; --world-accent: #f2d36b; }  /* Home */
+[data-world="noon"]      { --world-bg: #1e5bd8; --world-fg: #ffffff; --world-accent: #ffffff; }  /* Work */
+[data-world="afternoon"] { --world-bg: #cfdcb8; --world-fg: #1d2a14; --world-accent: #1d2a14; }  /* Education, Skills, Resume */
+[data-world="golden"]    { --world-bg: #e39a2c; --world-fg: #1d1204; --world-accent: #1d1204; }  /* About: Asmara */
+[data-world="dusk"]      { --world-bg: #3a2a7a; --world-fg: #f0ecff; --world-accent: #ff8a6b; }  /* About: the leap */
+[data-world="sunset"]    { --world-bg: #b83a36; --world-fg: #ffffff; --world-accent: #ffffff; }  /* Contact */
+[data-world="night"]     { --world-bg: #0b1433; --world-fg: #f3f0d8; --world-accent: #f3d77a; }  /* Research */
+[data-world="midnight"]  { --world-bg: #070612; --world-fg: #ecebff; --world-accent: #ff4a3d; }  /* Chapter 07, 404 */
+[data-world="bkws"]      { --world-bg: #ede7dd; --world-fg: #1d1a18; --world-accent: #d57d3b; }  /* BK Web Studios: its own brand */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-reveal: 200ms;
+    --t-stagger: 0ms;
+    --t-flood: 200ms;
+  }
+}

@@ -1,0 +1,32 @@
+---
+import "@/styles/fonts.css";
+import "@/styles/tokens.css";
+import "@/styles/base.css";
+import site from "@/lib/site";
+
+export type World =
+  | "morning" | "noon" | "afternoon" | "golden" | "dusk"
+  | "sunset" | "night" | "midnight" | "bkws";
+
+interface Props {
+  title?: string;
+  description?: string;
+  world: World;
+}
+
+const { title, description = site.meta.description, world } = Astro.props;
+const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.meta.title;
+---
+<!doctype html>
+<html lang="en" data-world={world}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

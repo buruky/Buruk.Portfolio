@@ -45,7 +45,7 @@ Claude uses its design and motion skills and research tools at each step, not ju
 
 ## Phase 2: Skeleton
 
-- [ ] **2.1 Project setup.** Content loads from `content/site.json`. A preview link you can open on your phone.
+- [x] **2.1 Project setup.** Content loads from `content/site.json`. A preview link you can open on your phone.
 - [ ] **2.2 The shell.** Menu button, page transitions, sound toggle, skip-intro. Works on mobile from day one.
 
 ## Phase 3: Home

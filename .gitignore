@@ -44,3 +44,9 @@ content/inspo/*.png
 content/inspo/*.jpg
 content/inspo/*.jpeg
 content/inspo/*.webp
+
+# Astro
+node_modules/
+dist/
+.astro/
+.vercel/
