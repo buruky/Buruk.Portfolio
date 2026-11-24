@@ -8,8 +8,8 @@
   "profile": {
     "name": "Buruk Yimesgen",
     "tagline": "Software Engineer / Salesforce Developer / Data Scientist",
-    "bio": "I'm a recent Computer Science & Systems and Mathematics double major graduate from the University of Washington Tacoma (June 2026, 3.6 GPA). My work spans Salesforce/CRM development, full stack engineering, and data science, including research in quantum computing and NASA GRACE climate data. I'm looking for entry-level Software Engineer, Data Science, or Salesforce/CRM Developer roles.",
-    "intro": "Recent UW Tacoma Computer Science & Mathematics graduate working across Salesforce/CRM, full stack, and data science. Looking for entry-level Software Engineer, Data Science, or Salesforce/CRM Developer roles.",
+    "bio": "I'm a recent Computer Science & Systems and Mathematics double major graduate from the University of Washington (June 2026, 3.6 GPA). My work spans Salesforce/CRM development, full stack engineering, and data science, including research in quantum computing and NASA GRACE climate data. I'm looking for entry-level Software Engineer, Data Science, or Salesforce/CRM Developer roles.",
+    "intro": "Recent University of Washington Computer Science & Mathematics graduate working across Salesforce/CRM, full stack, and data science. Looking for entry-level Software Engineer, Data Science, or Salesforce/CRM Developer roles.",
     "email": "burukyimesgen@gmail.com",
     "github": "https://github.com/buruky",
     "linkedin": "https://www.linkedin.com/in/Buruk-Yimesgen/",
@@ -22,12 +22,59 @@
   },
   "currentRole": null,
   "education": {
-    "school": "University of Washington Tacoma",
+    "school": "University of Washington",
+    "campus": "Tacoma",
     "degree": "B.S., Computer Science & Systems and Mathematics (double major)",
     "gpa": "3.6",
     "honors": "Dean's List",
     "graduation": "June 2026"
   },
+  "experience": [
+    {
+      "role": "Freelance Salesforce Developer",
+      "org": "Eritrean Community Connections",
+      "location": "Remote",
+      "start": "March 2026",
+      "end": "Present",
+      "points": [
+        "Streamlined case intake from hours to minutes with a 9-stage lifecycle across 4 custom Salesforce objects.",
+        "Built Apex, Lightning Web Components and Visualforce functionality for a case management app used daily by 10 staff across 3 roles.",
+        "Architected a reusable multi-program framework (WAMAS, PRIME, Other) on Nonprofit Success Pack with configurable per-program eligibility.",
+        "Own maintenance and administration, including Salesforce dashboards that monitor case data."
+      ],
+      "project": "ecc-salesforce-case-management"
+    },
+    {
+      "role": "Computer Science Course Facilitator",
+      "org": "University of Washington",
+      "location": "Tacoma, WA",
+      "start": "January 2025",
+      "end": "March 2026",
+      "points": [
+        "Facilitated bi-weekly sessions in Discrete Math and Object-Oriented Programming for 70+ students; exam scores 10% above course averages.",
+        "Designed and delivered 30+ problem sets, coding challenges and group exercises across 5 quarters.",
+        "Raised student engagement 35% (bi-weekly course evaluations) by acting on student suggestions."
+      ]
+    },
+    {
+      "role": "Data Science Research Program",
+      "org": "North Carolina A&T State University",
+      "location": "Greensboro, NC",
+      "start": "May 2024",
+      "end": "July 2024",
+      "points": [
+        "XGBoost reached 2.25× lower MSE than the other models among 5 benchmarked (XGBoost, deep neural networks, GLM) across multiple imputation techniques.",
+        "Analyzed 15+ years and 10,000+ data points of NASA GRACE satellite water-distribution data in R and Python."
+      ],
+      "project": "nasa-grace-climate-research"
+    }
+  ],
+  "activities": [
+    {
+      "name": "ICPC",
+      "description": "Competitive programming (International Collegiate Programming Contest)."
+    }
+  ],
   "skillGroups": [
     {
       "category": "Languages",

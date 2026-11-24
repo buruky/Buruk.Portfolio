@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Reference images are other people's work: keep them local, don't publish them
+content/inspo/*.png
+content/inspo/*.jpg
+content/inspo/*.jpeg
+content/inspo/*.webp
