@@ -1,0 +1,80 @@
+---
+// The colour flood between worlds. Persists across pages; driven by the transition engine below.
+---
+<div id="cover" class="cover" aria-hidden="true" hidden transition:persist="site-cover"></div>
+
+<script>
+  import { navigate } from "astro:transitions/client";
+  import { worldFor, WORLD_TIME } from "@/lib/worlds";
+
+  const EO = "cubic-bezier(0.23, 1, 0.32, 1)";
+  const EIO = "cubic-bezier(0.77, 0, 0.175, 1)";
+  const cover = document.getElementById("cover")!;
+  const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let busy = false;
+  let pending: string | null = null;
+  let safety = 0;
+
+  function floodIn(world: string, later: boolean): Promise<unknown> {
+    cover.dataset.world = world;
+    cover.hidden = false;
+    if (reduce()) {
+      return cover.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "ease", fill: "forwards" }).finished;
+    }
+    // Later in the day floods down from the top (night falling); earlier rises from the bottom (sunrise).
+    const from = later ? "inset(0 0 100% 0)" : "inset(100% 0 0 0)";
+    return cover.animate([{ clipPath: from, opacity: 1 }, { clipPath: "inset(0 0 0 0)", opacity: 1 }], { duration: 450, easing: EIO, fill: "forwards" }).finished;
+  }
+
+  function hideCover(): Promise<void> {
+    if (cover.hidden) return Promise.resolve();
+    return cover.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: "ease", fill: "forwards" }).finished.then(() => {
+      cover.getAnimations().forEach((a) => a.cancel());
+      cover.hidden = true;
+    });
+  }
+
+  /** Headings marked data-reveal rise line by line (motion tier: reveal). Content is visible without this. */
+  function reveal() {
+    const lines = document.querySelectorAll<HTMLElement>("[data-reveal] .ln > span");
+    lines.forEach((el, i) => {
+      if (reduce()) { el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "ease" }); return; }
+      el.animate([{ transform: "translateY(105%)" }, { transform: "translateY(0)" }], { duration: 700, delay: i * 40, easing: EO, fill: "backwards" });
+    });
+  }
+
+  function finish() {
+    window.clearTimeout(safety);
+    busy = false;
+    if (pending) { const next = pending; pending = null; void navigate(next); }
+  }
+
+  document.addEventListener("astro:before-preparation", (ev) => {
+    if (ev.from.pathname === ev.to.pathname) return; // same page (e.g. hash links)
+    if (busy) { ev.preventDefault(); pending = ev.to.href; return; } // queue instead of breaking the flood
+    busy = true;
+    window.clearTimeout(safety);
+    safety = window.setTimeout(() => { busy = false; void hideCover(); }, 6000); // never get stuck
+    document.dispatchEvent(new CustomEvent("bk:navigate"));
+    const from = worldFor(ev.from.pathname);
+    const to = worldFor(ev.to.pathname);
+    const later = WORLD_TIME[to] >= WORLD_TIME[from];
+    const load = ev.loader;
+    ev.loader = async () => { await Promise.all([floodIn(to, later), load()]); };
+  });
+
+  document.addEventListener("astro:page-load", () => {
+    reveal();
+    if (busy) void hideCover().then(finish);
+  });
+</script>
+
+<style>
+  .cover {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: var(--world-bg);
+    pointer-events: auto;
+  }
+</style>

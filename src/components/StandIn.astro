@@ -1,0 +1,35 @@
+---
+// Temporary page body for step 2.2. Each real page replaces this in later steps.
+interface Props { lines: string[]; note?: string }
+const { lines, note } = Astro.props;
+---
+<main id="main" class="stand">
+  <h1 data-reveal>
+    {lines.map((l) => <span class="ln"><span>{l}</span></span>)}
+  </h1>
+  {note && <p>{note}</p>}
+  <p class="small">Stand-in page (step 2.2). Open the menu and move between pages to feel the transitions.</p>
+</main>
+
+<style>
+  .stand {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: calc(env(safe-area-inset-top, 0px) + 96px) max(20px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 40px) max(20px, env(safe-area-inset-left, 0px));
+    max-width: 1200px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-stretch: 118%;
+    font-size: clamp(48px, 11vw, 128px);
+    line-height: 0.92;
+    margin: 0;
+    text-wrap: balance;
+  }
+  p { margin: 0; max-width: 60ch; font-size: 18px; }
+  .small { font-size: 14px; opacity: 0.75; }
+</style>

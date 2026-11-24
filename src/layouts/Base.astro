@@ -1,32 +1,40 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import "@/styles/fonts.css";
 import "@/styles/tokens.css";
 import "@/styles/base.css";
 import site from "@/lib/site";
-
-export type World =
-  | "morning" | "noon" | "afternoon" | "golden" | "dusk"
-  | "sunset" | "night" | "midnight" | "bkws";
+import { worldFor, WORLD_BG, type World } from "@/lib/worlds";
+import Header from "@/components/Header.astro";
+import Menu from "@/components/Menu.astro";
+import Cover from "@/components/Cover.astro";
 
 interface Props {
   title?: string;
   description?: string;
-  world: World;
+  world?: World;
 }
 
-const { title, description = site.meta.description, world } = Astro.props;
+const { title, description = site.meta.description } = Astro.props;
+const world = Astro.props.world ?? worldFor(Astro.url.pathname);
 const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.meta.title;
 ---
 <!doctype html>
-<html lang="en" data-world={world}>
+<html lang="en" data-world={world} transition:animate="none">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content={WORLD_BG[world]} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <ClientRouter fallback="none" />
   </head>
   <body>
+    <slot name="before" />
+    <Header />
+    <Menu />
+    <Cover />
     <slot />
   </body>
 </html>

@@ -1,0 +1,97 @@
+---
+// Persists across pages: the logo, sound toggle and menu button never reload.
+---
+<header class="hdr" transition:persist="site-header">
+  <a class="logo" href="/" aria-label="Buruk Yimesgen, home">
+    <span class="mono" lang="ti" aria-hidden="true">ቡሩኽ</span>
+    <span class="name" aria-hidden="true">Buruk Yimesgen</span>
+  </a>
+  <div class="actions">
+    <button type="button" class="pill" data-sound-toggle aria-pressed="false">
+      <span class="dot" aria-hidden="true"></span><span data-sound-label>Sound off</span>
+    </button>
+    <button type="button" class="pill menu-btn" data-menu-button aria-expanded="false" aria-controls="site-menu">
+      <span data-menu-label>Menu</span>
+    </button>
+  </div>
+</header>
+
+<script>
+  import { isSoundOn, setSound, onSoundChange, play } from "@/lib/sound";
+
+  const btn = document.querySelector<HTMLButtonElement>("[data-sound-toggle]")!;
+  const label = btn.querySelector<HTMLElement>("[data-sound-label]")!;
+  function render(on: boolean) {
+    btn.setAttribute("aria-pressed", String(on));
+    label.textContent = on ? "Sound on" : "Sound off";
+  }
+  render(isSoundOn());
+  onSoundChange(render);
+  btn.addEventListener("click", () => {
+    const on = !isSoundOn();
+    setSound(on);
+    if (on) play("toggle");
+  });
+</script>
+
+<style>
+  .hdr {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) max(16px, env(safe-area-inset-right, 0px)) 14px max(16px, env(safe-area-inset-left, 0px));
+    color: var(--world-fg);
+    pointer-events: none;
+  }
+  .hdr > * { pointer-events: auto; }
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    color: inherit;
+    text-decoration: none;
+    min-height: 44px;
+    align-items: center;
+  }
+  .mono { font-family: var(--font-geez); font-size: 26px; line-height: 1; }
+  .name {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-stretch: 120%;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .actions { display: flex; gap: 8px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+    background: color-mix(in srgb, var(--world-bg) 70%, transparent);
+    color: inherit;
+    font: 600 14px var(--font-body);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color var(--t-hover) ease, background-color var(--t-hover) ease, transform var(--t-press) var(--ease-out);
+  }
+  .pill:active { transform: scale(0.97); }
+  @media (hover: hover) and (pointer: fine) { .pill:hover { border-color: currentColor; } }
+  .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; }
+  [aria-pressed="true"] .dot { background: currentColor; }
+  /* With the menu open, the header sits on the inverted panel, so flip its colours too. */
+  :global(html.menu-open) .hdr { color: var(--world-bg); }
+  :global(html.menu-open) .pill { background: transparent; }
+  .hdr { transition: color var(--t-panel) var(--ease-drawer); }
+  @media (max-width: 480px) {
+    .name { display: none; }
+    [data-sound-toggle] { padding: 0 14px; }
+  }
+</style>

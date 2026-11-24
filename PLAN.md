@@ -46,7 +46,8 @@ Claude uses its design and motion skills and research tools at each step, not ju
 ## Phase 2: Skeleton
 
 - [x] **2.1 Project setup.** Content loads from `content/site.json`. A preview link you can open on your phone.
-- [ ] **2.2 The shell.** Menu button, page transitions, sound toggle, skip-intro. Works on mobile from day one.
+- [x] **2.2 The shell.** Menu button, page transitions, sound toggle, skip-intro. Works on mobile from day one. Every page uses one shared colour flood for now; each page's unique entrance (docs/motion-language.md §4) is built in that page's step.
+- [ ] **2.3 Sound files.** Render the Glass kit (docs/sound-kit.md) into real audio files and connect them, so the menu, gate and transitions make sound.
 
 ## Phase 3: Home
 
