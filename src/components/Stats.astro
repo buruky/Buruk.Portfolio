@@ -1,0 +1,142 @@
+---
+// "By the numbers" (after stanzza.design's About section): three tiles, one lit at a time. The first is lit when the
+// section comes into view; hovering (or tapping, or tabbing to) another lights it instead, and it stays lit after the
+// pointer leaves. The lit tile fills with its photo (revealed from the bottom). All three numbers count up together
+// when the section first comes into view.
+// Without JS it's a plain grid with every photo showing. Reduced motion: no count-up, the photo just appears.
+import { Image } from "astro:assets";
+// Photos used nowhere else on the page; sources and licenses in content/media/CREDITS.md
+import chalkboard from "@content/media/images/about/chalkboard.jpg";
+import suzzallo from "@content/media/images/about/suzzallo-library.jpg";
+import graceFo from "@content/media/images/about/grace-fo-launch.jpg"; // the GRACE-FO launch, May 2018
+
+const STATS = [
+  { value: 2, decimals: 0, label: "Majors", note: "Computer Science & Mathematics", img: chalkboard, pos: "35% 30%" },
+  { value: 3.6, decimals: 1, label: "GPA", note: "University of Washington", img: suzzallo, pos: "50% 40%" },
+  { value: 2, decimals: 0, label: "Research papers", note: "Quantum computing · NASA GRACE", img: graceFo, pos: "50% 30%" },
+];
+---
+<section class="stats" aria-labelledby="stats-title" data-stats style={`--n: ${STATS.length}`}>
+  <div class="inner">
+    <h2 id="stats-title" data-reveal><span class="ln"><span>By the numbers.</span></span></h2>
+    <ol class="tiles">
+      {STATS.map((s) => (
+        <li class="tile" data-tile tabindex="0" aria-label={`${s.label}: ${s.value.toFixed(s.decimals)}. ${s.note}`}>
+          <div class="photo" aria-hidden="true">
+            <Image src={s.img} alt="" widths={[400, 700]} sizes="(max-width: 760px) 92vw, 32vw" style={`object-position: ${s.pos}`} />
+          </div>
+          <span class="label">{s.label}</span>
+          <span class="note">{s.note}</span>
+          <span class="num" data-value={s.value} data-decimals={s.decimals}>{s.value.toFixed(s.decimals)}</span>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<script>
+  function init() {
+    const found = document.querySelector<HTMLElement>("[data-stats]");
+    if (!found || found.dataset.bound) return;
+    found.dataset.bound = "1";
+    const section: HTMLElement = found;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    section.classList.add("interactive");
+    const tiles = Array.from(section.querySelectorAll<HTMLElement>("[data-tile]"));
+    const counted = new Set<number>();
+    const ac = new AbortController();
+    const on = { signal: ac.signal };
+    document.addEventListener("astro:before-swap", () => ac.abort(), { once: true });
+
+    function count(i: number) {
+      if (counted.has(i)) return;
+      counted.add(i);
+      const el = tiles[i].querySelector<HTMLElement>("[data-value]")!;
+      const to = parseFloat(el.dataset.value!), dec = parseInt(el.dataset.decimals!, 10);
+      if (reduce) { el.textContent = to.toFixed(dec); return; }
+      const start = performance.now(), dur = 900;
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - t, 3);
+        el.textContent = (to * e).toFixed(dec);
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    let at = -1;
+    function light(i: number) {
+      if (i === at) return;
+      at = i;
+      tiles.forEach((t, k) => t.classList.toggle("on", k === i));
+    }
+
+    // numbers start at 0 so they have something to count up from (the aria-label carries the real value)
+    tiles.forEach((t) => { t.querySelector<HTMLElement>("[data-value]")!.textContent = "0"; });
+    tiles.forEach((t, i) => {
+      t.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") light(i); }, on);
+      t.addEventListener("click", () => light(i), on); // touch: tap to light
+      t.addEventListener("focus", () => light(i), on);
+    });
+    // the first tile lights up once the section is on screen
+    const io = new IntersectionObserver((es) => {
+      if (es.some((e) => e.isIntersecting) && at < 0) { light(0); tiles.forEach((_, k) => count(k)); io.disconnect(); }
+    }, { threshold: 0.4 });
+    io.observe(section.querySelector(".tiles")!);
+    ac.signal.addEventListener("abort", () => io.disconnect());
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .stats { position: relative; z-index: 1; }
+  .inner {
+    padding: clamp(56px, 10vh, 110px) max(20px, env(safe-area-inset-right, 0px)) clamp(56px, 10vh, 110px) max(20px, env(safe-area-inset-left, 0px));
+    display: flex; flex-direction: column; justify-content: center; gap: clamp(24px, 5vh, 48px);
+  }
+  h2 {
+    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(40px, 6vw, 80px); line-height: 0.95;
+    text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
+  }
+
+  .tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px); }
+  .tile {
+    position: relative; overflow: hidden; isolation: isolate;
+    aspect-ratio: 4 / 5; border-radius: 14px;
+    display: flex; flex-direction: column; padding: clamp(16px, 1.8vw, 26px);
+    background: color-mix(in srgb, var(--world-fg) 6%, transparent);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+    transition: box-shadow 500ms var(--ease-out), translate 500ms var(--ease-out);
+    cursor: default; outline: none;
+  }
+  .tile:focus-visible { box-shadow: 0 0 0 2px var(--world-fg); }
+  .label { font: 600 clamp(15px, 1.3vw, 19px) var(--font-body); opacity: 0.55; transition: opacity 500ms var(--ease-out); }
+  .note { margin-top: 4px; font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0; transition: opacity 500ms var(--ease-out); }
+  .num {
+    margin-top: auto; font-family: var(--font-display); font-weight: 900; font-stretch: 112%;
+    font-size: clamp(56px, 8vw, 132px); line-height: 0.85; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+    opacity: 0.28; transition: opacity 500ms var(--ease-out);
+  }
+
+  /* The photo: hidden below the tile, rises into place when the tile is active, darkened so the text stays readable */
+  .photo { position: absolute; inset: 0; z-index: -1; clip-path: inset(100% 0 0 0); transition: clip-path 800ms var(--ease-in-out); }
+  .photo :global(img) { width: 100%; height: 100%; object-fit: cover; scale: 1.12; transition: scale 1200ms var(--ease-out); }
+  .photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(10 24 14 / 0.55), rgb(10 24 14 / 0.15) 40%, rgb(10 24 14 / 0.7)); }
+
+  .tile.on, .stats:not(.interactive) .tile { box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.6); }
+  .tile.on { translate: 0 -6px; } /* the lit tile lifts slightly */
+  .tile.on .photo, .stats:not(.interactive) .photo { clip-path: inset(0 0 0 0); }
+  .tile.on .photo :global(img), .stats:not(.interactive) .photo :global(img) { scale: 1; }
+  .tile.on :is(.label, .note, .num), .stats:not(.interactive) .tile :is(.label, .note, .num) { opacity: 1; }
+  .tile.on .num, .stats:not(.interactive) .num { text-shadow: 0 0.06em 0.3em rgb(0 0 0 / 0.35); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .photo, .photo :global(img), .tile { transition-duration: 1ms; }
+  }
+  @media (max-width: 760px) {
+    /* phones: stacked wide tiles, label top-left and number bottom-left as on desktop */
+    .tiles { grid-template-columns: 1fr; }
+    .tile { aspect-ratio: 2 / 1; }
+    .num { font-size: 15vw; }
+    .note { display: none; }
+  }
+</style>

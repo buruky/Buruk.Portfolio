@@ -8,6 +8,7 @@ import StoryTeaser from "@/components/StoryTeaser.astro";
 import BkwsDoorway from "@/components/BkwsDoorway.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
 import HeroBackdrop from "@/components/HeroBackdrop.astro";
+import Stats from "@/components/Stats.astro";
 
 // "I build ____." The line fills itself in and cycles through the topics until the visitor picks one (step 3.3).
 // Nothing changes size: "I build" always spans the width, and every topic fills one line of the same
@@ -45,6 +46,7 @@ const TOPICS = [
    </div>
     <div class="hillside">
       <StoryTeaser />
+      <Stats />
       <FeaturedWork />
       <BkwsDoorway />
       <SiteFooter />

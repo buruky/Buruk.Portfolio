@@ -4,6 +4,7 @@
 // behind its card. The thread draws as you scroll and keeps going past the last card: the story isn't finished.
 // Copy is a draft; the real chapters are written in step 4.1. Photo credits: content/media/CREDITS.md.
 import { Image } from "astro:assets";
+import { ERITREA } from "@/lib/eritrea";
 import asmara from "@content/media/images/about/asmara-harnet-avenue.jpg";
 import campus from "@content/media/images/about/uw-tacoma-campus.jpg"; // Seattle itself is the hero's horizon
 import suit from "@content/media/images/about/dressed-up.jpg";
@@ -36,6 +37,16 @@ const CHAPTERS = [
             )}
           </div>
         </div>
+        {c.id === "asmara" && (
+          <svg class="map" viewBox={`-40 -40 ${ERITREA.width + 80} ${ERITREA.height + 80}`} aria-hidden="true">
+            {ERITREA.paths.map((d) => <path class="land" d={d} pathLength="1" />)}
+            <g class="pin" transform={`translate(${ERITREA.asmara.x} ${ERITREA.asmara.y})`}>
+              <circle class="pulse" r="14" />
+              <circle class="dot" r="11" />
+              <text class="pin-label" x="26" y="9">ASMARA</text>
+            </g>
+          </svg>
+        )}
         <div class="text">
           <span class="label">{c.label}</span>
           <h3>{c.title}</h3>
@@ -229,7 +240,27 @@ const CHAPTERS = [
 
   /* Chapters alternate sides; on wide screens the rows overlap so the zig-zag stays tight */
   .chapters { list-style: none; margin: 0 auto; padding: 0; max-width: 1100px; position: relative; z-index: 1; }
-  .chapter { display: flex; align-items: center; gap: clamp(24px, 4vw, 64px); }
+  .chapter { position: relative; display: flex; align-items: center; gap: clamp(24px, 4vw, 64px); }
+
+  /* Asmara: a line drawing of Eritrea in the space to the right, with a pin on the city.
+     The coastline draws itself as the chapter scrolls in (drawn in full without scroll-driven animation support). */
+  .map {
+    position: absolute; z-index: -1; right: 0; top: 50%; translate: 0 -62%;
+    width: clamp(240px, 24vw, 380px); height: auto; overflow: visible; pointer-events: none;
+  }
+  .land { fill: rgb(238 246 228 / 0.05); stroke: rgb(238 246 228 / 0.42); stroke-width: 2.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  .dot { fill: var(--thread); stroke: #2f5d3a; stroke-width: 4; }
+  .pulse { fill: none; stroke: var(--thread); stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: pulse 2.4s var(--ease-out) infinite; }
+  @keyframes pulse { from { scale: 1; opacity: 0.9; } to { scale: 3.4; opacity: 0; } }
+  .pin-label { font: 500 30px var(--font-mono); letter-spacing: 0.14em; fill: var(--world-fg); opacity: 0.85; }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .land { stroke-dasharray: 1; animation: coast linear both; animation-timeline: view(); animation-range: entry 0% cover 32%; }
+      .pin { animation: pin-in linear both; animation-timeline: view(); animation-range: cover 26% cover 34%; }
+    }
+  }
+  @keyframes coast { from { stroke-dashoffset: 1; fill-opacity: 0; } to { stroke-dashoffset: 0; fill-opacity: 1; } }
+  @keyframes pin-in { from { opacity: 0; } to { opacity: 1; } }
   .chapter.right { flex-direction: row-reverse; }
   .chapter + .chapter { margin-top: clamp(32px, 6vh, 64px); }
   @media (min-width: 900px) { .chapter + .chapter { margin-top: -90px; } }
@@ -306,12 +337,13 @@ const CHAPTERS = [
 
   /* Phones: one column, cards alternate a little left and right so the thread still winds */
   @media (max-width: 700px) {
+    .map { display: none; } /* phones: too small to read under the stacked card and text */
     .chapter, .chapter.right { flex-direction: column; align-items: flex-start; gap: 20px; }
     .chapter.right { align-items: flex-end; }
     .card-wrap { width: min(70vw, 300px); }
     .text, .right .text { max-width: none; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .story.ended .tip, .glitch, .glitchy :global(.tear) { animation: none; }
+    .story.ended .tip, .glitch, .glitchy :global(.tear), .pulse { animation: none; }
   }
 </style>
