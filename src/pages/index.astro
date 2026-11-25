@@ -7,6 +7,7 @@ import FeaturedWork from "@/components/FeaturedWork.astro";
 import StoryTeaser from "@/components/StoryTeaser.astro";
 import BkwsDoorway from "@/components/BkwsDoorway.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
+import HeroBackdrop from "@/components/HeroBackdrop.astro";
 
 // "I build ____." The line fills itself in and cycles through the topics until the visitor picks one (step 3.3).
 // Nothing changes size: "I build" always spans the width, and every topic fills one line of the same
@@ -22,6 +23,7 @@ const TOPICS = [
   <Intro slot="before" />
   <main id="main">
    <div class="home">
+    <HeroBackdrop />
     <div class="light" data-depth="0.35" aria-hidden="true"></div>
     <section class="build" aria-labelledby="build-title" data-build>
       <h1 id="build-title" class="sentence" data-depth="0.06">

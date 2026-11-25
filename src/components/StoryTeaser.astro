@@ -5,13 +5,13 @@
 // Copy is a draft; the real chapters are written in step 4.1. Photo credits: content/media/CREDITS.md.
 import { Image } from "astro:assets";
 import asmara from "@content/media/images/about/asmara-harnet-avenue.jpg";
-import seattle from "@content/media/images/about/seattle.jpg";
+import campus from "@content/media/images/about/uw-tacoma-campus.jpg"; // Seattle itself is the hero's horizon
 import suit from "@content/media/images/about/dressed-up.jpg";
 import snow from "@content/media/images/about/me.jpg";
 
 const CHAPTERS = [
   { id: "asmara", glow: "#f0a838", tilt: -3, label: "Where it starts", title: "Asmara, Eritrea", line: "Where I was born, and where the line starts.", img: asmara, pos: "50% 50%", caption: true },
-  { id: "leap", glow: "#8a6bff", tilt: 2.5, label: "The turning point", title: "The leap", line: "Told to pick another field. I picked two: Computer Science and Mathematics.", img: seattle, pos: "30% 50%" },
+  { id: "leap", glow: "#8a6bff", tilt: 2.5, label: "The turning point", title: "The leap", line: "Told to pick another field. I picked two: Computer Science and Mathematics.", img: campus, pos: "62% 50%" },
   { id: "now", glow: "#e0803c", tilt: -2, label: "Now", title: "BK Web Studios", line: "Freelancing for nonprofits turned into a studio of my own.", img: suit, pos: "50% 30%" },
 ];
 ---
