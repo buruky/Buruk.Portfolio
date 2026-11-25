@@ -298,6 +298,53 @@
         "position": "center",
         "aspect": "video"
       }
+    },
+    {
+      "slug": "galilee-afh",
+      "name": "Galilee Adult Family Home",
+      "lane": "Full Stack",
+      "description": "A website for Galilee, an adult family home in Mountlake Terrace, WA.",
+      "techStack": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Tailwind CSS"
+      ],
+      "role": "Freelance / commissioned developer",
+      "liveUrl": "https://galilee-afh.vercel.app",
+      "repoUrl": "https://github.com/buruky/galileeAFH",
+      "paperUrl": null,
+      "demoVideo": null,
+      "screenshot": {
+        "src": "images/screenshots/galilee-afh.png",
+        "fit": "cover",
+        "position": "top",
+        "aspect": "video"
+      }
+    },
+    {
+      "slug": "isaiah-cafe",
+      "name": "Isaiah Café",
+      "lane": "Full Stack",
+      "description": "A website for Isaiah Café, a breakfast, bakery and specialty coffee spot in NW Calgary.",
+      "techStack": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Tailwind CSS",
+        "Cloudflare"
+      ],
+      "role": "Freelance / commissioned developer",
+      "liveUrl": "https://www.isaiahcafe.com/",
+      "repoUrl": "https://github.com/buruky/isaiah-cafe-website",
+      "paperUrl": null,
+      "demoVideo": null,
+      "screenshot": {
+        "src": "images/screenshots/isaiah-cafe.png",
+        "fit": "cover",
+        "position": "center",
+        "aspect": "video"
+      }
     }
   ],
   "copy": {

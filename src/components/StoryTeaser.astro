@@ -1,0 +1,317 @@
+---
+// Home: "the short version" of the story (step 3.4). One background; the red thread winds down through
+// glossy, slightly tilted photo cards, one per chapter. Each chapter's world colour shows only as the glow
+// behind its card. The thread draws as you scroll and keeps going past the last card: the story isn't finished.
+// Copy is a draft; the real chapters are written in step 4.1. Photo credits: content/media/CREDITS.md.
+import { Image } from "astro:assets";
+import asmara from "@content/media/images/about/asmara-harnet-avenue.jpg";
+import seattle from "@content/media/images/about/seattle.jpg";
+import suit from "@content/media/images/about/dressed-up.jpg";
+import snow from "@content/media/images/about/me.jpg";
+
+const CHAPTERS = [
+  { id: "asmara", glow: "#f0a838", tilt: -3, label: "Where it starts", title: "Asmara, Eritrea", line: "Where I was born, and where the line starts.", img: asmara, pos: "50% 50%", caption: true },
+  { id: "leap", glow: "#8a6bff", tilt: 2.5, label: "The turning point", title: "The leap", line: "Told to pick another field. I picked two: Computer Science and Mathematics.", img: seattle, pos: "30% 50%" },
+  { id: "now", glow: "#e0803c", tilt: -2, label: "Now", title: "BK Web Studios", line: "Freelancing for nonprofits turned into a studio of my own.", img: suit, pos: "50% 30%" },
+];
+---
+<section class="story" aria-labelledby="story-title" data-story>
+  <h2 id="story-title" data-reveal data-thread-start><span class="ln"><span>The short version.</span></span></h2>
+  <svg class="thread" aria-hidden="true" preserveAspectRatio="none" data-thread>
+    <path class="line" data-thread-path />
+    <path class="tip" data-thread-tip />
+  </svg>
+
+  <ol class="chapters">
+    {CHAPTERS.map((c, i) => (
+      <li class={`chapter ${i % 2 ? "right" : "left"}`} data-stop style={`--glow: ${c.glow}; --tilt: ${c.tilt}deg`}>
+        <div class="card-wrap" data-anchor>
+          <div class="card" data-gloss="6">
+            <Image src={c.img} alt="" widths={[360, 540, 720]} sizes="(max-width: 700px) 70vw, 340px" style={`object-position: ${c.pos}`} />
+            {"caption" in c && (
+              <div class="caption" aria-hidden="true">
+                <span class="cap-geez" lang="ti">ኣስመራ</span>
+                <span class="cap-coords">15.33° N · 38.93° E</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div class="text">
+          <span class="label">{c.label}</span>
+          <h3>{c.title}</h3>
+          <p>{c.line}</p>
+        </div>
+      </li>
+    ))}
+    <li class="chapter right next" data-stop style="--glow: #ff4a3d; --tilt: 2deg">
+      <div class="card-wrap" data-anchor>
+        <div class="card glitchy" data-gloss="6">
+          <Image src={snow} alt="" widths={[360, 540, 720]} sizes="(max-width: 700px) 70vw, 340px" />
+          <Image class="tear" src={snow} alt="" widths={[360, 540, 720]} sizes="(max-width: 700px) 70vw, 340px" aria-hidden="true" />
+        </div>
+      </div>
+      <div class="text">
+        <span class="label glitch" aria-hidden="true">Next —</span>
+        <h3 class="static" data-static>
+          <span class="static-text">Still being written.</span>
+          <span class="static-noise" aria-hidden="true">Still being written.</span>
+        </h3>
+        <a class="go" href="/about">Read the whole story <span aria-hidden="true">→</span></a>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<script>
+  const fine = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+  // ---- The thread: winds from under the heading through the middle of every card, drawn by scroll ----
+  function thread(section: HTMLElement, signal: AbortSignal) {
+    const svg = section.querySelector<SVGSVGElement>("[data-thread]")!;
+    const path = section.querySelector<SVGPathElement>("[data-thread-path]")!;
+    const tip = section.querySelector<SVGPathElement>("[data-thread-tip]")!;
+    const head = section.querySelector<HTMLElement>("[data-thread-start]")!;
+    const stops = Array.from(section.querySelectorAll<HTMLElement>("[data-stop]"));
+    let len = 0, stopAt: number[] = [], raf = 0;
+
+    /** Length along the path where it reaches height y (the path only ever goes down). */
+    function lengthAtY(y: number) {
+      let lo = 0, hi = len;
+      for (let k = 0; k < 20; k++) { const m = (lo + hi) / 2; if (path.getPointAtLength(m).y < y) lo = m; else hi = m; }
+      return lo;
+    }
+
+    function build() {
+      const r = section.getBoundingClientRect();
+      const h = head.getBoundingClientRect();
+      // anchors are measured from layout boxes (offsetLeft/Top), so arrival animations and tilt don't move them
+      const boxes = stops.map((s) => {
+        const a = s.querySelector<HTMLElement>("[data-anchor]")!;
+        const t = a.style.translate; a.style.translate = "none";
+        const c = a.getBoundingClientRect(); a.style.translate = t;
+        return { x: c.left - r.left + c.width / 2, y: c.top - r.top + c.height / 2, top: c.top - r.top, bottom: c.bottom - r.top, left: c.left - r.left, right: c.right - r.left };
+      });
+      const narrow = r.width <= 700;
+      const curve = (x0: number, y0: number, x1: number, y1: number) => { const m = (y1 - y0) / 2; return ` C ${x0} ${y0 + m}, ${x1} ${y1 - m}, ${x1} ${y1}`; };
+      // start under the heading's first letter, then S-curves from card to card (vertical tangents, so it flows)
+      let px = Math.max(24, h.left - r.left + 14), py = h.bottom - r.top + 24;
+      let d = `M ${px} ${py}`;
+      boxes.forEach((b, i) => {
+        if (narrow && i > 0) {
+          // phones: the text under each card spans the width, so the thread drops down the screen edge beside it
+          const prev = boxes[i - 1];
+          const edge = prev.x < r.width / 2 ? 8 : r.width - 8;
+          d += curve(px, py, edge, prev.bottom + 30) + ` L ${edge} ${b.top - 30}`;
+          px = edge; py = b.top - 30;
+        }
+        d += curve(px, py, b.x, b.y); px = b.x; py = b.y;
+      });
+      const pts = boxes.map((b) => [b.x, b.y] as const);
+      path.setAttribute("d", d);
+      // past the last card the line keeps going, unsteadily, into what isn't written yet
+      const last = boxes[boxes.length - 1];
+      const out = narrow ? 120 : 140;
+      tip.setAttribute("d", `M ${px} ${py} L ${px} ${last.bottom - 10} C ${px} ${last.bottom + out * 0.4}, ${px - 30} ${last.bottom + out * 0.6}, ${px - 50} ${last.bottom + out}`);
+      svg.setAttribute("viewBox", `0 0 ${r.width} ${r.height}`);
+      len = path.getTotalLength();
+      stopAt = pts.map(([, y]) => lengthAtY(y));
+      path.style.strokeDasharray = `${len}`;
+      update();
+    }
+
+    function update() {
+      raf = 0;
+      const r = section.getBoundingClientRect();
+      const atBottom = scrollY + innerHeight >= document.documentElement.scrollHeight - 4;
+      // the tip of the thread follows a point 65% of the way down the screen
+      const drawn = reduced() || atBottom ? len : clamp(lengthAtY(innerHeight * 0.65 - r.top), 0, len);
+      path.style.strokeDashoffset = `${len - drawn}`;
+      stops.forEach((s, i) => s.classList.toggle("lit", drawn >= stopAt[i] - 2));
+      section.classList.toggle("ended", drawn >= len - 2);
+    }
+
+    addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true, signal });
+    const ro = new ResizeObserver(() => build());
+    ro.observe(section);
+    signal.addEventListener("abort", () => ro.disconnect());
+    (document.fonts?.ready ?? Promise.resolve()).then(build);
+  }
+
+  // ---- Cards drop into place (settling into their tilt) as they come into view ----
+  function arrive(section: HTMLElement, signal: AbortSignal) {
+    const wraps = section.querySelectorAll<HTMLElement>(".card-wrap");
+    if (reduced() || !("IntersectionObserver" in window)) return;
+    section.classList.add("will-arrive");
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      e.target.classList.add("in");
+    }), { rootMargin: "0px 0px -12% 0px" });
+    wraps.forEach((w) => io.observe(w));
+    signal.addEventListener("abort", () => io.disconnect());
+  }
+
+  // ---- "Still being written": text near the pointer fills with TV static, splits its colour and shakes ----
+  function staticFx(h: HTMLElement, signal: AbortSignal) {
+    const text = h.querySelector<HTMLElement>(".static-text")!;
+    const noise = h.querySelector<HTMLElement>(".static-noise")!;
+    const c = document.createElement("canvas");
+    c.width = c.height = 96;
+    const x = c.getContext("2d")!;
+    const img = x.createImageData(96, 96);
+    for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+    x.putImageData(img, 0, 0);
+    noise.style.backgroundImage = `url(${c.toDataURL()})`;
+    if (!fine() || reduced()) return;
+
+    let g = 0, target = 0, raf = 0, last = 0;
+    const loop = (t: number) => {
+      raf = 0;
+      g += (target - g) * 0.12;
+      if (g < 0.01 && target === 0) { h.style.transform = ""; text.style.textShadow = ""; noise.style.opacity = "0"; return; }
+      raf = requestAnimationFrame(loop);
+      if (t - last < 1000 / 24) return; // static runs at a choppy 24 fps, like a bad signal
+      last = t;
+      const j = () => (Math.random() - 0.5) * 6 * g;
+      h.style.transform = `translate(${j().toFixed(1)}px, ${(j() / 2).toFixed(1)}px)`;
+      text.style.textShadow = `${(-4 * g).toFixed(1)}px 0 rgb(255 74 61 / 0.85), ${(4 * g).toFixed(1)}px 0 rgb(106 215 255 / 0.85)`;
+      noise.style.opacity = String(Math.min(0.85, g * 1.1));
+      noise.style.backgroundPosition = `${Math.floor(Math.random() * 96)}px ${Math.floor(Math.random() * 96)}px`;
+    };
+    addEventListener("pointermove", (e) => {
+      const r = h.getBoundingClientRect();
+      const dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right);
+      const dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom);
+      target = clamp(1 - Math.hypot(dx, dy) / 180, 0, 1);
+      if (!raf && (target > 0 || g > 0.01)) raf = requestAnimationFrame(loop);
+    }, { passive: true, signal });
+    signal.addEventListener("abort", () => cancelAnimationFrame(raf));
+  }
+
+  function init() {
+    const section = document.querySelector<HTMLElement>("[data-story]");
+    if (!section || section.dataset.bound) return;
+    section.dataset.bound = "1";
+    const ac = new AbortController();
+    document.addEventListener("astro:before-swap", () => ac.abort(), { once: true });
+    thread(section, ac.signal);
+    arrive(section, ac.signal);
+    section.querySelectorAll<HTMLElement>("[data-static]").forEach((h) => staticFx(h, ac.signal));
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .story {
+    position: relative; z-index: 1;
+    padding: clamp(80px, 14vh, 150px) max(20px, env(safe-area-inset-right, 0px)) clamp(140px, 18vh, 200px) max(20px, env(safe-area-inset-left, 0px));
+  }
+  h2 {
+    margin: 0 0 clamp(40px, 8vh, 80px);
+    font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(40px, 6vw, 80px); line-height: 0.95;
+    text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
+  }
+
+  /* The thread runs behind the cards */
+  .thread { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 0; }
+  .thread path { fill: none; stroke: var(--thread); stroke-width: 3; stroke-linecap: round; }
+  .thread .line { filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.25)); }
+  .thread .tip {
+    stroke-dasharray: 2 9; opacity: 0;
+    filter: drop-shadow(-2px 0 rgb(255 74 61 / 0.8)) drop-shadow(2px 0 rgb(106 215 255 / 0.8));
+    transition: opacity 400ms var(--ease-out);
+  }
+  .story.ended .tip { opacity: 1; animation: tip-draw 1.2s linear infinite, tip-flicker 2.6s steps(1) infinite; }
+  @keyframes tip-draw { to { stroke-dashoffset: -22; } }
+  @keyframes tip-flicker { 0%, 100% { opacity: 1; } 37% { opacity: 0.35; } 39% { opacity: 1; } 71% { opacity: 0.15; } 73% { opacity: 1; } }
+
+  /* Chapters alternate sides; on wide screens the rows overlap so the zig-zag stays tight */
+  .chapters { list-style: none; margin: 0 auto; padding: 0; max-width: 1100px; position: relative; z-index: 1; }
+  .chapter { display: flex; align-items: center; gap: clamp(24px, 4vw, 64px); }
+  .chapter.right { flex-direction: row-reverse; }
+  .chapter + .chapter { margin-top: clamp(32px, 6vh, 64px); }
+  @media (min-width: 900px) { .chapter + .chapter { margin-top: -90px; } }
+
+  .card-wrap { position: relative; flex: 0 0 auto; width: clamp(220px, 28vw, 340px); rotate: var(--tilt); }
+  .card {
+    position: relative; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden;
+    background: #1b3a24;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.25) inset,
+      0 30px 60px -24px rgb(0 0 0 / 0.6),
+      0 0 0 1px rgb(255 255 255 / 0.08);
+  }
+  /* the chapter's colour lives only here: a soft glow behind the card, brighter once the thread reaches it */
+  .card-wrap::before {
+    content: ""; position: absolute; inset: 6% 4%; z-index: -1; border-radius: 40px;
+    background: var(--glow); filter: blur(48px); opacity: 0.35;
+    transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+  }
+  .lit .card-wrap::before { opacity: 0.75; transform: scale(1.08); }
+  .card :global(img) { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Arrival: each card drops in and settles into its tilt */
+  .will-arrive .card-wrap { opacity: 0; translate: 0 40px; rotate: calc(var(--tilt) * -2); }
+  .will-arrive .card-wrap.in {
+    opacity: 1; translate: 0 0; rotate: var(--tilt);
+    transition: opacity 600ms var(--ease-out), translate 900ms var(--ease-out), rotate 1100ms cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+
+  /* Asmara: the city's name in Ge'ez over the photo, on a warm fade */
+  .caption {
+    position: absolute; inset: auto 0 0; z-index: 1; display: flex; flex-direction: column; gap: 4px; padding: 48px 20px 18px;
+    background: linear-gradient(to top, rgb(40 18 4 / 0.75), transparent);
+    color: #fff4e0;
+  }
+  .cap-geez { font-family: var(--font-geez); font-size: clamp(36px, 4.4vw, 52px); line-height: 1; text-shadow: 0 2px 12px rgb(0 0 0 / 0.4); }
+  .cap-coords { font: 500 11px var(--font-mono); letter-spacing: 0.1em; opacity: 0.85; }
+
+  /* The unwritten chapter: the photo tears sideways every few seconds */
+  .glitchy :global(.tear) {
+    position: absolute; inset: 0; mix-blend-mode: screen; opacity: 0;
+    filter: saturate(2) hue-rotate(160deg);
+    animation: tear 5s steps(1) infinite;
+  }
+  @keyframes tear {
+    0%, 100% { opacity: 0; clip-path: inset(0 0 100% 0); translate: 0 0; }
+    62% { opacity: 0.9; clip-path: inset(22% 0 58% 0); translate: 14px 0; }
+    63% { opacity: 0.9; clip-path: inset(64% 0 20% 0); translate: -10px 0; }
+    64% { opacity: 0; }
+    88% { opacity: 0.8; clip-path: inset(40% 0 44% 0); translate: 8px 0; }
+    89% { opacity: 0; }
+  }
+
+  .text { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; max-width: 460px; }
+  .right .text { align-items: flex-end; text-align: right; }
+  .label { font: 500 12px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+  h3 {
+    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 112%;
+    font-size: clamp(32px, 4.4vw, 60px); line-height: 0.95; text-wrap: balance;
+    text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
+  }
+  .text p { margin: 0; font-size: 17px; max-width: 38ch; opacity: 0.9; }
+
+  .glitch { text-shadow: -2px 0 rgb(255 74 61 / 0.85), 2px 0 rgb(106 215 255 / 0.85); opacity: 1; animation: label-flicker 4s steps(1) infinite; }
+  @keyframes label-flicker { 0%, 100% { opacity: 1; } 62% { opacity: 0.3; } 64% { opacity: 1; } 88% { opacity: 0.6; } }
+  .static { position: relative; display: grid; will-change: transform; }
+  .static > span { grid-area: 1 / 1; }
+  .static-noise { color: transparent; -webkit-background-clip: text; background-clip: text; background-size: 96px 96px; opacity: 0; pointer-events: none; text-shadow: none; }
+  .go {
+    color: inherit; font: 600 16px var(--font-body); margin-top: 6px;
+    text-decoration: underline; text-decoration-color: var(--thread); text-decoration-thickness: 2px; text-underline-offset: 6px;
+  }
+  .go:focus-visible { outline: 2px solid var(--world-fg); outline-offset: 4px; }
+
+  /* Phones: one column, cards alternate a little left and right so the thread still winds */
+  @media (max-width: 700px) {
+    .chapter, .chapter.right { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .chapter.right { align-items: flex-end; }
+    .card-wrap { width: min(70vw, 300px); }
+    .text, .right .text { max-width: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .story.ended .tip, .glitch, .glitchy :global(.tear) { animation: none; }
+  }
+</style>

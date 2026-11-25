@@ -1,0 +1,108 @@
+---
+// The depth layer, on every page (step 3.4). Flat colour reads as a surface once it has grain, light and gloss:
+// - grain: a film-grain overlay that shifts at 12 fps (docs/motion-language.md: stepped, linear; still with reduced motion)
+// - vignette: the edges of the screen fall off a little, like light on a print
+// - gloss: anything marked [data-gloss] tilts slightly toward the pointer and a soft sheen slides across it
+// - parallax: anything marked [data-depth="0.1"] drifts with scroll at its own speed (positive = slower, further away)
+// Gloss and parallax only run with a fine pointer / without reduced motion; otherwise things sit still.
+---
+<div class="grain" aria-hidden="true"><div class="grain-tex"></div></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<script>
+  function init() {
+    if (document.documentElement.dataset.depthBound) return;
+    document.documentElement.dataset.depthBound = "1";
+    const ac = new AbortController();
+    const signal = ac.signal;
+    document.addEventListener("astro:before-swap", () => { ac.abort(); delete document.documentElement.dataset.depthBound; }, { once: true });
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    // ---- Gloss: tilt toward the pointer, sheen follows it ----
+    if (fine && !reduce) {
+      document.querySelectorAll<HTMLElement>("[data-gloss]").forEach((el) => {
+        const max = parseFloat(el.dataset.gloss || "") || 5; // degrees of tilt
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+          el.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`);
+          el.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
+          el.style.setProperty("--ry", `${((x - 0.5) * 2 * max).toFixed(2)}deg`);
+          el.style.setProperty("--rx", `${((0.5 - y) * 2 * max).toFixed(2)}deg`);
+          el.classList.add("glossing");
+        }, { signal });
+        el.addEventListener("pointerleave", () => {
+          el.classList.remove("glossing");
+          el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg");
+        }, { signal });
+      });
+    }
+
+    // ---- Parallax: each layer drifts by its distance from the middle of the screen ----
+    const layers = Array.from(document.querySelectorAll<HTMLElement>("[data-depth]"));
+    if (!layers.length || reduce) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const mid = innerHeight / 2;
+      for (const el of layers) {
+        const k = parseFloat(el.dataset.depth || "0");
+        const r = (el.parentElement ?? el).getBoundingClientRect();
+        if (r.bottom < -200 || r.top > innerHeight + 200) continue;
+        el.style.translate = `0 ${((r.top + r.height / 2 - mid) * -k).toFixed(1)}px`;
+      }
+    };
+    addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true, signal });
+    addEventListener("resize", update, { signal });
+    update();
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style is:global>
+  /* Film grain: a fixed noise texture nudged to a new spot 12 times a second (transform only, so it stays cheap) */
+  .grain { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
+  .grain-tex {
+    position: absolute; inset: -50%;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.1 -0.2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.16; mix-blend-mode: overlay;
+    animation: grain-shift 0.5s steps(1) infinite;
+  }
+  @keyframes grain-shift {
+    0% { transform: translate(0, 0); }
+    16% { transform: translate(-7%, 4%); }
+    33% { transform: translate(5%, -9%); }
+    50% { transform: translate(-3%, 8%); }
+    66% { transform: translate(9%, 2%); }
+    83% { transform: translate(-8%, -5%); }
+  }
+  .vignette {
+    position: fixed; inset: 0; z-index: 89; pointer-events: none;
+    background: radial-gradient(130% 100% at 50% 45%, transparent 55%, rgb(0 0 0 / 0.28) 100%);
+  }
+
+  /* Gloss: a soft tilt plus a sheen that follows the pointer. Add data-gloss to any block; it needs a border-radius to match. */
+  [data-gloss] {
+    position: relative;
+    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 700ms var(--ease-out);
+  }
+  [data-gloss].glossing { transition-duration: 160ms; }
+  [data-gloss]::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2;
+    /* a resting highlight along the top edge, plus a moving sheen where the pointer is */
+    background:
+      radial-gradient(60% 60% at var(--mx, 30%) var(--my, -10%), rgb(255 255 255 / 0.32), transparent 70%),
+      linear-gradient(160deg, rgb(255 255 255 / 0.14) 0%, transparent 35%);
+    mix-blend-mode: soft-light;
+    opacity: 0.7;
+    transition: opacity 400ms var(--ease-out);
+  }
+  [data-gloss].glossing::after { opacity: 1; }
+  [data-depth] { will-change: translate; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .grain-tex { animation: none; }
+  }
+</style>

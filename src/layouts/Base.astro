@@ -8,6 +8,7 @@ import { worldFor, WORLD_BG, type World } from "@/lib/worlds";
 import Header from "@/components/Header.astro";
 import Menu from "@/components/Menu.astro";
 import Cover from "@/components/Cover.astro";
+import Depth from "@/components/Depth.astro";
 
 interface Props {
   title?: string;
@@ -36,5 +37,6 @@ const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.me
     <Menu />
     <Cover />
     <slot />
+    <Depth />
   </body>
 </html>

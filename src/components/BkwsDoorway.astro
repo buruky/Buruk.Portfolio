@@ -1,0 +1,213 @@
+---
+// Home: the doorway into BK Web Studios (step 3.4). BKWS is its own world, so instead of a band of colour it's a
+// window from another computer, dropped on the hillside: BKWS's own brand (paper, ember, teal, pixel type,
+// bevelled edges, hard shadows) inside the frame, the portfolio outside it. Leads to the real BKWS site.
+// Client sites can appear here but are never linked (docs/research-notes.md). No "book a call" on the portfolio.
+import "@fontsource/silkscreen/latin-400.css";
+import { Image } from "astro:assets";
+import site from "@/lib/site";
+import type { ImageMetadata } from "astro";
+
+const bk = site.bkWebStudios;
+const host = new URL(bk.siteUrl).host.replace(/^www\./, "");
+
+// Client sites cycle in the little browser window. Add one to clientSites in content/site.json to include it.
+const shots = import.meta.glob<{ default: ImageMetadata }>("../../content/media/images/screenshots/*.{png,jpg,jpeg,webp}", { eager: true });
+const clients = site.clientSites
+  .map((c) => ({ name: c.name, img: shots[`../../content/media/${c.screenshot.src}`]?.default, pos: c.screenshot.position === "top" ? "50% 0%" : "50% 50%" }))
+  .filter((c): c is { name: string; img: ImageMetadata; pos: string } => !!c.img);
+---
+<section class="studio" aria-labelledby="studio-title">
+  <header class="head">
+    <h2 data-reveal><span class="ln"><span>My studio.</span></span></h2>
+    <p class="aside">Where the freelancing went: I design and build websites for small businesses.</p>
+  </header>
+
+  <div class="window" data-bkws-window>
+    <div class="titlebar" aria-hidden="true">
+      <span class="title">{host}</span>
+      <span class="controls"><i>_</i><i>□</i><i>×</i></span>
+    </div>
+    <div class="body">
+      <div class="copy">
+        <p class="kicker">{bk.tagline}</p>
+        <h3 id="studio-title">{bk.name}<span class="cursor" aria-hidden="true"></span></h3>
+        <p class="desc">{bk.description}</p>
+        <p class="role">{bk.role}</p>
+        <div class="actions">
+          <a class="btn primary" href={bk.siteUrl} target="_blank" rel="noopener">Visit {host} <span aria-hidden="true">↗</span></a>
+          <a class="btn ghost" href="/bk-web-studios">About the studio <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+      <figure class="shot" data-cycler aria-roledescription="carousel" aria-label="Client sites built by BK Web Studios">
+        <div class="mini-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="screen">
+          {clients.map((c, i) => (
+            <Image class={i === 0 ? "slide on" : "slide"} src={c.img} alt={`Home page of ${c.name}, a site built by BK Web Studios`} widths={[480, 720, 960]} sizes="(max-width: 860px) 90vw, 40vw" loading={i === 0 ? "eager" : "lazy"} style={`object-position: ${c.pos}`} aria-hidden={i === 0 ? undefined : "true"} data-name={c.name} />
+          ))}
+        </div>
+        <figcaption>
+          <span>Client work · <span data-cycler-name>{clients[0]?.name}</span></span>
+          {clients.length > 1 && (
+            <span class="dots">
+              {clients.map((c, i) => (
+                <button type="button" class={i === 0 ? "dot on" : "dot"} aria-label={`Show ${c.name}`} aria-pressed={i === 0 ? "true" : "false"} data-cycler-dot={i}></button>
+              ))}
+            </span>
+          )}
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Cycles the client sites every few seconds. The new site "redraws" top to bottom in chunky steps, like an old
+  // screen. Pauses on hover or keyboard focus, and while the window is off screen. Dots pick a site directly.
+  function init() {
+    const fig = document.querySelector<HTMLElement>("[data-cycler]");
+    if (!fig || fig.dataset.bound) return;
+    fig.dataset.bound = "1";
+    const slides = Array.from(fig.querySelectorAll<HTMLElement>(".slide"));
+    const dots = Array.from(fig.querySelectorAll<HTMLButtonElement>("[data-cycler-dot]"));
+    const name = fig.querySelector<HTMLElement>("[data-cycler-name]")!;
+    if (slides.length < 2) return;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const ac = new AbortController();
+    document.addEventListener("astro:before-swap", () => ac.abort(), { once: true });
+    let at = 0, timer = 0, hovered = false, visible = false;
+
+    function show(i: number) {
+      if (i === at) return;
+      const prev = slides[at];
+      at = (i + slides.length) % slides.length;
+      const next = slides[at];
+      slides.forEach((s) => s.classList.remove("on", "drawing", "under"));
+      prev.classList.add("under");
+      next.classList.add("on");
+      if (!reduce) { void next.offsetWidth; next.classList.add("drawing"); }
+      slides.forEach((s, k) => s.toggleAttribute("aria-hidden", k !== at));
+      dots.forEach((d, k) => { d.classList.toggle("on", k === at); d.setAttribute("aria-pressed", String(k === at)); });
+      name.textContent = next.dataset.name ?? "";
+    }
+    const schedule = () => {
+      clearTimeout(timer);
+      if (!hovered && visible && !document.hidden && !reduce) timer = window.setTimeout(() => { show(at + 1); schedule(); }, 4200);
+    };
+
+    dots.forEach((d, k) => d.addEventListener("click", () => { show(k); schedule(); }, { signal: ac.signal }));
+    fig.addEventListener("pointerenter", () => { hovered = true; schedule(); }, { signal: ac.signal });
+    fig.addEventListener("pointerleave", () => { hovered = false; schedule(); }, { signal: ac.signal });
+    fig.addEventListener("focusin", () => { hovered = true; schedule(); }, { signal: ac.signal });
+    fig.addEventListener("focusout", () => { hovered = false; schedule(); }, { signal: ac.signal });
+    document.addEventListener("visibilitychange", schedule, { signal: ac.signal });
+    const io = new IntersectionObserver((es) => { visible = es[0]?.isIntersecting ?? false; schedule(); });
+    io.observe(fig);
+    ac.signal.addEventListener("abort", () => { io.disconnect(); clearTimeout(timer); });
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .studio {
+    --paper: #ede7dd; --bone: #f4efe8; --linen: #e8e0d4; --ink: #1d1a18; --dune: #2a2f33; --ember: #d57d3b; --ember-hi: #e8955a; --teal: #2e6170;
+    --pixel: "Silkscreen", ui-monospace, monospace;
+    --bk-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    position: relative; z-index: 1;
+    padding: clamp(40px, 8vh, 96px) max(20px, env(safe-area-inset-right, 0px)) clamp(100px, 16vh, 180px) max(20px, env(safe-area-inset-left, 0px));
+    display: flex; flex-direction: column; gap: clamp(32px, 6vh, 56px);
+  }
+  .head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px; }
+  h2 {
+    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(40px, 6vw, 80px); line-height: 0.95;
+    text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
+  }
+  .aside { margin: 0; max-width: 34ch; font-size: 17px; opacity: 0.85; }
+
+  /* The window: another computer's UI. Bevels and a hard, offset shadow instead of the portfolio's soft light. */
+  .window {
+    width: 100%; max-width: 1180px; margin: 0 auto;
+    background: var(--paper); color: var(--ink);
+    border: 2px solid var(--dune);
+    box-shadow: 12px 12px 0 rgb(15 13 12 / 0.85);
+  }
+  .titlebar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 10px 8px 14px; background: var(--teal); color: var(--bone);
+    border-bottom: 2px solid var(--dune);
+    box-shadow: inset 2px 2px 0 rgb(255 255 255 / 0.25), inset -2px -2px 0 rgb(0 0 0 / 0.25);
+    font: 400 14px var(--pixel); letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .controls { display: flex; gap: 6px; }
+  .controls i {
+    display: grid; place-items: center; width: 22px; height: 20px; font-style: normal; font-size: 12px; line-height: 1;
+    background: var(--linen); color: var(--ink); border: 2px solid var(--dune);
+    box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 rgb(0 0 0 / 0.2);
+  }
+  .body {
+    display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(24px, 4vw, 56px); align-items: center;
+    padding: clamp(24px, 4vw, 56px);
+  }
+  .copy { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .kicker { margin: 0; font: 400 13px var(--pixel); letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); }
+  h3 { margin: 0; font: 400 clamp(34px, 4.6vw, 60px) / 1 var(--pixel); letter-spacing: -0.01em; }
+  .cursor { display: inline-block; width: 0.5em; height: 0.85em; margin-left: 0.12em; vertical-align: -0.06em; background: var(--ember); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .desc { margin: 0; font: 400 16px / 1.6 var(--bk-mono); max-width: 44ch; }
+  .role { margin: 0; font: 400 13px var(--bk-mono); color: var(--dune); opacity: 0.8; }
+
+  /* Retro buttons: a hard shadow that the button presses down into */
+  .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 18px;
+    font: 400 14px var(--pixel); letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; color: var(--ink);
+    border: 2px solid var(--dune); box-shadow: 4px 4px 0 var(--dune);
+    transition: transform 80ms steps(2), box-shadow 80ms steps(2), background-color 120ms ease;
+  }
+  .btn.primary { background: var(--ember); }
+  .btn.ghost { background: var(--bone); }
+  .btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--dune); }
+  .btn:focus-visible { outline: 2px dashed var(--teal); outline-offset: 4px; }
+  @media (hover: hover) and (pointer: fine) {
+    .btn.primary:hover { background: var(--ember-hi); }
+    .btn.ghost:hover { background: #fff; }
+  }
+
+  /* The client site, in a little browser window of its own (shown, never linked) */
+  .shot { margin: 0; border: 2px solid var(--dune); background: var(--linen); box-shadow: 6px 6px 0 rgb(42 47 51 / 0.35); }
+  .mini-bar { display: flex; gap: 6px; padding: 7px 8px; border-bottom: 2px solid var(--dune); background: var(--linen); }
+  .mini-bar i { width: 10px; height: 10px; border: 2px solid var(--dune); background: var(--bone); }
+  .screen { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--night, #0f0d0c); }
+  .screen :global(.slide) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+  .screen :global(.slide.under) { opacity: 1; z-index: 0; }
+  .screen :global(.slide.on) { opacity: 1; z-index: 1; }
+  /* the next site redraws top to bottom in 8 chunky steps, like an old screen */
+  .screen :global(.slide.drawing) { animation: redraw 640ms steps(8, end) both; }
+  @keyframes redraw { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+  .shot figcaption {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 10px; border-top: 2px solid var(--dune); font: 400 11px var(--pixel); letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .dots { display: flex; gap: 6px; flex: none; }
+  .dot {
+    width: 12px; height: 12px; padding: 0; cursor: pointer; border: 2px solid var(--dune); background: var(--bone);
+    position: relative;
+  }
+  .dot::after { content: ""; position: absolute; inset: -10px; } /* bigger tap target than it looks */
+  .dot.on { background: var(--ember); }
+  .dot:focus-visible { outline: 2px dashed var(--teal); outline-offset: 3px; }
+
+  /* Scroll: the window opens in chunky steps, like an old OS drawing it */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .window { animation: open steps(6, end) both; animation-timeline: view(); animation-range: entry 5% cover 35%; transform-origin: 50% 0; }
+    }
+  }
+  @keyframes open { from { transform: scale(0.82, 0.12); opacity: 0.2; } to { transform: none; opacity: 1; } }
+
+  @media (max-width: 860px) {
+    .body { grid-template-columns: 1fr; }
+    .window { box-shadow: 8px 8px 0 rgb(15 13 12 / 0.85); }
+  }
+  @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+</style>

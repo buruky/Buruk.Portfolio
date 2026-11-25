@@ -1,0 +1,145 @@
+---
+// Home: selected work as "glow frames" (step 3.4, after jordangilroy.com). Each project is a clean frame floating
+// over a huge, blurred glow of its own screenshot, so the page picks up the project's light. Frames grow into
+// place as they scroll in (CSS scroll-driven animation where supported; static otherwise).
+import { Image } from "astro:assets";
+import site from "@/lib/site";
+import ecc from "@content/media/images/screenshots/ecc-my-cases.png"; // frame from videos/ecc-demo.mp4 at 36.3s, captions cropped
+import fabriq from "@content/media/images/screenshots/fabriq.png";
+import GraceChart from "@/components/GraceChart.astro"; // GRACE is drawn from the paper's results table, not a screenshot
+
+const FEATURED = [
+  { slug: "ecc-salesforce-case-management", img: ecc, pos: "0% 0%", title: "ECC Case Management", line: "A Salesforce app for Eritrean Community Connections, a nonprofit serving immigrant families.", stat: "10", statLabel: "staff use it every day", href: "/work#ecc" },
+  { slug: "fabriq", img: fabriq, pos: "100% 50%", title: "Fabriq", line: "An AI fashion app: build a digital closet, get outfits generated from what you own.", stat: "3rd", statLabel: "of 10+ teams at a hackathon", href: "/work#fabriq" },
+  { slug: "nasa-grace-climate-research", img: null, pos: "50% 50%", title: "NASA GRACE", line: "Filling gaps in NASA satellite water data with machine learning.", stat: "2.25×", statLabel: "lower error with XGBoost", href: "/research#nasa-grace" },
+].map((f) => {
+  const p = site.projects.find((x) => x.slug === f.slug);
+  return { ...f, lane: p?.lane ?? "", stack: (p?.techStack ?? []).slice(0, 4) };
+});
+const pad = (n: number) => String(n).padStart(2, "0");
+---
+<section class="featured" aria-labelledby="featured-title">
+  <header class="head">
+    <h2 id="featured-title" data-reveal><span class="ln"><span>Selected work</span></span></h2>
+    <span class="count" aria-hidden="true">({pad(FEATURED.length)})</span>
+  </header>
+  <ol class="list">
+    {FEATURED.map((p, i) => (
+      <li class="project">
+        <div class={p.img ? "glow" : "glow glow-night"} aria-hidden="true">
+          {p.img && <Image src={p.img} alt="" width={240} style={`object-position: ${p.pos}`} />}
+        </div>
+        <a class="frame" href={p.href} tabindex="-1" aria-hidden="true" data-gloss="3">
+          {p.img ? (
+            <Image src={p.img} alt="" widths={[640, 960, 1280]} sizes="(max-width: 760px) 92vw, 60vw" style={`object-position: ${p.pos}`} />
+          ) : (
+            <GraceChart />
+          )}
+        </a>
+        <div class="meta">
+          <div class="top">
+            <span class="idx">[{pad(i + 1)}]</span>
+            <span class="lane">{p.lane}</span>
+          </div>
+          <div class="mid">
+            <h3><a href={p.href}>{p.title}</a></h3>
+            <p class="line">{p.line}</p>
+            <p class="stat"><b>{p.stat}</b><span>{p.statLabel}</span></p>
+          </div>
+          <div class="bottom">
+            <ul class="stack" aria-label="Built with">
+              {p.stack.map((s) => <li>{s}</li>)}
+            </ul>
+            <a class="view" href={p.href} aria-hidden="true" tabindex="-1">View project <span>↗</span></a>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .featured {
+    position: relative; z-index: 1;
+    padding: clamp(16px, 3vh, 40px) max(20px, env(safe-area-inset-right, 0px)) clamp(80px, 12vh, 140px) max(20px, env(safe-area-inset-left, 0px));
+    display: flex; flex-direction: column; gap: clamp(40px, 8vh, 88px);
+  }
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  h2 {
+    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(40px, 6vw, 80px); line-height: 0.95;
+    text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
+  }
+  .count { font: 500 clamp(14px, 1.4vw, 18px) var(--font-mono); letter-spacing: 0.08em; opacity: 0.75; padding-bottom: 0.4em; }
+
+  .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(96px, 16vh, 180px); }
+  .project {
+    position: relative; isolation: isolate;
+    display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(24px, 4vw, 64px); align-items: stretch;
+  }
+
+  /* The glow: the project's own screenshot, blown up and blurred, blooming out from behind the frame (never behind
+     the text, so the copy keeps its contrast). Edges fade into the page. */
+  .glow {
+    position: absolute; z-index: -1; inset: -22% 32% -22% -10%; pointer-events: none;
+    -webkit-mask-image: radial-gradient(closest-side, #000 30%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 30%, transparent 100%);
+    opacity: 0.5;
+  }
+  /* the drawn GRACE figure has no screenshot to blur, so its glow is plain paper-white light, like the other frames */
+  .glow-night { background: radial-gradient(55% 50% at 45% 55%, #ffffff 0%, rgb(255 255 255 / 0.4) 45%, transparent 75%); }
+  .glow :global(img) { width: 100%; height: 100%; object-fit: cover; filter: blur(60px) saturate(2); transform: scale(1.1); }
+
+  /* The frame: clean, rounded, with a thin lit edge and a deep soft shadow so it floats over its glow */
+  .frame {
+    display: block; border-radius: 16px; overflow: hidden; align-self: center;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.14),
+      0 50px 90px -36px rgb(0 0 0 / 0.75),
+      0 18px 36px -24px rgb(0 0 0 / 0.5);
+  }
+  .frame :global(img) { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; transition: scale 900ms var(--ease-out); }
+
+  /* Meta column: index and lane at the top, the story in the middle, stack and link at the bottom (like a spec sheet) */
+  .meta { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; min-width: 0; padding: 4px 0; }
+  .top, .bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+  .idx, .lane, .stack, .view { font: 500 12px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+  .idx { opacity: 0.75; }
+  .lane { opacity: 0.75; text-align: right; }
+  .mid { display: flex; flex-direction: column; gap: 12px; }
+  h3 {
+    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 3.6vw, 52px); line-height: 0.95;
+    text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
+  }
+  h3 a { color: inherit; text-decoration: none; }
+  h3 a:focus-visible { outline: 2px solid var(--world-fg); outline-offset: 4px; }
+  .line { margin: 0; font-size: 16px; max-width: 40ch; opacity: 0.9; }
+  .stat { margin: 4px 0 0; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .stat b { font-family: var(--font-display); font-weight: 900; font-stretch: 105%; font-size: clamp(36px, 4vw, 56px); line-height: 1; font-variant-numeric: tabular-nums; color: var(--world-accent); }
+  .stat span { font-size: 15px; opacity: 0.85; }
+  .stack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; opacity: 0.8; }
+  .view { color: inherit; text-decoration: none; white-space: nowrap; border-bottom: 2px solid var(--thread); padding-bottom: 4px; }
+  .view span { display: inline-block; transition: transform var(--t-ui) var(--ease-out); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .project:hover .frame :global(img) { scale: 1.03; }
+    .project:hover .view span { transform: translate(2px, -2px); }
+  }
+
+  /* Scroll: each frame grows into place and its glow blooms as it comes into view */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .frame { animation: frame-in linear both; animation-timeline: view(); animation-range: entry 0% cover 40%; }
+      .glow { animation: glow-in linear both; animation-timeline: view(); animation-range: entry 10% cover 50%; }
+      .meta { animation: meta-in linear both; animation-timeline: view(); animation-range: entry 10% cover 35%; }
+    }
+  }
+  @keyframes frame-in { from { scale: 0.88; translate: 0 60px; opacity: 0.4; } to { scale: 1; translate: 0 0; opacity: 1; } }
+  @keyframes glow-in { from { opacity: 0; scale: 0.75; } to { opacity: 0.5; scale: 1; } }
+  @keyframes meta-in { from { opacity: 0; translate: 0 30px; } to { opacity: 1; translate: 0 0; } }
+
+  @media (max-width: 760px) {
+    .project { grid-template-columns: 1fr; }
+    .glow { inset: -12% -20% 40% -20%; } /* phones: frame on top, so the glow stays above the text */
+    .bottom { align-items: flex-end; }
+  }
+</style>

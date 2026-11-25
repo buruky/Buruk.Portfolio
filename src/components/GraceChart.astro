@@ -1,0 +1,84 @@
+---
+// The NASA GRACE result, redrawn as a figure in the style of the paper (step 3.4): white page, serif type, two
+// side-by-side panels with axes and gridlines, and a LaTeX-style caption.
+// Data: the paper's MSE table after imputation (main.tex, "MSE values for different models", tab:mse_values).
+const MODELS = ["Mean", "Median", "GLM", "DNN", "XGBoost"];
+const PANELS = [
+  { tag: "(a)", name: "São Francisco", mse: [55.39, 61.6, 22.57, 29.42, 13.0], max: 70, step: 10, digits: 1 },
+  { tag: "(b)", name: "Saudi Arabia", mse: [1.92, 1.53, 0.71, 1.22, 0.22], max: 2.5, step: 0.5, digits: 2 },
+];
+const W = 1600, H = 900;
+const plotTop = 70, plotBottom = 620, plotH = plotBottom - plotTop;
+const panelX = [{ x0: 170, x1: 760 }, { x0: 960, x1: 1550 }];
+const slot = (panelX[0].x1 - panelX[0].x0) / MODELS.length;
+const barW = slot * 0.56;
+const fmtTick = (v: number, step: number) => (step < 1 ? v.toFixed(1) : String(v));
+---
+<svg class="figure" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Figure: mean squared error of each imputation method. São Francisco: mean 55.39, median 61.60, GLM 22.57, DNN 29.42, XGBoost 13.00. Saudi Arabia: mean 1.92, median 1.53, GLM 0.71, DNN 1.22, XGBoost 0.22. XGBoost is lowest in both basins.">
+  <rect width={W} height={H} fill="#fff" />
+
+  {PANELS.map((p, pi) => {
+    const { x0, x1 } = panelX[pi];
+    const y = (v: number) => plotBottom - (v / p.max) * plotH;
+    const ticks = Array.from({ length: Math.round(p.max / p.step) + 1 }, (_, k) => +(k * p.step).toFixed(2));
+    return (
+      <g class="panel">
+        {/* gridlines and y ticks */}
+        {ticks.map((t) => (
+          <g>
+            {t > 0 && <line class="grid" x1={x0} x2={x1} y1={y(t)} y2={y(t)} />}
+            <line class="tick" x1={x0 - 10} x2={x0} y1={y(t)} y2={y(t)} />
+            <text class="tick-label" x={x0 - 18} y={y(t) + 8} text-anchor="end">{fmtTick(t, p.step)}</text>
+          </g>
+        ))}
+        {/* bars */}
+        {p.mse.map((v, i) => {
+          const cx = x0 + slot * (i + 0.5);
+          const best = MODELS[i] === "XGBoost";
+          return (
+            <g class={best ? "bar-g best" : "bar-g"} style={`--i: ${i}`}>
+              <rect class="bar" x={cx - barW / 2} y={y(v)} width={barW} height={plotBottom - y(v)} />
+              <text class="value" x={cx} y={y(v) - 12} text-anchor="middle">{v.toFixed(p.digits)}</text>
+              <text class="x-label" x={cx} y={plotBottom + 40} text-anchor="middle">{MODELS[i]}</text>
+            </g>
+          );
+        })}
+        {/* axes */}
+        <line class="axis" x1={x0} x2={x0} y1={plotTop - 10} y2={plotBottom} />
+        <line class="axis" x1={x0} x2={x1} y1={plotBottom} y2={plotBottom} />
+        <text class="y-label" transform={`translate(${x0 - 95} ${(plotTop + plotBottom) / 2}) rotate(-90)`} text-anchor="middle">MSE</text>
+        <text class="subcap" x={(x0 + x1) / 2} y={plotBottom + 100} text-anchor="middle">{p.tag} {p.name}</text>
+      </g>
+    );
+  })}
+
+  <text class="caption" x={W / 2} y={H - 50} text-anchor="middle"><tspan class="caption-lead">Imputation results.</tspan> MSE after filling missing GRACE values with each method, then modelling with XGBoost. Lower is better.</text>
+</svg>
+
+<style>
+  .figure { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+  .figure text { font-family: "Latin Modern Roman", "CMU Serif", "Times New Roman", Times, serif; fill: #111; }
+  .tick-label, .value { font-size: 24px; }
+  .x-label { font-size: 27px; }
+  .y-label { font-size: 28px; font-style: italic; }
+  .subcap { font-size: 30px; }
+  .caption { font-size: 27px; }
+  .caption-lead { font-weight: 700; }
+  .axis { stroke: #111; stroke-width: 2; }
+  .tick { stroke: #111; stroke-width: 2; }
+  .grid { stroke: #111; stroke-opacity: 0.12; stroke-width: 1.5; stroke-dasharray: 6 6; }
+  .bar { fill: #c9ced6; stroke: #111; stroke-width: 1.5; transform-box: fill-box; transform-origin: 50% 100%; }
+  .value { fill: #444; }
+  .best .bar { fill: #1f4e8c; }
+  .best .value, .best .x-label { font-weight: 700; fill: #111; }
+
+  /* A quiet build: bars rise from the axis as the figure scrolls in (drawn in full otherwise) */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .bar { animation: rise linear both; animation-timeline: view(); animation-range: entry calc(25% + var(--i) * 5%) cover calc(45% + var(--i) * 5%); }
+      .value { animation: fade linear both; animation-timeline: view(); animation-range: entry calc(35% + var(--i) * 5%) cover calc(50% + var(--i) * 5%); }
+    }
+  }
+  @keyframes rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes fade { from { opacity: 0; } }
+</style>
