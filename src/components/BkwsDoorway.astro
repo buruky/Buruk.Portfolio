@@ -17,11 +17,9 @@ const clients = site.clientSites
   .map((c) => ({ name: c.name, img: shots[`../../content/media/${c.screenshot.src}`]?.default, pos: c.screenshot.position === "top" ? "50% 0%" : "50% 50%" }))
   .filter((c): c is { name: string; img: ImageMetadata; pos: string } => !!c.img);
 ---
-<section class="studio" aria-labelledby="studio-title">
-  <header class="head">
-    <h2 data-reveal><span class="ln"><span>My studio.</span></span></h2>
-    <p class="aside">Where the freelancing went: I design and build websites for small businesses.</p>
-  </header>
+<section class="studio" aria-labelledby="studio-title" data-section="My studio">
+  <!-- No big heading: the window's title bar is the heading, with one short line above it -->
+  <p class="aside"><span class="tag">My studio</span> Where the freelancing went: I design and build websites for small businesses.</p>
 
   <div class="window" data-bkws-window>
     <div class="titlebar" aria-hidden="true">
@@ -31,7 +29,7 @@ const clients = site.clientSites
     <div class="body">
       <div class="copy">
         <p class="kicker">{bk.tagline}</p>
-        <h3 id="studio-title">{bk.name}<span class="cursor" aria-hidden="true"></span></h3>
+        <h2 id="studio-title" class="name">{bk.name}<span class="cursor" aria-hidden="true"></span></h2>
         <p class="desc">{bk.description}</p>
         <p class="role">{bk.role}</p>
         <div class="actions">
@@ -117,12 +115,11 @@ const clients = site.clientSites
     padding: clamp(40px, 8vh, 96px) max(20px, env(safe-area-inset-right, 0px)) clamp(100px, 16vh, 180px) max(20px, env(safe-area-inset-left, 0px));
     display: flex; flex-direction: column; gap: clamp(32px, 6vh, 56px);
   }
-  .head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px; }
-  h2 {
-    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(40px, 6vw, 80px); line-height: 0.95;
-    text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
+  .aside {
+    width: 100%; max-width: 1180px; margin: 0 auto;
+    font: 500 12px/1.6 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85;
   }
-  .aside { margin: 0; max-width: 34ch; font-size: 17px; opacity: 0.85; }
+  .aside .tag { color: var(--world-fg); opacity: 1; margin-right: 10px; padding-right: 12px; border-right: 1px solid color-mix(in srgb, currentColor 40%, transparent); }
 
   /* The window: another computer's UI. Bevels and a hard, offset shadow instead of the portfolio's soft light. */
   .window {
@@ -136,7 +133,7 @@ const clients = site.clientSites
     padding: 8px 10px 8px 14px; background: var(--teal); color: var(--bone);
     border-bottom: 2px solid var(--dune);
     box-shadow: inset 2px 2px 0 rgb(255 255 255 / 0.25), inset -2px -2px 0 rgb(0 0 0 / 0.25);
-    font: 400 14px var(--pixel); letter-spacing: 0.06em; text-transform: uppercase;
+    font: 400 clamp(15px, 1.5vw, 20px) var(--pixel); letter-spacing: 0.06em; text-transform: uppercase;
   }
   .controls { display: flex; gap: 6px; }
   .controls i {
@@ -150,7 +147,7 @@ const clients = site.clientSites
   }
   .copy { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
   .kicker { margin: 0; font: 400 13px var(--pixel); letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); }
-  h3 { margin: 0; font: 400 clamp(34px, 4.6vw, 60px) / 1 var(--pixel); letter-spacing: -0.01em; }
+  .name { margin: 0; font: 400 clamp(34px, 4.6vw, 60px) / 1 var(--pixel); letter-spacing: -0.01em; }
   .cursor { display: inline-block; width: 0.5em; height: 0.85em; margin-left: 0.12em; vertical-align: -0.06em; background: var(--ember); animation: blink 1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
   .desc { margin: 0; font: 400 16px / 1.6 var(--bk-mono); max-width: 44ch; }

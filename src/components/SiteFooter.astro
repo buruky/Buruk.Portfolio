@@ -9,7 +9,7 @@ const { email, linkedin, github } = site.profile;
 const { heading, body } = site.copy.contact;
 const year = new Date().getFullYear();
 ---
-<footer class="sign-off" aria-labelledby="sign-off-title">
+<footer class="sign-off" aria-labelledby="sign-off-title" data-section="Contact">
   <div class="evening" aria-hidden="true"></div>
   <p class="kicker">Contact</p>
   <h2 id="sign-off-title" class="giant">{heading}.</h2>
@@ -29,7 +29,10 @@ const year = new Date().getFullYear();
     <li><a class="pill" href={github} target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a></li>
   </ul>
 
-  <div class="base">
+  <!-- Where the glass ቡሩኽ comes to rest at the end of Home: GlassHero measures this box and brings the name forward into it -->
+  <div class="glass-spot" data-glass-spot aria-hidden="true"></div>
+
+  <div class="base" data-corners-hide>
     <span>© {year} Buruk Yimesgen</span>
     <span class="geez" lang="ti" aria-hidden="true">ቡሩኽ</span>
     <a href="#main" class="top" data-to-top>Back to top <span aria-hidden="true">↑</span></a>
@@ -71,7 +74,18 @@ const year = new Date().getFullYear();
   .sign-off {
     position: relative; isolation: isolate; overflow: hidden;
     padding: clamp(24px, 5vh, 64px) max(20px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 28px) max(20px, env(safe-area-inset-left, 0px));
-    display: flex; flex-direction: column; gap: clamp(20px, 3vh, 32px);
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 3vh, 32px); align-content: start;
+  }
+  .sign-off > * { min-width: 0; }
+  /* Room for the glass name, which leaves the background and settles here, uncovered */
+  .glass-spot { min-height: clamp(150px, 26vh, 240px); touch-action: pan-y; }
+  .glass-spot.can-grab { cursor: grab; }
+  .glass-spot.grabbing { cursor: grabbing; }
+  @media (min-width: 900px) {
+    .sign-off { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: clamp(24px, 4vw, 72px); }
+    .kicker, .giant, .base { grid-column: 1 / -1; }
+    .body, .reach, .links { grid-column: 1; }
+    .glass-spot { grid-column: 2; grid-row: 3 / span 3; min-height: 0; }
   }
   /* Evening: a low warm light rising from below the bottom edge */
   .evening {

@@ -119,4 +119,13 @@ import { MENU } from "@/lib/worlds";
     li { opacity: 1; }
   }
   :global(html.menu-open) { overflow: hidden; }
+  /* With the menu open, the page beside the drawer goes soft and steps back (like the hero's words), so the menu and
+     the glass name are what you read. Phones skip it: there the menu covers the whole screen. */
+  @media (min-width: 641px) {
+    :global(main > :not(#glass-hero)) { transition: filter 520ms var(--ease-out), opacity 520ms var(--ease-out); }
+    :global(html.menu-open main > :not(#glass-hero)) { filter: blur(10px); opacity: 0.45; pointer-events: none; }
+  }
+  @media (min-width: 641px) and (prefers-reduced-motion: reduce) {
+    :global(html.menu-open main > :not(#glass-hero)) { filter: none; opacity: 0.25; }
+  }
 </style>

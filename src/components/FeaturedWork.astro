@@ -11,21 +11,25 @@ import GraceChart from "@/components/GraceChart.astro"; // GRACE is drawn from t
 const FEATURED = [
   { slug: "ecc-salesforce-case-management", img: ecc, pos: "0% 0%", title: "ECC Case Management", line: "A Salesforce app for Eritrean Community Connections, a nonprofit serving immigrant families.", stat: "10", statLabel: "staff use it every day", href: "/work#ecc" },
   { slug: "fabriq", img: fabriq, pos: "100% 50%", title: "Fabriq", line: "An AI fashion app: build a digital closet, get outfits generated from what you own.", stat: "3rd", statLabel: "of 10+ teams at a hackathon", href: "/work#fabriq" },
-  { slug: "nasa-grace-climate-research", img: null, pos: "50% 50%", title: "NASA GRACE", line: "Filling gaps in NASA satellite water data with machine learning.", stat: "2.25×", statLabel: "lower error with XGBoost", href: "/research#nasa-grace" },
+  { slug: "nasa-grace-climate-research", img: null, pos: "50% 50%", title: "NASA GRACE", line: "Filling gaps in NASA satellite water data with machine learning.", stat: "2.25×", statLabel: "lower error than the other 4 models", href: "/research#nasa-grace" },
 ].map((f) => {
   const p = site.projects.find((x) => x.slug === f.slug);
   return { ...f, lane: p?.lane ?? "", stack: (p?.techStack ?? []).slice(0, 4) };
 });
 const pad = (n: number) => String(n).padStart(2, "0");
 ---
-<section class="featured" aria-labelledby="featured-title">
+<section class="featured" aria-labelledby="featured-title" data-section="Selected work">
+  <!-- A sticky side column: "Selected work" stays put while the frames scroll past, and the counter follows along -->
   <header class="head">
-    <h2 id="featured-title" data-reveal><span class="ln"><span>Selected work</span></span></h2>
-    <span class="count" aria-hidden="true">({pad(FEATURED.length)})</span>
+    <div class="pin">
+      <h2 id="featured-title" data-reveal><span class="ln"><span>Selected work</span></span></h2>
+      <p class="count" aria-hidden="true"><span data-work-now>01</span> / {pad(FEATURED.length)}</p>
+      <ol class="dots" aria-hidden="true">{FEATURED.map((_, i) => <li class={i === 0 ? "on" : undefined} data-work-dot />)}</ol>
+    </div>
   </header>
   <ol class="list">
     {FEATURED.map((p, i) => (
-      <li class="project">
+      <li class="project" data-work-item>
         <div class={p.img ? "glow" : "glow glow-night"} aria-hidden="true">
           {p.img && <Image src={p.img} alt="" width={240} style={`object-position: ${p.pos}`} />}
         </div>
@@ -58,18 +62,44 @@ const pad = (n: number) => String(n).padStart(2, "0");
   </ol>
 </section>
 
+<script>
+  // The counter in the sticky column follows whichever project is in the middle of the screen.
+  function init() {
+    const items = Array.from(document.querySelectorAll<HTMLElement>("[data-work-item]"));
+    const now = document.querySelector<HTMLElement>("[data-work-now]");
+    const dots = Array.from(document.querySelectorAll<HTMLElement>("[data-work-dot]"));
+    if (!items.length || !now || now.dataset.bound) return;
+    now.dataset.bound = "1";
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) {
+        if (!e.isIntersecting) continue;
+        const i = items.indexOf(e.target as HTMLElement);
+        now.textContent = String(i + 1).padStart(2, "0");
+        dots.forEach((d, k) => d.classList.toggle("on", k === i));
+      }
+    }, { rootMargin: "-50% 0px -50% 0px" });
+    items.forEach((it) => io.observe(it));
+    document.addEventListener("astro:before-swap", () => io.disconnect(), { once: true });
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
 <style>
   .featured {
     position: relative; z-index: 1;
     padding: clamp(16px, 3vh, 40px) max(20px, env(safe-area-inset-right, 0px)) clamp(80px, 12vh, 140px) max(20px, env(safe-area-inset-left, 0px));
-    display: flex; flex-direction: column; gap: clamp(40px, 8vh, 88px);
+    display: grid; grid-template-columns: minmax(200px, 2.4fr) minmax(0, 9fr); gap: clamp(24px, 4vw, 64px); align-items: start;
   }
-  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  .head { align-self: stretch; }
+  .pin { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 112px); display: flex; flex-direction: column; gap: 14px; }
   h2 {
-    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(40px, 6vw, 80px); line-height: 0.95;
+    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 100%; font-size: clamp(36px, 3.6vw, 58px); line-height: 0.92;
     text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
   }
-  .count { font: 500 clamp(14px, 1.4vw, 18px) var(--font-mono); letter-spacing: 0.08em; opacity: 0.75; padding-bottom: 0.4em; }
+  .count { margin: 0; font: 500 clamp(14px, 1.3vw, 18px) var(--font-mono); letter-spacing: 0.08em; opacity: 0.8; font-variant-numeric: tabular-nums; }
+  .dots { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
+  .dots li { width: 18px; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--world-fg) 25%, transparent); transition: background-color var(--t-ui) var(--ease-out), width var(--t-ui) var(--ease-out); }
+  .dots li.on { width: 34px; background: var(--thread); }
 
   .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(96px, 16vh, 180px); }
   .project {
@@ -107,7 +137,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .lane { opacity: 0.75; text-align: right; }
   .mid { display: flex; flex-direction: column; gap: 12px; }
   h3 {
-    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 112%; font-size: clamp(30px, 3.6vw, 52px); line-height: 0.95;
+    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 112%; font-size: clamp(28px, 2.9vw, 44px); line-height: 0.95; text-wrap: balance;
     text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
   }
   h3 a { color: inherit; text-decoration: none; }
@@ -137,6 +167,19 @@ const pad = (n: number) => String(n).padStart(2, "0");
   @keyframes glow-in { from { opacity: 0; scale: 0.75; } to { opacity: 0.5; scale: 1; } }
   @keyframes meta-in { from { opacity: 0; translate: 0 30px; } to { opacity: 1; translate: 0 0; } }
 
+  /* Narrower screens: the column becomes a small sticky label riding along the top */
+  @media (max-width: 1000px) {
+    .featured { grid-template-columns: 1fr; gap: clamp(28px, 5vh, 48px); }
+    .head { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px); z-index: 2; align-self: start; }
+    .pin {
+      position: static; flex-direction: row; align-items: center; gap: 14px; width: fit-content;
+      padding: 8px 14px; border-radius: 999px;
+      background: color-mix(in srgb, var(--world-bg) 60%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 10px 24px -14px rgb(0 0 0 / 0.6);
+    }
+    h2 { font: 600 12px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; text-shadow: none; }
+    .count { font-size: 12px; }
+  }
   @media (max-width: 760px) {
     .project { grid-template-columns: 1fr; }
     .glow { inset: -12% -20% 40% -20%; } /* phones: frame on top, so the glow stays above the text */

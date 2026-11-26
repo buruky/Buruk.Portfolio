@@ -12,10 +12,13 @@ import Stats from "@/components/Stats.astro";
     <!-- Hero (2026-11-25): the glass ቡሩኽ intro and the "C · Lockup" layout. See GlassHero.astro. -->
     <GlassHero />
     <div class="hillside">
-      <StoryTeaser />
-      <Stats />
-      <FeaturedWork />
-      <BkwsDoorway />
+      <div class="veiled">
+        <StoryTeaser />
+        <Stats />
+        <FeaturedWork />
+        <BkwsDoorway />
+      </div>
+      <!-- No veil here: at the end of Home the glass name comes out from behind the green and rests beside "Let's talk." -->
       <SiteFooter />
     </div>
   </main>
@@ -24,11 +27,13 @@ import Stats from "@/components/Stats.astro";
 <style>
   /* The rest of Home sits on a see-through morning-green veil over the glass layer (GlassHero), so the floating
      glass name shows faintly behind every section. It sits above that fixed layer, so it needs its own stacking. */
-  .hillside {
+  .hillside { position: relative; z-index: 1; }
+  .veiled {
     --hill: #244a2e;
-    position: relative; z-index: 1;
     --veil: color-mix(in srgb, var(--hill) 58%, transparent);
-    /* starts as dark as the bottom of the hero's shade, so there's no seam, then settles into the veil */
-    background: linear-gradient(to bottom, rgb(5 5 6 / 0.78) 0, var(--veil) clamp(160px, 26vh, 300px), var(--veil) 100%);
+    /* starts as dark as the bottom of the hero's shade, so there's no seam, settles into the veil,
+       then thins out over the last stretch so the footer sits on the open scene */
+    background: linear-gradient(to bottom, rgb(5 5 6 / 0.78) 0, var(--veil) clamp(160px, 26vh, 300px),
+      var(--veil) calc(100% - clamp(200px, 40vh, 420px)), transparent 100%);
   }
 </style>

@@ -16,9 +16,10 @@ const STATS = [
   { value: 2, decimals: 0, label: "Research papers", note: "Quantum computing · NASA GRACE", img: graceFo, pos: "50% 30%" },
 ];
 ---
-<section class="stats" aria-labelledby="stats-title" data-stats style={`--n: ${STATS.length}`}>
+<section class="stats" aria-labelledby="stats-title" data-stats data-section="By the numbers" style={`--n: ${STATS.length}`}>
   <div class="inner">
-    <h2 id="stats-title" data-reveal><span class="ln"><span>By the numbers.</span></span></h2>
+    <!-- No visible heading: the numbers are the headline (each section on Home opens differently) -->
+    <h2 id="stats-title" class="sr-only">By the numbers</h2>
     <ol class="tiles">
       {STATS.map((s) => (
         <li class="tile" data-tile tabindex="0" aria-label={`${s.label}: ${s.value.toFixed(s.decimals)}. ${s.note}`}>
@@ -77,10 +78,15 @@ const STATS = [
       t.addEventListener("click", () => light(i), on); // touch: tap to light
       t.addEventListener("focus", () => light(i), on);
     });
-    // the first tile lights up once the section is on screen
+    // Once the section is on screen, the numbers count up, and the first tile lights unless one already is (the
+    // pointer may be resting on a tile as it scrolls in). Counting never depends on that: before, a hover that came
+    // first left every number stuck at 0.
     const io = new IntersectionObserver((es) => {
-      if (es.some((e) => e.isIntersecting) && at < 0) { light(0); tiles.forEach((_, k) => count(k)); io.disconnect(); }
-    }, { threshold: 0.4 });
+      if (!es.some((e) => e.isIntersecting)) return;
+      if (at < 0) light(0);
+      tiles.forEach((_, k) => count(k));
+      io.disconnect();
+    }, { threshold: 0.25 });
     io.observe(section.querySelector(".tiles")!);
     ac.signal.addEventListener("abort", () => io.disconnect());
   }
@@ -93,10 +99,7 @@ const STATS = [
     padding: clamp(56px, 10vh, 110px) max(20px, env(safe-area-inset-right, 0px)) clamp(56px, 10vh, 110px) max(20px, env(safe-area-inset-left, 0px));
     display: flex; flex-direction: column; justify-content: center; gap: clamp(24px, 5vh, 48px);
   }
-  h2 {
-    margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(40px, 6vw, 80px); line-height: 0.95;
-    text-shadow: 0 0.12em 0.35em rgb(8 30 14 / 0.28);
-  }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   .tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px); }
   .tile {
@@ -113,8 +116,8 @@ const STATS = [
   .note { margin-top: 4px; font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0; transition: opacity 500ms var(--ease-out); }
   .num {
     margin-top: auto; font-family: var(--font-display); font-weight: 900; font-stretch: 112%;
-    font-size: clamp(56px, 8vw, 132px); line-height: 0.85; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
-    opacity: 0.28; transition: opacity 500ms var(--ease-out);
+    font-size: clamp(72px, 11vw, 190px); line-height: 0.8; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+    opacity: 0.5; transition: opacity 500ms var(--ease-out); /* the headline now, so never too faint */
   }
 
   /* The photo: hidden below the tile, rises into place when the tile is active, darkened so the text stays readable */
@@ -136,7 +139,7 @@ const STATS = [
     /* phones: stacked wide tiles, label top-left and number bottom-left as on desktop */
     .tiles { grid-template-columns: 1fr; }
     .tile { aspect-ratio: 2 / 1; }
-    .num { font-size: 15vw; }
+    .num { font-size: 21vw; }
     .note { display: none; }
   }
 </style>

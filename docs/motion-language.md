@@ -76,20 +76,19 @@ Glitches never loop forever. The only repeating one is chapter 07, which fires a
 - **Grain** shifts at 12 fps (stepped, like film) with linear timing. It's static with reduced motion.
 - **Light** (the sun glow, horizon light) drifts a little with scroll inside each world, never on a timer.
 - **Night details** (stars, windows) twinkle slowly (3–6 s), only while visible.
-- **The pointer:** no custom cursor, no glow blob (too big, and a common template look), and nothing that needs precise aim. Each world gets its own pointer behaviour, all with heavy smoothing and only on devices with a mouse:
-  | World | Pointer effect |
+- **The pointer (revised 2026-11-26):** no custom cursor, no glow blob, nothing that needs precise aim, and **nothing that follows the pointer around** (the scene and lights hold still). Since the glass ቡሩኽ hero, **water and glass are the interaction language**: you touch the scene, it answers, and it settles.
+  | Where | Interaction |
   | --- | --- |
-  | Home (morning) | **Wind through grass:** long grass leans away from the pointer and sways gently on its own |
-  | Work (noon), About (golden hour), Contact (sunset) | **The pointer is the sun:** a heading's long shadow swings away from the pointer |
-  | Education, Skills, Resume (afternoon) | **Dust in a sunbeam:** dust drifting in a slanted beam is stirred by the pointer |
-  | The leap (dusk) | **Windows answer you:** windows near the pointer switch on and fade slowly, leaving a trail (after teamLab's resonating lamps) |
-  | Research (night) | **Moon on water:** the pointer is the moon, with a shimmering reflection below (after Hiroshige's moonlit prints) |
-  | Chapter 07, 404 (midnight) | **TV static:** text near the pointer fills with static, colour split and shake |
+  | Home (built) | **The pond:** click or tap anywhere that isn't a link for a ripple and a quiet water drop; a mouse draws a thin wake; the glass letters bob when rings reach them and can be grabbed and flicked. At the end of Home the name comes out from behind the green veil and rests beside "Let's talk.", where it can be flicked again. |
+  | Every page | **The glass ቡሩኽ travels with you:** the one object that lives through the whole site (the "one asset" idea from the hero picks). Each page decides where it rests and how it reacts. |
+  | Research (night) | **Moon on water:** the same pond at night, with the moon's reflection breaking up under ripples (after Hiroshige's moonlit prints) |
+  | The leap (dusk) | **Windows answer you:** windows near a tap or click switch on and fade slowly (after teamLab's resonating lamps); decided when 4.4 is built |
+  | Chapter 07, 404 (midnight) | **TV static:** text you touch fills with static, colour split and shake |
   | BK Web Studios | Its own world; decided with that page |
 
-  Rejected: the big glow, star-layer parallax, letters widening near the pointer, Tom and Jerry satellites, star trails, speed-stirred grain.
+  Dropped with the old hero: wind through grass (Home), and "the pointer is the sun" / dust in a sunbeam as pointer-follow effects. A fixed sun can still cast the headline shadows. Rejected earlier: the big glow, star-layer parallax, letters widening near the pointer, Tom and Jerry satellites, star trails, speed-stirred grain.
 
-  On phones they rest in a still default position.
+  On phones, everything works by tap; nothing depends on hover.
 
 ## 7. Interruption rules
 

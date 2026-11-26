@@ -67,7 +67,7 @@ The trade-off is that animations must be cleaned up and restarted on each page c
 ## Risks to watch
 
 - **Too much JavaScript.** GSAP, Lenis, OGL and Howler together are fine, but we load each one only where it's used.
-- **Accessibility of smooth scroll and heavy motion.** The reduced-motion version is planned from the start (step 10.2), not added at the end.
+- **Accessibility of smooth scroll and heavy motion.** The reduced-motion version is planned from the start (step 4.1 for the glass and water, 10.2 for every page), not added at the end.
 - **Page-change cleanup.** Every animated page needs a "start / stop" pattern so nothing leaks between pages. We'll set it up once in step 2.2.
 
 ## Sources

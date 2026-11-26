@@ -1,24 +1,29 @@
 ---
-// Persists across pages: the logo, sound toggle and menu button never reload.
+// The header, "Corners" (chosen 2026-11-26 from https://claude.ai/artifact/RtRRqHxgpi2SRR4jfT74Fy): no bar. Each corner of
+// the screen holds one thing: the name (top left), MENU with the page count (top right), sound (bottom left), and where
+// you are on the page (bottom right). Persists across pages: the logo, sound toggle and menu button never reload.
+// "Where you are" reads [data-section="Label"] elements on the page; pages without them leave that corner empty.
+import { MENU } from "@/lib/worlds";
+const count = String(MENU.length).padStart(2, "0");
 ---
 <header class="hdr" transition:persist="site-header">
   <a class="logo" href="/" aria-label="Buruk Yimesgen, home">
-    <span class="mono" lang="ti" aria-hidden="true">ቡሩኽ</span>
-    <span class="name" aria-hidden="true">Buruk Yimesgen</span>
+    <span class="name" aria-hidden="true"><span data-fly-line>Buruk</span><br /><span data-fly-line>Yimesgen</span></span>
+    <span class="sub" aria-hidden="true">Software engineer · Seattle</span>
   </a>
-  <div class="actions">
-    <button type="button" class="pill" data-sound-toggle aria-pressed="false">
-      <span class="dot" aria-hidden="true"></span><span data-sound-label>Sound off</span>
-    </button>
-    <button type="button" class="pill menu-btn" data-menu-button aria-expanded="false" aria-controls="site-menu">
-      <span data-menu-label>Menu</span>
-    </button>
-  </div>
+  <button type="button" class="menu-btn" data-menu-button aria-expanded="false" aria-controls="site-menu">
+    <span data-menu-label>Menu</span><sup aria-hidden="true">({count})</sup>
+  </button>
+  <button type="button" class="snd" data-sound-toggle aria-pressed="false">
+    <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-sound-label>Sound off</span>
+  </button>
+  <p class="where" data-where aria-hidden="true" hidden><span data-where-n></span><b data-where-name></b></p>
 </header>
 
 <script>
   import { isSoundOn, setSound, onSoundChange, play } from "@/lib/sound";
 
+  const hdr = document.querySelector<HTMLElement>(".hdr")!;
   const btn = document.querySelector<HTMLButtonElement>("[data-sound-toggle]")!;
   const label = btn.querySelector<HTMLElement>("[data-sound-label]")!;
   function render(on: boolean) {
@@ -27,91 +32,127 @@
   }
   render(isSoundOn());
   onSoundChange(render);
-  // Once the page scrolls, the header gets a solid strip in the current world's colour so content never runs under it.
-  const hdr = document.querySelector<HTMLElement>(".hdr")!;
-  const onScroll = () => hdr.classList.toggle("scrolled", scrollY > 8);
-  addEventListener("scroll", onScroll, { passive: true });
-  document.addEventListener("astro:page-load", onScroll);
-
   btn.addEventListener("click", () => {
     const on = !isSoundOn();
     setSound(on);
     if (on) play("toggle");
   });
+
+  // Bottom right: which section is in the middle of the screen, as "02 / 06" and its name.
+  const where = hdr.querySelector<HTMLElement>("[data-where]")!;
+  const whereN = where.querySelector<HTMLElement>("[data-where-n]")!;
+  const whereName = where.querySelector<HTMLElement>("[data-where-name]")!;
+  let stop: (() => void) | null = null;
+  function watch() {
+    stop?.();
+    const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-section]"));
+    where.hidden = sections.length === 0;
+    if (!sections.length) { stop = null; return; }
+    const total = String(sections.length).padStart(2, "0");
+    const show = (i: number) => { whereN.textContent = `${String(i + 1).padStart(2, "0")} / ${total}`; whereName.textContent = sections[i].dataset.section ?? ""; };
+    show(0);
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) if (e.isIntersecting) show(sections.indexOf(e.target as HTMLElement));
+    }, { rootMargin: "-50% 0px -50% 0px" });
+    sections.forEach((s) => io.observe(s));
+    // the bottom corners step aside at the very end, where the footer has its own bottom row
+    const ends = Array.from(document.querySelectorAll<HTMLElement>("[data-corners-hide]"));
+    const endIo = new IntersectionObserver((es) => { hdr.classList.toggle("at-end", es.some((e) => e.isIntersecting)); });
+    ends.forEach((el) => endIo.observe(el));
+    stop = () => { io.disconnect(); endIo.disconnect(); hdr.classList.remove("at-end"); };
+  }
+  document.addEventListener("astro:page-load", watch);
+  // past the first screen, soft fades at the top and bottom edges keep the corners readable over the page
+  const onScroll = () => hdr.classList.toggle("scrolled", scrollY > innerHeight * 0.6);
+  addEventListener("scroll", onScroll, { passive: true });
+  document.addEventListener("astro:page-load", onScroll);
 </script>
 
 <style>
+  /* The header is a layer over the whole screen; only its four corners take clicks. */
   .hdr {
-    position: fixed;
-    inset: 0 0 auto;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: calc(env(safe-area-inset-top, 0px) + 14px) max(16px, env(safe-area-inset-right, 0px)) 14px max(16px, env(safe-area-inset-left, 0px));
+    position: fixed; inset: 0; z-index: 100; pointer-events: none;
+    --edge-x: clamp(18px, 2vw, 28px); --edge-y: clamp(16px, 2.6vh, 24px);
     color: var(--world-fg);
-    pointer-events: none;
+    text-shadow: 0 1px 14px rgb(0 0 0 / 0.35); /* the corners sit on photos and pages, so they carry a little shade */
   }
-  .hdr > * { pointer-events: auto; }
-  .hdr::before {
-    content: ""; position: absolute; inset: 0; z-index: -1;
-    /* frosted glass: the page shows through, blurred, with a thin lit edge along the bottom */
-    background: color-mix(in srgb, var(--world-bg) 62%, transparent);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
-    backdrop-filter: blur(18px) saturate(1.4);
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--world-fg) 14%, transparent), 0 10px 30px -18px rgb(0 0 0 / 0.5);
+  .hdr > * { position: absolute; pointer-events: auto; margin: 0; }
+  /* No bar: just a soft fade in the page's own colour behind the top and bottom corners, once you've scrolled */
+  .hdr::before, .hdr::after {
+    content: ""; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none;
     opacity: 0; transition: opacity var(--t-ui) var(--ease-out);
   }
-  .hdr.scrolled::before { opacity: 1; }
-  :global(html.menu-open) .hdr::before { opacity: 0; }
-  .logo {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    color: inherit;
-    text-decoration: none;
-    min-height: 44px;
-    align-items: center;
-  }
-  .mono { font-family: var(--font-geez); font-size: 26px; line-height: 1; }
-  .name {
-    font-family: var(--font-display);
-    font-weight: 900;
-    font-stretch: 118%;
-    font-size: 15px;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
-  }
-  .actions { display: flex; gap: 8px; }
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 44px;
-    padding: 0 16px;
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
-    background: color-mix(in srgb, var(--world-bg) 55%, transparent);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--world-fg) 22%, transparent); /* glassy top edge */
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    color: inherit;
-    font: 600 14px var(--font-body);
-    cursor: pointer;
+  .hdr::before { top: 0; height: calc(env(safe-area-inset-top, 0px) + 150px); background: linear-gradient(to bottom, color-mix(in srgb, var(--world-bg) 94%, transparent) 0, color-mix(in srgb, var(--world-bg) 80%, transparent) 40%, transparent); }
+  .hdr::after { bottom: 0; height: calc(env(safe-area-inset-bottom, 0px) + 100px); background: linear-gradient(to top, color-mix(in srgb, var(--world-bg) 78%, transparent), transparent); }
+  .hdr.scrolled::before, .hdr.scrolled::after { opacity: 1; }
+  .hdr.scrolled.at-end::after { opacity: 0; }
+  :global(html.menu-open) .hdr::before, :global(html.menu-open) .hdr::after { opacity: 0; }
+  .logo, .menu-btn { top: calc(env(safe-area-inset-top, 0px) + var(--edge-y)); }
+  .snd, .where { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge-y)); }
+  .logo, .snd { left: max(var(--edge-x), env(safe-area-inset-left, 0px)); }
+  .menu-btn, .where { right: max(var(--edge-x), env(safe-area-inset-right, 0px)); }
+
+  /* top left: the name */
+  .logo { display: flex; flex-direction: column; gap: 8px; color: inherit; text-decoration: none; }
+  .name { font: 900 22px/0.95 var(--font-display); font-stretch: 122%; text-transform: uppercase; letter-spacing: -0.02em; }
+  .sub { font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+
+  /* top right: MENU (08) */
+  .menu-btn {
+    display: flex; gap: 4px; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit;
+    font: 900 22px/1 var(--font-display); font-stretch: 122%; text-transform: uppercase; letter-spacing: -0.02em;
     -webkit-tap-highlight-color: transparent;
-    transition: border-color var(--t-hover) ease, background-color var(--t-hover) ease, transform var(--t-press) var(--ease-out);
   }
-  .pill:active { transform: scale(0.97); }
-  @media (hover: hover) and (pointer: fine) { .pill:hover { border-color: currentColor; } }
-  .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; }
-  [aria-pressed="true"] .dot { background: currentColor; }
-  /* With the menu open, the header sits on the inverted panel, so flip its colours too. */
-  :global(html.menu-open) .hdr { color: var(--world-bg); }
-  :global(html.menu-open) .pill { background: transparent; }
+  .menu-btn [data-menu-label] { position: relative; }
+  .menu-btn [data-menu-label]::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 2px; background: var(--thread);
+    transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--t-ui) var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) { .menu-btn:hover [data-menu-label]::after { transform: scaleX(1); } }
+  .menu-btn sup { font: 500 10px var(--font-mono); letter-spacing: 0.06em; opacity: 0.7; }
+
+  /* bottom left: sound, a waveform that moves while it's on */
+  .snd {
+    display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit;
+    font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; -webkit-tap-highlight-color: transparent;
+  }
+  .wave { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+  .wave i { width: 2px; height: 30%; border-radius: 1px; background: currentColor; transition: height var(--t-ui) var(--ease-out); }
+  .snd[aria-pressed="true"] .wave i { animation: hdr-wave 0.9s ease-in-out infinite; }
+  .snd[aria-pressed="true"] .wave i:nth-child(2) { animation-delay: -0.3s; }
+  .snd[aria-pressed="true"] .wave i:nth-child(3) { animation-delay: -0.6s; }
+  .snd[aria-pressed="true"] .wave i:nth-child(4) { animation-delay: -0.15s; }
+  @keyframes hdr-wave { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+
+  /* bottom right: where you are */
+  .where { text-align: right; font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+  .where b { display: block; margin-top: 2px; font: 900 17px var(--font-display); font-stretch: 122%; letter-spacing: -0.02em; }
+
+  .hdr > :is(.snd, .where) { transition: opacity var(--t-ui) var(--ease-out); }
+  .hdr.at-end > :is(.snd, .where) { opacity: 0; pointer-events: none; }
+
+  :focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+
+  /* With the menu open: MENU (now CLOSE) sits on the light panel, so it flips colour; on phones the panel covers
+     everything, so the whole header flips. The bottom-right corner steps away. */
+  :global(html.menu-open) .menu-btn { color: var(--world-bg); text-shadow: none; }
+  .menu-btn { transition: color var(--t-panel) var(--ease-drawer), opacity 600ms ease; }
+  :global(html.menu-open) .hdr > .where { opacity: 0; }
+  :global(html.menu-open) .hdr > .snd { filter: blur(6px); opacity: 0.45; }
+  .snd { transition: filter var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out); }
+  @media (max-width: 640px) {
+    :global(html.menu-open) .hdr { color: var(--world-bg); text-shadow: none; }
+    :global(html.menu-open) .hdr > :is(.snd, .sub) { opacity: 0; }
+  }
   .hdr { transition: color var(--t-panel) var(--ease-drawer); }
-  @media (max-width: 480px) {
-    .name { display: none; }
-    [data-sound-toggle] { padding: 0 14px; }
+
+  @media (max-width: 600px) {
+    .name { font-size: 17px; }
+    .sub { display: none; }
+    .menu-btn { font-size: 18px; }
+    .where b { font-size: 13px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .snd[aria-pressed="true"] .wave i { animation: none; height: 70%; }
   }
 </style>
