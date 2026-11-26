@@ -10,6 +10,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as opentype from "opentype.js";
 import { getImage } from "astro:assets";
+import me from "@content/media/images/profile.jpg";
+import portrait from "@content/media/images/profile2.jpg";
+import place from "@content/media/images/about/seattle.jpg";
 import asmara from "@content/media/images/about/asmara-harnet-avenue.jpg";
 
 // ቡ ሩ ኽ: each letter's family of 7 vowel forms, which form is the one in the name, and the sound it makes.
@@ -42,6 +45,11 @@ const glyphs = {
 };
 
 const photo = await getImage({ src: asmara, width: 1600, format: "webp", quality: 72 });
+const keepsakePhotos = {
+  me: (await getImage({ src: me, width: 700, format: "webp", quality: 82 })).src,
+  portrait: (await getImage({ src: portrait, width: 600, format: "webp", quality: 82 })).src,
+  place: (await getImage({ src: place, width: 800, format: "webp", quality: 82 })).src,
+};
 
 const TOPICS = [
   { label: "Salesforce", fill: "Salesforce apps.", href: "/work" },
@@ -57,7 +65,7 @@ const TOPICS = [
   } catch (e) {}
 </script>
 
-<section class="gh" id="glass-hero" data-photo={photo.src} aria-labelledby="gh-title">
+<section class="gh" id="glass-hero" data-photo={photo.src} data-photos={JSON.stringify(keepsakePhotos)} aria-labelledby="gh-title">
   <canvas class="gl" data-gl aria-hidden="true"></canvas>
   <div class="shade" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
@@ -70,6 +78,8 @@ const TOPICS = [
     <button type="button" data-enter="quiet">Enter quietly</button>
   </div>
   <div class="syls" data-syls aria-hidden="true"></div>
+  <p class="ks-hint" data-ks-hint aria-hidden="true">Pick them up.</p>
+  <p class="sr-only">Photos of me float in the water around the name.</p>
   <button type="button" class="skip" data-skip hidden>Skip intro</button>
 
   <!-- the hero: layout C, the glass name in the slot, "I build" big beneath it -->
@@ -97,12 +107,14 @@ const TOPICS = [
   import * as THREE from "three";
   import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
   import { play, unlock, setSound } from "@/lib/sound";
+  import { createKeepsakes, type KeepsakeVariant } from "@/lib/keepsakes";
 
   type GlyphData = { upm: number; families: { t: number; lat: string; forms: { adv: number; d: (string | number)[] }[] }[] };
   type Letter = {
     pivot: THREE.Group; mesh: THREE.Mesh; geos: THREE.BufferGeometry[]; t: number; form: number; homeX: number;
     angle: number; vel: number; mode: "idle" | "cycle" | "lock"; bump: number; flash: number; lastTick: number;
     fy: number; fvy: number; hit: Set<number>; // floating on the water: offset, speed, ripples already felt
+    mat: THREE.MeshPhysicalMaterial; glint: number; // its own glass (tinted with its flag colour at the gate), and a passing glint
   };
 
   const SIZE = 2.2;            // world height of a letter before fitting
@@ -234,19 +246,55 @@ const TOPICS = [
       [rtA, rtB] = [rtB, rtA]; simStep++;
     }
     const bgMat = new THREE.ShaderMaterial({
-      uniforms: { tPhoto: { value: null as THREE.Texture | null }, tHeight: { value: rtA.texture }, texel: { value: new THREE.Vector2(1 / SIM_W, 1 / SIM_H) }, tint: { value: new THREE.Color(0, 0, 0) } },
+      uniforms: { tPhoto: { value: null as THREE.Texture | null }, tHeight: { value: rtA.texture }, texel: { value: new THREE.Vector2(1 / SIM_W, 1 / SIM_H) }, tint: { value: new THREE.Color(0, 0, 0) },
+        // The flag's colours as light through the glass: each letter casts a pool of light on the water (ቡ green, ሩ red, ኽ blue).
+        // soft pools of the flag's colours behind the letters at the gate (ቡ green, ሩ red, ኽ blue): uv.x, uv.y, radius
+        lightPos: { value: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()] },
+        lightCol: { value: [new THREE.Color(0x12ad2b), new THREE.Color(0xea0437).multiplyScalar(1.3), new THREE.Color(0x4189dd)] },
+        lightAmt: { value: 0 }, time: { value: 0 }, aspect: { value: 1.6 },
+        tObjects: { value: null as THREE.Texture | null }, objAmt: { value: 0 } },
       vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
       fragmentShader: `
         precision highp float; varying vec2 vUv;
         uniform sampler2D tPhoto; uniform sampler2D tHeight; uniform vec2 texel; uniform vec3 tint;
+        uniform vec3 lightPos[3]; uniform vec3 lightCol[3]; uniform float lightAmt; uniform float time; uniform float aspect;
+        uniform sampler2D tObjects; uniform float objAmt; // the gate's keepsakes, floating just under the surface
+        // a cheap caustic net: bright, thin, slowly moving lines like light at the bottom of a pool
+        float caustic(vec2 p) {
+          float c = 0.0; vec2 q = p;
+          for (int i = 0; i < 3; i++) {
+            q += vec2(sin(q.y * 1.7 + time * 0.6 + float(i)), cos(q.x * 1.5 - time * 0.5 + float(i) * 1.3)) * 0.55;
+            c += 1.0 / (1.0 + 18.0 * abs(sin(q.x + q.y)));
+          }
+          return c / 3.0;
+        }
         void main(){
           float l = texture2D(tHeight, vUv - vec2(texel.x, 0.0)).r, r = texture2D(tHeight, vUv + vec2(texel.x, 0.0)).r;
           float d = texture2D(tHeight, vUv - vec2(0.0, texel.y)).r, u = texture2D(tHeight, vUv + vec2(0.0, texel.y)).r;
           vec2 g = vec2(r - l, u - d);
           vec3 col = texture2D(tPhoto, vUv + g * 0.06).rgb * tint;
+          if (objAmt > 0.0) {
+            vec4 o = texture2D(tObjects, vUv + g * 0.035); // the ripples bend them too
+            if (o.a > 0.002) {
+              vec3 oc = o.rgb / o.a;
+              oc *= vec3(0.95, 0.99, 0.98);                                 // under a very thin layer of water
+              oc += caustic(vUv * vec2(aspect, 1.0) * 9.0) * 0.04;          // and its moving light
+              col = mix(col, oc * 0.9, o.a * objAmt); // bright enough to read every detail
+            }
+          }
           vec3 n = normalize(vec3(-g * 14.0, 1.0));
           float spec = pow(max(dot(n, normalize(vec3(-0.35, 0.55, 1.0))), 0.0), 90.0);
           col += (spec * 0.35 + (abs(g.x) + abs(g.y)) * 0.25) * max(tint.g, 0.2);
+          if (lightAmt > 0.0) {
+            vec2 w = (vUv + g * 0.5) * vec2(aspect, 1.0); // ripples bend the light too
+            for (int i = 0; i < 3; i++) {
+              vec2 d = w - lightPos[i].xy * vec2(aspect, 1.0);
+              float r = lightPos[i].z, pool = exp(-dot(d, d) / (r * r));
+              float net = caustic(d / r * 3.2 + float(i) * 7.0);
+              vec3 add = lightCol[i] * pool * (0.4 + 1.1 * net + (abs(g.x) + abs(g.y)) * 6.0) * lightAmt;
+              col = 1.0 - (1.0 - col) * (1.0 - clamp(add, 0.0, 1.0)); // screen blend: light, never paint
+            }
+          }
           gl_FragColor = vec4(col, 1.0);
           #include <colorspace_fragment>
         }`,
@@ -319,9 +367,9 @@ const TOPICS = [
     pen = -rowW / 2;
     const sylEls: HTMLSpanElement[] = [];
     built.forEach((b, i) => {
-      const mesh = new THREE.Mesh(b.geos[b.t], glass), pivot = new THREE.Group(); pivot.add(mesh);
+      const mat = glass.clone(), mesh = new THREE.Mesh(b.geos[b.t], mat), pivot = new THREE.Group(); pivot.add(mesh);
       pivot.position.x = pen + b.offset; pen += b.adv + TRACK; name.add(pivot);
-      letters.push({ pivot, mesh, geos: b.geos, t: b.t, form: b.t, homeX: pivot.position.x, angle: (i - 1) * 0.3, vel: 0.25, mode: "idle", bump: 0, flash: 0, lastTick: 0, fy: 0, fvy: 0, hit: new Set() });
+      letters.push({ pivot, mesh, geos: b.geos, t: b.t, form: b.t, homeX: pivot.position.x, angle: (i - 1) * 0.3, vel: 0.25, mode: "idle", bump: 0, flash: 0, lastTick: 0, fy: 0, fvy: 0, hit: new Set(), mat, glint: 0 });
       const el = document.createElement("span"); el.className = "syl"; el.textContent = b.lat; $<HTMLElement>("[data-syls]").append(el); sylEls.push(el);
     });
     const setForm = (l: Letter, i: number) => { l.form = i; l.mesh.geometry = l.geos[i]; };
@@ -376,9 +424,12 @@ const TOPICS = [
       buruk.position.set(bx1 * t, y, -1.6);
       yimesgen.position.set(bx1 + (yx1 - bx1) * Math.min(1, t * 1.05), y, -1.75);
     }
+    const helloEl = $<HTMLElement>("[data-hello]");
     function placeHello() {
+      // measured from the real screen, so it stays right even if this ran before the page's styles arrived
       const v = new THREE.Vector3(0, intro.y + SIZE * 0.44 * intro.s, 0).project(camera);
-      $<HTMLElement>("[data-hello]").style.top = `${(-v.y * 0.5 + 0.5) * H - 14}px`;
+      const y = (-v.y * 0.5 + 0.5) * root.clientHeight - 14;
+      if (Number.isFinite(y) && y > 40) helloEl.style.top = `${Math.round(y)}px`;
     }
     function layout() {
       W = canvas.clientWidth || innerWidth; H = canvas.clientHeight || innerHeight;
@@ -412,7 +463,7 @@ const TOPICS = [
     async function runIntro(withSound: boolean) {
       const my = ++run;
       if (withSound) { unlock(); setSound(true); play("enter"); } else setSound(false);
-      atGate = false;
+      atGate = false; ks?.leave(); ksDrop();
       root.classList.add("entered");
       $<HTMLButtonElement>("[data-skip]").hidden = false;
       $<HTMLButtonElement>("[data-skip]").focus({ preventScroll: true });
@@ -456,6 +507,7 @@ const TOPICS = [
 
     // 4. the name flies into the header logo; the photo comes up; the glass rises into the hero
     async function arrive(_my: number) {
+      atGate = false; ks?.leave(); ksDrop();
       $<HTMLButtonElement>("[data-skip]").hidden = true;
       sylEls.forEach((e) => e.classList.remove("on"));
       letters.forEach((l) => { if (l.mode !== "idle") { setForm(l, l.t); l.mode = "idle"; l.vel = 0.3; } });
@@ -546,15 +598,21 @@ const TOPICS = [
     const quiet = (t: EventTarget | null) => !!(t as Element | null)?.closest?.("a, button, input, select, textarea, label, summary, [role='button'], #site-menu, .hdr");
     addEventListener("pointerdown", (e) => {
       const grabbedNow = pressGrabbed; pressGrabbed = false;
-      if (grabbedNow || quiet(e.target) || html.classList.contains("intro-active") || html.classList.contains("menu-open")) return;
+      if (grabbedNow || quiet(e.target) || html.classList.contains("menu-open")) return;
+      if (html.classList.contains("intro-active") && !atGate) return; // no ripples while the intro plays
       const uv = toUV(e.clientX, e.clientY); if (!uv) return;
+      if (atGate && ks?.visible && ks.grab(uv.x, uv.y)) {
+        ksDragging = true; root.classList.add("grabbing");
+        pending.push({ u: uv.x, v: uv.y, s: 0.3, r: 0.01 }); // lifting it disturbs the water a little
+        return;
+      }
       pending.push({ u: uv.x, v: uv.y, s: reduce ? 0.6 : 1.4, r: 0.018 });
       drops.push({ u: uv.x, v: uv.y, s: reduce ? 0.6 : 1.4, step0: simStep, id: dropId++ }); if (drops.length > 24) drops.shift();
       play("drop");
     }, on);
     if (fine && !reduce) {
       addEventListener("pointermove", (e) => {
-        if (html.classList.contains("intro-active") || html.classList.contains("menu-open")) { wakeFrom = wakeTo = null; return; }
+        if ((html.classList.contains("intro-active") && !atGate) || html.classList.contains("menu-open") || ksDragging) { wakeFrom = wakeTo = null; return; }
         const uv = toUV(e.clientX, e.clientY); if (!uv) return;
         wakeTo = uv.clone(); if (!wakeFrom) wakeFrom = wakeTo.clone();
       }, { passive: true, signal: ac.signal });
@@ -563,9 +621,31 @@ const TOPICS = [
     root.addEventListener("pointerup", release, on); root.addEventListener("pointercancel", release, on);
     if (!reduce) addEventListener("pointermove", (e) => { px = (e.clientX / innerWidth) * 2 - 1; py = (e.clientY / innerHeight) * 2 - 1; }, { passive: true, signal: ac.signal });
 
+    /* ---------------- the gate's keepsakes, floating in the pond (src/lib/keepsakes.ts) ---------------- */
+    // which version of the gate: one print of Buruk (chosen), or ?keepsakes=prints for the three-photo version
+    const variant: KeepsakeVariant = new URLSearchParams(location.search).get("keepsakes") === "prints" ? "prints" : "me";
+    $<HTMLElement>("[data-ks-hint]").textContent = variant === "me" ? "That's me, floating. Pick it up." : "Some photos, floating. Pick them up.";
+    const ks = firstVisit ? createKeepsakes(JSON.parse(root.dataset.photos ?? "{}"), variant, reduce) : null;
+    let ksReady = false, ksDragging = false;
+    function ksLayout() {
+      if (!ks || !ksReady) return;
+      const A = bg.scale.x / bg.scale.y, visH = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.position.z - BG_Z);
+      ks.layout(A, (fx, fy) => { const uv = toUV(fx * W, fy * H); return uv ? { x: uv.x * A, y: uv.y } : null; }, visH / H / bg.scale.y, W < 640);
+    }
+    ks?.ready.then(() => { ksReady = true; ksLayout(); });
+    addEventListener("resize", () => ksLayout(), on);
+    addEventListener("pointermove", (e) => {
+      if (!ks || !atGate) return;
+      const uv = toUV(e.clientX, e.clientY); if (!uv) return;
+      if (ksDragging) ks.move(uv.x, uv.y);
+      else if (fine) root.classList.toggle("can-grab", ks.hover(uv.x, uv.y) && !quiet(e.target));
+    }, { passive: true, signal: ac.signal });
+    const ksDrop = () => { if (ksDragging) { ks?.release(); ksDragging = false; root.classList.remove("grabbing"); } };
+    addEventListener("pointerup", ksDrop, on); addEventListener("pointercancel", ksDrop, on);
+
     /* ---------------- render loop (paused when the hero is off screen) ---------------- */
     const clock = new THREE.Clock(), v3 = new THREE.Vector3();
-    let away = 0; // 0 in the hero → 1 once the hero has scrolled off: the glass is floating in the background
+    let away = 0, flagT = 0; // 0 in the hero → 1 once the hero has scrolled off: the glass is floating in the background
     // The menu: when it opens the glass steps beside the drawer and comes forward; hovering a link makes the letters glance at it.
     let menuT = 0, lookT = 0, lookY = 0, hoveringLink = false, linkY = 0;
     const menuEl = document.getElementById("site-menu");
@@ -575,6 +655,10 @@ const TOPICS = [
     r3.setAnimationLoop(() => {
       const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
       if (document.hidden) return;
+      if (atGate) {
+        if (canvas.clientWidth !== W || canvas.clientHeight !== H) layout(); // styles arrived late: size up properly
+        placeHello();
+      }
       const heroH = root.offsetHeight || H;
       const pr = Math.min(1, Math.max(0, (scrollY / heroH - 0.12) / 0.7)), target = pr * pr * (3 - 2 * pr);
       away += (target - away) * (reduce ? 1 : Math.min(1, dt * 4));
@@ -585,6 +669,29 @@ const TOPICS = [
       lookY += ((hoveringLink ? (linkY / H) * 2 - 1 : 0) - lookY) * (reduce ? 1 : Math.min(1, dt * 6));
       (bgMat.uniforms.tint.value as THREE.Color).setScalar(bgLevel * BRIGHT).lerp(DEEP.clone().multiplyScalar(bgLevel), away).multiplyScalar(1 - 0.3 * menuT);
       stepSim(); stepSim(); bgMat.uniforms.tHeight.value = rtA.texture;
+      if (ks && ksReady && ks.visible) {
+        ks.update(dt, { drops, simStep, speed: SPEED, simW: SIM_W, simH: SIM_H, ripple: (u, v, s, r) => { pending.push({ u, v, s, r }); } });
+        ks.render(r3); bgMat.uniforms.tObjects.value = ks.target.texture; bgMat.uniforms.objAmt.value = 1;
+      } else bgMat.uniforms.objAmt.value = 0;
+      // where each letter's coloured light lands: from the key light, through the letter, onto the water
+      {
+        // only before the intro: the flag's light glows while "This is my portfolio, and I'm ቡሩኽ" is up, then fades as you enter
+        flagT += ((atGate ? 1 : 0) - flagT) * (reduce ? 1 : Math.min(1, dt * 1.6));
+        {
+          // each pool sits just behind and a little below its letter, and follows it
+          const lp = bgMat.uniforms.lightPos.value as THREE.Vector3[], tmp = new THREE.Vector3();
+          letters.forEach((l, i) => {
+            l.pivot.getWorldPosition(tmp);
+            const f = (BG_Z - camera.position.z) / (tmp.z - camera.position.z);
+            const hx = camera.position.x + (tmp.x - camera.position.x) * f, hy = camera.position.y + (tmp.y - camera.position.y) * f - 0.35;
+            const r = (SIZE * 0.42 * name.scale.x * f * (1 - 0.35 * annT)) / bg.scale.y;
+            lp[i].set((hx - bg.position.x) / bg.scale.x + 0.5, (hy - bg.position.y) / bg.scale.y + 0.5, Math.max(0.02, r));
+          });
+          bgMat.uniforms.lightAmt.value = flagT * 0.22; // quieter than before: a hint of the colours, not a spotlight
+        }
+        bgMat.uniforms.time.value = reduce ? 0 : t;
+        bgMat.uniforms.aspect.value = bg.scale.x / bg.scale.y;
+      }
       sx += (px - sx) * 0.04; sy += (py - sy) * 0.04;
       const arrived = root.classList.contains("arrived") && poseT > 0.99;
       const kk = reduce ? 1 : Math.min(1, dt * 3.2);
@@ -606,11 +713,16 @@ const TOPICS = [
       letters.forEach((l, i) => {
         if (l.mode === "cycle") { l.vel += (10 - l.vel) * dt * 2; l.angle += l.vel * dt * (i % 2 ? -1 : 1) * 0.35; }
         else if (l.mode === "lock") { l.angle += (Math.round(l.angle / (Math.PI * 2)) * Math.PI * 2 - l.angle) * Math.min(1, dt * 6); }
-        else if (atGate || ((away > 0.25 || menuT > 0.05) && grabbed !== l)) {
-          // at the gate and in the background the letters don't spin: they turn back to face you and only sway a little
-          const front = Math.round(l.angle / (Math.PI * 2)) * Math.PI * 2, sway = reduce ? 0 : Math.sin(t * 0.55 + i * 1.3) * (atGate ? 0.22 : 0.14);
-          l.angle += (front + sway - l.angle) * Math.min(1, dt * 2.5); l.vel = 0.25;
-        } else if (grabbed !== l) { const idle = reduce ? 0 : 0.22 + i * 0.04; l.vel += (idle - l.vel) * Math.min(1, dt * 0.9); l.angle += l.vel * dt; }
+        else if (grabbed !== l) {
+          if (!atGate && Math.abs(l.vel) > 0.6) {
+            // flicked: it spins freely and slows down, like a coin on a table…
+            l.vel *= Math.pow(0.3, dt); l.angle += l.vel * dt;
+          } else {
+            // …otherwise it never spins: it turns back to face you and only sways a little
+            const front = Math.round(l.angle / (Math.PI * 2)) * Math.PI * 2, sway = reduce ? 0 : Math.sin(t * 0.55 + i * 1.3) * (atGate ? 0.22 : 0.16);
+            l.angle += (front + sway - l.angle) * Math.min(1, dt * 2.5); l.vel = 0;
+          }
+        }
         l.bump *= Math.pow(0.02, dt); l.flash *= Math.pow(0.05, dt);
         if (drops.length) {
           // where this letter sits over the photo; when a ring reaches that spot, the letter lifts and settles
@@ -644,9 +756,8 @@ const TOPICS = [
       });
       key.intensity = 3.2 + Math.max(0, ...letters.map((l) => l.flash)) * 5;
       const tilt = arrived ? 1 : 0.4;
-      name.rotation.y = sx * 0.15 * tilt; name.rotation.x = sy * 0.08 * tilt;
-      key.position.set(3 + sx * 4, 4 - sy * 3, 6);
-      bg.position.x = -sx * 0.25; bg.position.y = sy * 0.15;
+      name.rotation.set(0, 0, 0); void tilt; // the scene holds still under the pointer; only the light follows it
+
       r3.render(scene, camera);
     });
 
@@ -655,7 +766,7 @@ const TOPICS = [
       r3.setAnimationLoop(null);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) { o.geometry.dispose(); const m = o.material as THREE.Material & { map?: THREE.Texture | null }; m.map?.dispose(); m.dispose(); } });
       letters.forEach((l) => l.geos.forEach((g) => g.dispose()));
-      rtA.dispose(); rtB.dispose(); simMat.dispose(); (bgMat.uniforms.tPhoto.value as THREE.Texture | null)?.dispose();
+      ks?.dispose(); letters.forEach((l) => l.mat.dispose()); rtA.dispose(); rtB.dispose(); simMat.dispose(); (bgMat.uniforms.tPhoto.value as THREE.Texture | null)?.dispose();
       envTex.dispose(); pmrem.dispose(); r3.dispose();
     });
     return () => ac.abort();
@@ -702,11 +813,21 @@ const TOPICS = [
   :global(.hdr) { transition: opacity 600ms ease, color var(--t-panel) var(--ease-drawer); } /* keep the header's own colour flip */
 
   /* gate */
-  .hello, .gate, .skip { display: none; }
+  .hello, .gate, .skip, .ks-hint { display: none; }
   :global(html.intro-active) .hello, :global(html.intro-active) .gate:not([hidden]) { display: flex; }
   :global(html.intro-active) .skip:not([hidden]) { display: block; }
+  :global(html.intro-active) .ks-hint { display: block; }
+  .ks-hint {
+    position: absolute; z-index: 4; left: max(20px, env(safe-area-inset-left, 0px)); top: calc(env(safe-area-inset-top, 0px) + 20px); margin: 0; pointer-events: none;
+    font: 400 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--world-fg) 62%, transparent);
+    transition: opacity 400ms ease;
+  }
+  .entered .ks-hint { opacity: 0; }
+  /* the gate's text and button row must not catch drags meant for the water */
+  .hello, .gate { pointer-events: none; }
+  .gate button { pointer-events: auto; }
   .hello {
-    position: absolute; z-index: 4; left: 0; right: 0; margin: 0; justify-content: center; text-align: center;
+    position: absolute; z-index: 4; left: 0; right: 0; top: 22vh; margin: 0; justify-content: center; text-align: center;
     transform: translateY(-100%); padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
     font: 400 clamp(22px, 2.6vw, 38px)/1.2 var(--font-display); letter-spacing: -0.015em; text-wrap: balance;
     transition: opacity 450ms ease, transform 700ms var(--ease-out);
