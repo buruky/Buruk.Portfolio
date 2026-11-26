@@ -1,0 +1,646 @@
+---
+// Home hero (approved 2026-11-25): ቡሩኽ as three pieces of glass over Harnet Avenue, Asmara.
+// First visit: the glass waits with "This is my portfolio, and I'm ቡሩኽ" and the Enter buttons; entering cycles each letter
+// through its vowel forms until it locks, the glass shrinks to sit over BURUK, YIMESGEN slides out, and the Latin name flies
+// into the header logo while the photo comes up and the letters rise into the hero (layout "C · Lockup").
+// Samples: intro https://claude.ai/artifact/MQ9CURwH2sanqiL37P4azM · layout https://claude.ai/artifact/7D8tUuMh5kZeFqXSEXoQUU
+//
+// The letter outlines are read from Abyssinica SIL here, at build time, so the browser gets only the shapes it needs.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import * as opentype from "opentype.js";
+import { getImage } from "astro:assets";
+import asmara from "@content/media/images/about/asmara-harnet-avenue.jpg";
+
+// ቡ ሩ ኽ: each letter's family of 7 vowel forms, which form is the one in the name, and the sound it makes.
+const FAMILIES = [
+  { forms: [0x1260, 0x1261, 0x1262, 0x1263, 0x1264, 0x1265, 0x1266], t: 1, lat: "BU" },
+  { forms: [0x1228, 0x1229, 0x122a, 0x122b, 0x122c, 0x122d, 0x122e], t: 1, lat: "RU" },
+  { forms: [0x12b8, 0x12b9, 0x12ba, 0x12bb, 0x12bc, 0x12bd, 0x12be], t: 5, lat: "K" },
+];
+const fontFile = readFileSync(join(process.cwd(), "node_modules/@fontsource/abyssinica-sil/files/abyssinica-sil-ethiopic-400-normal.woff"));
+const font = opentype.parse(fontFile.buffer.slice(fontFile.byteOffset, fontFile.byteOffset + fontFile.byteLength));
+const upm = font.unitsPerEm;
+// Outlines as flat command lists in font units, y pointing down: ["M", x, y, "L", x, y, "Q", x1, y1, x, y, "C", …, "Z"]
+const glyphs = {
+  upm,
+  families: FAMILIES.map((f) => ({
+    t: f.t,
+    lat: f.lat,
+    forms: f.forms.map((cp) => {
+      const g = font.charToGlyph(String.fromCodePoint(cp));
+      const d: (string | number)[] = [];
+      for (const c of g.getPath(0, 0, upm).commands) {
+        d.push(c.type);
+        if (c.type === "Q") d.push(Math.round(c.x1), Math.round(c.y1));
+        if (c.type === "C") d.push(Math.round(c.x1), Math.round(c.y1), Math.round(c.x2), Math.round(c.y2));
+        if (c.type !== "Z") d.push(Math.round(c.x), Math.round(c.y));
+      }
+      return { adv: g.advanceWidth ?? upm, d };
+    }),
+  })),
+};
+
+const photo = await getImage({ src: asmara, width: 1600, format: "webp", quality: 72 });
+
+const TOPICS = [
+  { label: "Salesforce", fill: "Salesforce apps.", href: "/work" },
+  { label: "Full stack", fill: "full-stack products.", href: "/work" },
+  { label: "Research", fill: "research with data.", href: "/research" },
+  { label: "BK Web Studios", fill: "websites for small businesses.", href: "/bk-web-studios" },
+];
+---
+<script is:inline>
+  // Before first paint: on the first visit this session, hold the page for the intro.
+  try {
+    if (!sessionStorage.getItem("bk-entered")) document.documentElement.classList.add("intro-active", "intro-logo-hidden");
+  } catch (e) {}
+</script>
+
+<section class="gh" id="glass-hero" data-photo={photo.src} aria-labelledby="gh-title">
+  <canvas class="gl" data-gl aria-hidden="true"></canvas>
+  <div class="shade" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <script type="application/json" data-glyphs set:html={JSON.stringify(glyphs)}></script>
+
+  <!-- the gate (first visit only) -->
+  <p class="hello" data-hello aria-hidden="true">This is my portfolio, and I&rsquo;m</p>
+  <div class="gate" data-gate hidden>
+    <button type="button" class="primary" data-enter="sound">Enter with sound</button>
+    <button type="button" data-enter="quiet">Enter quietly</button>
+  </div>
+  <div class="syls" data-syls aria-hidden="true"></div>
+  <button type="button" class="skip" data-skip hidden>Skip intro</button>
+
+  <!-- the hero: layout C, the glass name in the slot, "I build" big beneath it -->
+  <div class="stage ui">
+    <div class="slot" data-slot aria-hidden="true">
+      <span class="fallback" lang="ti">ቡሩኽ</span>
+    </div>
+    <div class="copy" data-build>
+      <h1 id="gh-title" class="sentence">
+        <span class="sr-only">Buruk Yimesgen. </span>
+        <span class="lead">I build<span class="caret" aria-hidden="true"></span></span>
+        <span class="fill" aria-live="polite"><a class="word" data-word href="/work" hidden></a></span>
+        <span class="sr-only">Salesforce apps, full-stack products, research with data, and websites for small businesses.</span>
+      </h1>
+      <div class="topics" role="group" aria-label="What I build" data-topics>
+        {TOPICS.map((t) => <button type="button" aria-pressed="false" data-fill-text={t.fill} data-href={t.href}>{t.label}</button>)}
+      </div>
+      <p class="about"><b><span lang="ti">ቡሩኽ</span> is my name, Buruk, in Ge&rsquo;ez script.</b> CS &amp; Math, University of Washington.</p>
+    </div>
+  </div>
+  <p class="hint ui" data-hint aria-hidden="true">Grab a letter and flick it</p>
+</section>
+
+<script>
+  import * as THREE from "three";
+  import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+  import { play, unlock, setSound } from "@/lib/sound";
+
+  type GlyphData = { upm: number; families: { t: number; lat: string; forms: { adv: number; d: (string | number)[] }[] }[] };
+  type Letter = {
+    pivot: THREE.Group; mesh: THREE.Mesh; geos: THREE.BufferGeometry[]; t: number; form: number; homeX: number;
+    angle: number; vel: number; mode: "idle" | "cycle" | "lock"; bump: number; flash: number; lastTick: number;
+  };
+
+  const SIZE = 2.2;            // world height of a letter before fitting
+  const DIM = 0.08;            // how much of the photo glows through during the intro
+  const ANN = 0.4;             // how small the letters get when they sit over BURUK
+  const EO = (t: number) => 1 - Math.pow(1 - t, 3);
+  const EIO = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+  function init(root: HTMLElement) {
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const html = document.documentElement;
+    const firstVisit = html.classList.contains("intro-active");
+    const ac = new AbortController();
+    const on = { signal: ac.signal } as const;
+    const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+    const canvas = $<HTMLCanvasElement>("[data-gl]");
+
+    /* ---------------- "I build ___" ---------------- */
+    const build = $<HTMLElement>("[data-build]"), word = $<HTMLAnchorElement>("[data-word]"), topics = $<HTMLElement>("[data-topics]");
+    const btns = Array.from(topics.querySelectorAll<HTMLButtonElement>("button"));
+    const POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    let iv = 0, idx = -1, locked = false, cycle = 0, startT = 0;
+    function fill(text: string, href: string) {
+      window.clearInterval(iv); word.hidden = false; word.href = href; build.classList.add("filled");
+      if (reduce) { word.textContent = text; return; }
+      let n = 0; const ticks = 12;
+      iv = window.setInterval(() => {
+        n++; let out = "";
+        for (let k = 0; k < text.length; k++) { const ch = text[k]; out += ch === " " || ch === "." || ch === "-" || n > (k / text.length) * ticks ? ch : POOL[(Math.random() * POOL.length) | 0]; }
+        word.textContent = out; if (n >= ticks) { window.clearInterval(iv); word.textContent = text; }
+      }, 30);
+    }
+    function select(i: number, auto: boolean) {
+      idx = i;
+      btns.forEach((b, j) => b.setAttribute("aria-pressed", String(i === j)));
+      topics.classList.remove("auto"); void topics.offsetWidth; if (auto && !locked) topics.classList.add("auto");
+      fill(btns[i].dataset.fillText ?? "", btns[i].dataset.href ?? "/work");
+    }
+    function stopCycle() { window.clearTimeout(startT); window.clearInterval(cycle); }
+    function startCycle(delay: number) {
+      stopCycle(); if (locked) return;
+      if (reduce) { if (idx < 0) select(0, true); return; }
+      startT = window.setTimeout(() => { select((idx + 1) % btns.length, true); cycle = window.setInterval(() => { if (!document.hidden) select((idx + 1) % btns.length, true); }, 4500); }, delay);
+    }
+    btns.forEach((b, i) => {
+      b.addEventListener("click", () => { locked = true; stopCycle(); topics.classList.remove("auto"); select(i, false); }, on);
+      b.addEventListener("pointerenter", () => { if (locked || !fine) return; stopCycle(); topics.classList.remove("auto"); if (idx !== i) select(i, false); }, on);
+    });
+    topics.addEventListener("pointerleave", () => { if (!locked && fine) startCycle(4500); }, on);
+    ac.signal.addEventListener("abort", stopCycle);
+
+    /* ---------------- 3D ---------------- */
+    let renderer: THREE.WebGLRenderer | null = null;
+    try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); } catch { renderer = null; }
+    if (!renderer) {
+      // No WebGL: show the name as type, skip the intro.
+      root.classList.add("no-gl");
+      finishIntro(false);
+      return () => ac.abort();
+    }
+    const r3 = renderer;
+    r3.setPixelRatio(Math.min(devicePixelRatio, 2));
+    r3.outputColorSpace = THREE.SRGBColorSpace;
+    r3.toneMapping = THREE.ACESFilmicToneMapping;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    const pmrem = new THREE.PMREMGenerator(r3);
+    const envTex = pmrem.fromScene(new RoomEnvironment(r3), 0.03).texture;
+    scene.environment = envTex;
+    const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+    camera.position.set(0, 0, 9);
+    const key = new THREE.DirectionalLight(0xfff0dc, 3.2); key.position.set(3, 4, 6); scene.add(key);
+    const fillLight = new THREE.DirectionalLight(0xbcd0ff, 0.8); fillLight.position.set(-5, -1, 3); scene.add(fillLight);
+
+    // the photo, softened and a little darker, far behind the glass. Fades are by brightness: glass only bends solid things.
+    const BG_Z = -7;
+    const bgMat = new THREE.MeshBasicMaterial({ toneMapped: false, color: new THREE.Color(0, 0, 0) });
+    const bg = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), bgMat); bg.position.z = BG_Z; scene.add(bg);
+    const BRIGHT = 0.8;
+    const setBg = (t: number) => bgMat.color.setScalar(t * BRIGHT);
+    let imgAspect = 1.5;
+    {
+      const img = new Image();
+      img.onload = () => {
+        // Soft focus that works in every browser (canvas blur filters don't): halve the photo a few times, then double it
+        // back up. Each smooth step averages neighbours, which adds up to an even, blocky-free blur.
+        const ratio = img.naturalHeight / img.naturalWidth;
+        let src: CanvasImageSource = img, w = img.naturalWidth;
+        let big = document.createElement("canvas");
+        const step = (to: number) => {
+          const c = document.createElement("canvas"); c.width = Math.round(to); c.height = Math.round(to * ratio);
+          const g = c.getContext("2d")!; g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high"; g.drawImage(src, 0, 0, c.width, c.height);
+          src = c; big = c; w = to;
+        };
+        while (w / 2 >= 200) step(w / 2);
+        while (w * 2 <= 1700) step(w * 2);
+        const tex = new THREE.CanvasTexture(big); tex.colorSpace = THREE.SRGBColorSpace;
+        bgMat.map = tex; bgMat.needsUpdate = true; imgAspect = big.width / big.height; fitBackground();
+      };
+      img.src = root.dataset.photo ?? "";
+    }
+
+    const glass = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, metalness: 0, roughness: 0.05, transmission: 1, thickness: 1.6, ior: 1.6,
+      attenuationColor: new THREE.Color(0xffe6c4), attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.02,
+      specularIntensity: 1, envMapIntensity: 1.8, iridescence: 0.35, iridescenceIOR: 1.3, iridescenceThicknessRange: [200, 600],
+    });
+
+    /* ---------------- the letters ---------------- */
+    const data = JSON.parse($<HTMLScriptElement>("[data-glyphs]").textContent ?? "{}") as GlyphData;
+    const k = SIZE / data.upm;
+    function shapes(d: (string | number)[]) {
+      const sp = new THREE.ShapePath(); let i = 0;
+      const n = () => (d[i++] as number) * k;
+      while (i < d.length) {
+        const c = d[i++];
+        if (c === "M") { const x = n(), y = n(); sp.moveTo(x, -y); }
+        else if (c === "L") { const x = n(), y = n(); sp.lineTo(x, -y); }
+        else if (c === "Q") { const x1 = n(), y1 = n(), x = n(), y = n(); sp.quadraticCurveTo(x1, -y1, x, -y); }
+        else if (c === "C") { const x1 = n(), y1 = n(), x2 = n(), y2 = n(), x = n(), y = n(); sp.bezierCurveTo(x1, -y1, x2, -y2, x, -y); }
+      }
+      return sp.toShapes(false);
+    }
+    const extrude = (d: (string | number)[], fast: boolean) => new THREE.ExtrudeGeometry(shapes(d), {
+      depth: SIZE * 0.22, curveSegments: fast ? 10 : 18, bevelEnabled: true,
+      bevelThickness: SIZE * 0.035, bevelSize: SIZE * 0.022, bevelSegments: fast ? 4 : 8,
+    });
+    const name = new THREE.Group(); scene.add(name);
+    const letters: Letter[] = [];
+    const TRACK = SIZE * 0.1;
+    let rowW = 1, rowH = 1, pen = 0;
+    const built = data.families.map((fam) => {
+      const geos = fam.forms.map((f, i) => extrude(f.d, i !== fam.t));
+      const ref = geos[fam.t]; ref.computeBoundingBox();
+      const c = new THREE.Vector3(); ref.boundingBox!.getCenter(c);
+      geos.forEach((g) => { g.computeBoundingBox(); const bx = new THREE.Vector3(); g.boundingBox!.getCenter(bx); g.translate(-bx.x, -c.y, -c.z); g.computeVertexNormals(); });
+      return { geos, t: fam.t, lat: fam.lat, offset: c.x, adv: fam.forms[fam.t].adv * k, h: ref.boundingBox!.max.y - ref.boundingBox!.min.y };
+    });
+    rowW = built.reduce((s, b) => s + b.adv, 0) + TRACK * (built.length - 1);
+    rowH = Math.max(...built.map((b) => b.h));
+    pen = -rowW / 2;
+    const sylEls: HTMLSpanElement[] = [];
+    built.forEach((b, i) => {
+      const mesh = new THREE.Mesh(b.geos[b.t], glass), pivot = new THREE.Group(); pivot.add(mesh);
+      pivot.position.x = pen + b.offset; pen += b.adv + TRACK; name.add(pivot);
+      letters.push({ pivot, mesh, geos: b.geos, t: b.t, form: b.t, homeX: pivot.position.x, angle: (i - 1) * 0.3, vel: 0.25, mode: "idle", bump: 0, flash: 0, lastTick: 0 });
+      const el = document.createElement("span"); el.className = "syl"; el.textContent = b.lat; $<HTMLElement>("[data-syls]").append(el); sylEls.push(el);
+    });
+    const setForm = (l: Letter, i: number) => { l.form = i; l.mesh.geometry = l.geos[i]; };
+
+    /* ---------------- the Latin name, on planes behind the glass ---------------- */
+    function textPlane(text: string, worldH: number) {
+      const c = document.createElement("canvas"), ctx = c.getContext("2d")!, px = 220;
+      const face = `900 ${px}px "Anybody Variable", "Anybody", system-ui, sans-serif`;
+      ctx.font = face; const w = Math.ceil(ctx.measureText(text).width) + 40;
+      c.width = w; c.height = Math.round(px * 1.25);
+      const g = c.getContext("2d")!; g.font = face; g.fillStyle = getComputedStyle(root).color || "#f5f0e6"; g.textBaseline = "middle";
+      g.fillText(text, 20, c.height / 2 + px * 0.04);
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+      const worldW = worldH * (c.width / c.height);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(worldW, worldH), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, transparent: true, opacity: 0, depthWrite: false }));
+      m.userData = { w: worldW, h: worldH }; m.visible = false; scene.add(m);
+      return m;
+    }
+    let buruk: THREE.Mesh | null = null, yimesgen: THREE.Mesh | null = null;
+    const show = (m: THREE.Mesh | null, t: number) => { if (m) (m.material as THREE.MeshBasicMaterial).opacity = t; };
+
+    /* ---------------- layout ---------------- */
+    let W = 1, H = 1, poseT = firstVisit ? 0 : 1, annT = 0, latinT = 0;
+    const intro = { x: 0, y: 0.45, s: 1 }, slot = { x: 0, y: 0, s: 1 }, slotNow = { x: 0, y: 0, s: 1 };
+    let slotReady = false;
+    const halfH = () => Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+    function fitBackground() {
+      const dist = camera.position.z - BG_Z, h = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * 1.08, w = h * camera.aspect;
+      const sw = Math.max(w, h * imgAspect); bg.scale.set(sw, sw / imgAspect, 1);
+    }
+    function measureSlot() {
+      const r = $<HTMLElement>("[data-slot]").getBoundingClientRect(), h0 = root.getBoundingClientRect();
+      const hh = halfH(), hw = hh * camera.aspect;
+      slot.x = ((r.left - h0.left + r.width / 2) / W * 2 - 1) * hw;
+      slot.y = -((r.top - h0.top + r.height / 2) / H * 2 - 1) * hh;
+      slot.s = Math.max(0.05, Math.min(((r.height / H) * 2 * hh) / rowH, ((r.width / W) * 2 * hw) / rowW) * 0.88);
+      if (!slotReady) { Object.assign(slotNow, slot); slotReady = true; }
+    }
+    function placeLatin(t: number) {
+      if (!buruk || !yimesgen) return;
+      const narrow = W / H < 1, s = narrow ? 0.5 : Math.min(1, (W / H) / 1.6), y = narrow ? -0.2 : -0.6;
+      buruk.scale.setScalar(s); yimesgen.scale.setScalar(s);
+      const bw = buruk.userData.w * s, yw = yimesgen.userData.w * s, gap = 0.35 * s, total = bw + gap + yw;
+      const bx1 = -total / 2 + bw / 2, yx1 = total / 2 - yw / 2;
+      buruk.position.set(bx1 * t, y, -1.6);
+      yimesgen.position.set(bx1 + (yx1 - bx1) * Math.min(1, t * 1.05), y, -1.75);
+    }
+    function placeHello() {
+      const v = new THREE.Vector3(0, intro.y + SIZE * 0.44 * intro.s, 0).project(camera);
+      $<HTMLElement>("[data-hello]").style.top = `${(-v.y * 0.5 + 0.5) * H - 14}px`;
+    }
+    function layout() {
+      W = root.clientWidth; H = root.clientHeight;
+      r3.setSize(W, H, false); camera.aspect = W / H; camera.fov = W / H > 1 ? 32 : 50; camera.updateProjectionMatrix();
+      const narrow = W / H < 1;
+      intro.y = narrow ? 0.9 : 0.45; intro.s = narrow ? 0.62 : Math.min(1.05, (W / H) / 1.45);
+      fitBackground(); measureSlot(); placeLatin(latinT); placeHello();
+    }
+    addEventListener("resize", layout, on);
+    const ro = new ResizeObserver(() => measureSlot()); ro.observe($<HTMLElement>("[data-build]"));
+    ac.signal.addEventListener("abort", () => ro.disconnect());
+    layout();
+
+    /* ---------------- the intro ---------------- */
+    let run = 0, atGate = firstVisit;
+    const alive = (my: number) => my === run && !ac.signal.aborted;
+    const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
+    function tween(ms: number, fn: (t: number) => void, e = EO) {
+      return new Promise<void>((res) => {
+        if (reduce) { fn(1); res(); return; }
+        const t0 = performance.now();
+        const step = (n: number) => { const p = Math.min(1, (n - t0) / ms); fn(e(p)); if (p < 1 && !ac.signal.aborted) requestAnimationFrame(step); else res(); };
+        requestAnimationFrame(step);
+      });
+    }
+    function placeSyl(l: Letter, i: number) {
+      const v = new THREE.Vector3(); l.pivot.getWorldPosition(v); v.y -= SIZE * 0.62 * name.scale.y; v.project(camera);
+      sylEls[i].style.left = `${(v.x * 0.5 + 0.5) * W}px`; sylEls[i].style.top = `${(-v.y * 0.5 + 0.5) * H}px`;
+    }
+
+    async function runIntro(withSound: boolean) {
+      const my = ++run;
+      if (withSound) { unlock(); setSound(true); play("enter"); } else setSound(false);
+      atGate = false;
+      root.classList.add("entered");
+      $<HTMLButtonElement>("[data-skip]").hidden = false;
+      $<HTMLButtonElement>("[data-skip]").focus({ preventScroll: true });
+      if (reduce) return arrive(my);
+      await document.fonts.load('900 100px "Anybody Variable"').catch(() => undefined);
+      buruk ??= textPlane("BURUK", 1.25); yimesgen ??= textPlane("YIMESGEN", 1.25);
+      buruk.visible = yimesgen.visible = true; placeLatin(0);
+      letters.forEach((l) => { l.mode = "cycle"; l.vel = 9; setForm(l, (l.t + 3) % 7); });
+
+      // 1. each letter cycles through its vowel forms, then locks, left to right
+      const lockAt = [1300, 1800, 2300], t0 = performance.now();
+      await new Promise<void>((res) => {
+        const tick = () => {
+          if (!alive(my)) return res();
+          const now = performance.now() - t0;
+          letters.forEach((l, i) => {
+            if (l.mode !== "cycle") return;
+            if (now >= lockAt[i]) { l.mode = "lock"; setForm(l, l.t); l.bump = 1; l.flash = 1; play("lock"); placeSyl(l, i); sylEls[i].classList.add("on"); }
+            else if (now - l.lastTick > 95) { l.lastTick = now; setForm(l, (l.form + 1) % 7); l.bump = 0.5; if (i === 1 || Math.random() < 0.4) play("tick"); }
+          });
+          if (letters.every((l) => l.mode !== "cycle")) return res();
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+      if (!alive(my)) return;
+      await sleep(500); if (!alive(my)) return;
+
+      // 2. the glass makes way: the letters shrink and rest over BURUK as it appears
+      play("swell");
+      sylEls.forEach((e) => e.classList.remove("on"));
+      await tween(1200, (t) => { annT = t; show(buruk, Math.min(1, t * 1.4)); }, EIO); if (!alive(my)) return;
+      await sleep(500); if (!alive(my)) return;
+
+      // 3. YIMESGEN slides out from behind BURUK
+      play("yimesgen");
+      await tween(1100, (t) => { latinT = t; placeLatin(t); show(yimesgen, Math.min(1, t * 1.6)); }, EIO); if (!alive(my)) return;
+      await sleep(1300); if (!alive(my)) return;
+      await arrive(my);
+    }
+
+    // 4. the name flies into the header logo; the photo comes up; the glass rises into the hero
+    async function arrive(_my: number) {
+      $<HTMLButtonElement>("[data-skip]").hidden = true;
+      sylEls.forEach((e) => e.classList.remove("on"));
+      letters.forEach((l) => { if (l.mode !== "idle") { setForm(l, l.t); l.mode = "idle"; l.vel = 0.3; } });
+      finishIntro(true);
+      const target = document.querySelector<HTMLElement>(".hdr .name");
+      const mark = target && target.getBoundingClientRect().width > 0 ? target : document.querySelector<HTMLElement>(".hdr .mono");
+      const flying = !!(buruk && yimesgen && buruk.visible && mark);
+      let flyStep: ((t: number) => void) | null = null;
+      if (flying && buruk && yimesgen && mark) {
+        const r = mark.getBoundingClientRect(), z = buruk.position.z;
+        const rc = new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(((r.left + r.width / 2) / W) * 2 - 1, -((r.top + r.height / 2) / H) * 2 + 1), camera);
+        const target3 = rc.ray.origin.clone().addScaledVector(rc.ray.direction, (z - rc.ray.origin.z) / rc.ray.direction.z);
+        const pxToWorld = (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.position.z - z)) / H;
+        const left = buruk.position.x - (buruk.userData.w * buruk.scale.x) / 2, right = yimesgen.position.x + (yimesgen.userData.w * yimesgen.scale.x) / 2;
+        const center = new THREE.Vector3((left + right) / 2, buruk.position.y, z), kEnd = (r.width * pxToWorld) / Math.max(0.01, right - left);
+        const start = [buruk, yimesgen].map((m) => ({ m, p: m.position.clone(), s: m.scale.x, o: (m.material as THREE.MeshBasicMaterial).opacity }));
+        flyStep = (t) => {
+          const kk = 1 + (kEnd - 1) * t, c = center.clone().lerp(target3, t);
+          start.forEach(({ m, p, s, o }) => { m.position.set(c.x + (p.x - center.x) * kk, c.y + (p.y - center.y) * kk, z); m.scale.setScalar(s * kk); show(m, o * (1 - Math.max(0, (t - 0.6) / 0.4))); });
+        };
+      }
+      const a0 = annT;
+      await tween(1500, (t) => { setBg(DIM + (1 - DIM) * t); poseT = t; annT = a0 * (1 - Math.min(1, t * 1.3)); flyStep?.(t); }, EIO);
+      if (buruk) buruk.visible = false;
+      if (yimesgen) yimesgen.visible = false;
+      html.classList.remove("intro-logo-hidden"); // the real logo takes over where the name landed
+    }
+
+    // Hands the page back: scrolling, header, the cover, the "I build" cycle. Safe to call more than once.
+    let finished = false;
+    function finishIntro(animated: boolean) {
+      if (finished) return; finished = true;
+      try { sessionStorage.setItem("bk-entered", "1"); } catch { /* private mode */ }
+      html.classList.remove("intro-active");
+      if (!animated) html.classList.remove("intro-logo-hidden");
+      root.classList.add("arrived");
+      document.dispatchEvent(new CustomEvent("bk:intro-reveal"));
+      select(0, true); startCycle(4500);
+    }
+
+    // first visit: open the gate; repeat visit: arrive straight away
+    if (firstVisit) {
+      setBg(DIM);
+      const gate = $<HTMLElement>("[data-gate]"); gate.hidden = false;
+      gate.querySelectorAll<HTMLButtonElement>("[data-enter]").forEach((b) => b.addEventListener("click", () => runIntro(b.dataset.enter === "sound"), { once: true, signal: ac.signal }));
+      gate.querySelector<HTMLButtonElement>(".primary")?.focus({ preventScroll: true });
+      const skip = () => { const my = ++run; arrive(my); };
+      $<HTMLButtonElement>("[data-skip]").addEventListener("click", skip, on);
+      addEventListener("keydown", (e) => { if (e.key === "Escape" && !$<HTMLButtonElement>("[data-skip]").hidden) skip(); }, on);
+    } else {
+      setBg(1);
+      finishIntro(false);
+    }
+
+    /* ---------------- play: flick a letter, each rings its own note ---------------- */
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+    let grabbed: Letter | null = null, lastX = 0, lastT = 0, px = 0, py = 0, sx = 0, sy = 0;
+    const hint = $<HTMLElement>("[data-hint]");
+    function pick(e: PointerEvent) {
+      const r = canvas.getBoundingClientRect();
+      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      const hit = ray.intersectObjects(letters.map((l) => l.mesh), false)[0];
+      return hit ? letters.find((l) => l.mesh === hit.object) ?? null : null;
+    }
+    root.addEventListener("pointerdown", (e) => {
+      if (!root.classList.contains("arrived") || (e.target as Element).closest("button, a")) return;
+      const l = pick(e); if (!l) return;
+      grabbed = l; lastX = e.clientX; lastT = performance.now();
+      root.setPointerCapture(e.pointerId); root.classList.add("grabbing"); hint.classList.add("used");
+      play(`glass${letters.indexOf(l)}` as "glass0");
+    }, on);
+    root.addEventListener("pointermove", (e) => {
+      if (!grabbed) { if (fine && root.classList.contains("arrived") && !(e.target as Element).closest("button, a")) root.classList.toggle("can-grab", !!pick(e)); return; }
+      const now = performance.now(), dx = e.clientX - lastX, dt = Math.max(8, now - lastT);
+      grabbed.angle += dx * 0.012; grabbed.vel = (dx * 0.012) / (dt / 1000); lastX = e.clientX; lastT = now;
+    }, on);
+    const release = () => { grabbed = null; root.classList.remove("grabbing"); };
+    root.addEventListener("pointerup", release, on); root.addEventListener("pointercancel", release, on);
+    if (!reduce) addEventListener("pointermove", (e) => { px = (e.clientX / innerWidth) * 2 - 1; py = (e.clientY / innerHeight) * 2 - 1; }, { passive: true, signal: ac.signal });
+
+    /* ---------------- render loop (paused when the hero is off screen) ---------------- */
+    let visible = true;
+    const io = new IntersectionObserver((es) => { visible = es[0]?.isIntersecting ?? true; }); io.observe(root);
+    ac.signal.addEventListener("abort", () => io.disconnect());
+    const clock = new THREE.Clock();
+    r3.setAnimationLoop(() => {
+      const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
+      if (!visible || document.hidden) return;
+      sx += (px - sx) * 0.04; sy += (py - sy) * 0.04;
+      const arrived = root.classList.contains("arrived") && poseT > 0.99;
+      const kk = reduce ? 1 : Math.min(1, dt * 3.2);
+      slotNow.x += (slot.x - slotNow.x) * kk; slotNow.y += (slot.y - slotNow.y) * kk; slotNow.s += (slot.s - slotNow.s) * kk;
+      name.position.set(intro.x + (slotNow.x - intro.x) * poseT, intro.y + (slotNow.y - intro.y) * poseT, 0);
+      name.scale.setScalar(intro.s + (slotNow.s - intro.s) * poseT);
+      letters.forEach((l, i) => {
+        if (l.mode === "cycle") { l.vel += (10 - l.vel) * dt * 2; l.angle += l.vel * dt * (i % 2 ? -1 : 1) * 0.35; }
+        else if (l.mode === "lock") { l.angle += (Math.round(l.angle / (Math.PI * 2)) * Math.PI * 2 - l.angle) * Math.min(1, dt * 6); }
+        else if (atGate) {
+          const front = Math.round(l.angle / (Math.PI * 2)) * Math.PI * 2, sway = reduce ? 0 : Math.sin(t * 0.55 + i * 1.3) * 0.22;
+          l.angle += (front + sway - l.angle) * Math.min(1, dt * 2.5);
+        } else if (grabbed !== l) { const idle = reduce ? 0 : 0.22 + i * 0.04; l.vel += (idle - l.vel) * Math.min(1, dt * 0.9); l.angle += l.vel * dt; }
+        l.bump *= Math.pow(0.02, dt); l.flash *= Math.pow(0.05, dt);
+        l.pivot.rotation.y = l.angle;
+        l.pivot.rotation.x = reduce ? 0 : Math.sin(t * 0.6 + i * 1.7) * 0.08 * (arrived ? 1 : 0.4);
+        const bob = reduce ? 0 : Math.sin(t * 0.9 + i * 1.7) * 0.12 * (arrived ? 1 : 0.4);
+        let ax = l.homeX, ay = 0;
+        if (annT > 0 && buruk) {
+          // over BURUK: the word stays a word, centred and smaller; the Latin sits deeper, so bring its points forward
+          const S = name.scale.x, f = camera.position.z / (camera.position.z - buruk.position.z);
+          const top = (buruk.position.y + buruk.userData.h * buruk.scale.y * 0.42) * f + SIZE * ANN * S * 0.55 + 0.08;
+          ax = (buruk.position.x * f - name.position.x) / S + l.homeX * ANN; ay = (top - name.position.y) / S;
+        }
+        l.pivot.position.x = l.homeX + (ax - l.homeX) * annT;
+        l.pivot.position.y = bob * (1 - annT) + ay * annT;
+        l.pivot.scale.setScalar((1 + (ANN - 1) * annT) * (1 + l.bump * 0.07));
+      });
+      key.intensity = 3.2 + Math.max(0, ...letters.map((l) => l.flash)) * 5;
+      const tilt = arrived ? 1 : 0.4;
+      name.rotation.y = sx * 0.15 * tilt; name.rotation.x = sy * 0.08 * tilt;
+      key.position.set(3 + sx * 4, 4 - sy * 3, 6);
+      bg.position.x = -sx * 0.25; bg.position.y = sy * 0.15;
+      r3.render(scene, camera);
+    });
+
+    ac.signal.addEventListener("abort", () => {
+      run++;
+      r3.setAnimationLoop(null);
+      scene.traverse((o) => { if (o instanceof THREE.Mesh) { o.geometry.dispose(); const m = o.material as THREE.Material & { map?: THREE.Texture | null }; m.map?.dispose(); m.dispose(); } });
+      letters.forEach((l) => l.geos.forEach((g) => g.dispose()));
+      envTex.dispose(); pmrem.dispose(); r3.dispose();
+    });
+    return () => ac.abort();
+  }
+
+  let teardown: (() => void) | null = null;
+  document.addEventListener("astro:page-load", () => {
+    const root = document.getElementById("glass-hero");
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = "1";
+    teardown = init(root);
+  });
+  document.addEventListener("astro:before-swap", () => { teardown?.(); teardown = null; });
+</script>
+
+<style>
+  .gh {
+    position: relative; isolation: isolate; overflow: hidden;
+    height: 100svh; min-height: 560px;
+    display: flex; flex-direction: column;
+    background: #000; color: var(--world-fg);
+  }
+  .gl { position: absolute; inset: 0; z-index: -3; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+  .gh.can-grab .gl, .gh.can-grab { cursor: grab; }
+  .gh.grabbing, .gh.grabbing .gl { cursor: grabbing; }
+  .shade {
+    position: absolute; inset: 0; z-index: -2; pointer-events: none; opacity: 0; transition: opacity 1.6s ease;
+    background:
+      radial-gradient(120% 90% at 50% 40%, transparent 45%, rgb(5 5 6 / 0.55) 100%),
+      linear-gradient(to bottom, rgb(5 5 6 / 0.4) 0%, transparent 22%, transparent 55%, rgb(5 5 6 / 0.78) 100%);
+  }
+  .arrived .shade { opacity: 1; }
+  .grain {
+    position: absolute; inset: -50%; z-index: -1; pointer-events: none; opacity: 0.12; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -0.2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    animation: gh-grain 0.9s steps(6) infinite;
+  }
+  @keyframes gh-grain { 0%{transform:translate(0,0)} 20%{transform:translate(-4%,3%)} 40%{transform:translate(3%,-5%)} 60%{transform:translate(-2%,4%)} 80%{transform:translate(5%,2%)} 100%{transform:translate(0,0)} }
+
+  /* the page waits for the intro on the first visit */
+  :global(html.intro-active) { overflow: hidden; }
+  :global(html.intro-logo-hidden .hdr) { opacity: 0; pointer-events: none; }
+  :global(.hdr) { transition: opacity 600ms ease; }
+
+  /* gate */
+  .hello, .gate, .skip { display: none; }
+  :global(html.intro-active) .hello, :global(html.intro-active) .gate:not([hidden]) { display: flex; }
+  :global(html.intro-active) .skip:not([hidden]) { display: block; }
+  .hello {
+    position: absolute; z-index: 4; left: 0; right: 0; margin: 0; justify-content: center; text-align: center;
+    transform: translateY(-100%); padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+    font: 400 clamp(22px, 2.6vw, 38px)/1.2 var(--font-display); letter-spacing: -0.015em; text-wrap: balance;
+    transition: opacity 450ms ease, transform 700ms var(--ease-out);
+  }
+  .entered .hello { opacity: 0; transform: translateY(calc(-100% - 14px)); }
+  .gate {
+    position: absolute; z-index: 4; left: 0; right: 0; bottom: max(12vh, calc(env(safe-area-inset-bottom, 0px) + 72px));
+    justify-content: center; gap: 12px; flex-wrap: wrap; padding: 0 16px; transition: opacity 300ms ease;
+  }
+  .entered .gate { opacity: 0; pointer-events: none; }
+  .gate button {
+    min-height: 46px; padding: 0 22px; border-radius: 999px; cursor: pointer; font: 500 15px var(--font-body);
+    color: inherit; background: color-mix(in srgb, var(--world-fg) 6%, transparent); border: 1px solid color-mix(in srgb, var(--world-fg) 22%, transparent);
+    -webkit-tap-highlight-color: transparent; transition: transform var(--t-press) var(--ease-out), border-color var(--t-hover) ease;
+  }
+  .gate .primary { background: var(--world-fg); color: #08080a; border-color: var(--world-fg); }
+  .gate button:active { transform: scale(0.97); }
+  .skip {
+    position: absolute; z-index: 5; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    min-height: 44px; padding: 0 4px; background: none; border: 0; cursor: pointer; color: color-mix(in srgb, var(--world-fg) 72%, transparent);
+    font: 400 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .gate button:focus-visible, .skip:focus-visible { outline: 2px solid var(--world-fg); outline-offset: 3px; }
+  /* BU · RU · K under each letter as it locks: big enough to read at a glance, on a dark pill so the photo can't swallow it */
+  :global(.gh .syl) {
+    position: absolute; z-index: 3; left: 0; top: 0; transform: translate(-50%, 8px); pointer-events: none; opacity: 0;
+    transition: opacity 260ms ease, transform 420ms var(--ease-out);
+    padding: 0.18em 0.6em; border-radius: 999px;
+    background: rgb(8 8 10 / 0.62); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--world-fg) 18%, transparent);
+    font: 700 clamp(18px, 1.9vw, 30px)/1.2 var(--font-display); font-stretch: 112%; letter-spacing: 0.08em; color: var(--world-fg);
+  }
+  :global(.gh .syl.on) { opacity: 1; transform: translate(-50%, 0); }
+
+  /* hero, layout C: glass name in the slot, "I build" big beneath it, each in its own space */
+  .ui { opacity: 1; transition: opacity 900ms ease 300ms; }
+  :global(html.intro-active) .ui { opacity: 0; pointer-events: none; }
+  .stage {
+    position: relative; flex: 1; min-height: 0; display: grid; grid-template-rows: 1fr auto; justify-items: center; text-align: center;
+    gap: clamp(16px, 3vh, 36px);
+    padding: calc(env(safe-area-inset-top, 0px) + 96px) max(24px, env(safe-area-inset-right, 0px)) clamp(36px, 7vh, 72px) max(24px, env(safe-area-inset-left, 0px));
+  }
+  .slot { width: 92%; min-height: 0; display: grid; place-items: center; pointer-events: none; }
+  .fallback { display: none; font-family: var(--font-geez); font-size: clamp(96px, 20vw, 260px); line-height: 1; }
+  .no-gl .fallback { display: block; }
+  .copy { display: flex; flex-direction: column; align-items: center; gap: 18px; min-width: 0; }
+  .sentence { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.35em; font-family: var(--font-display); text-shadow: 0 0.04em 0.5em rgb(0 0 0 / 0.55); }
+  .lead { display: inline-flex; align-items: center; white-space: nowrap; font-size: clamp(64px, 11vw, 188px); line-height: 0.86; font-weight: 560; letter-spacing: -0.035em; }
+  .caret { display: inline-block; width: 0.06em; height: 0.72em; margin-left: 0.08em; background: var(--thread); animation: gh-caret 1.05s steps(1, end) infinite; }
+  @keyframes gh-caret { 50% { opacity: 0; } }
+  .filled .caret { display: none; }
+  .fill { display: block; font-size: clamp(22px, 2.6vw, 42px); line-height: 1.1; min-height: 1.1em; font-weight: 400; letter-spacing: -0.02em; }
+  .word {
+    color: color-mix(in srgb, var(--world-fg) 72%, transparent);
+    text-decoration: underline var(--thread); text-decoration-thickness: 0.06em; text-underline-offset: 0.2em; text-decoration-skip-ink: none;
+  }
+  .word:hover { color: var(--world-fg); }
+  .topics { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 26px; }
+  .topics button {
+    position: relative; min-height: 44px; padding: 0; cursor: pointer; background: none; border: 0; -webkit-tap-highlight-color: transparent;
+    font: 400 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--world-fg) 66%, transparent);
+    transition: color 200ms ease;
+  }
+  .topics button:hover, .topics button[aria-pressed="true"] { color: var(--world-fg); }
+  .topics button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 8px; height: 1px; background: var(--thread); transform: scaleX(0); transform-origin: 0 50%; }
+  .topics:not(.auto) button[aria-pressed="true"]::after { transform: scaleX(1); }
+  .topics.auto button[aria-pressed="true"]::after { animation: gh-prog 4500ms linear forwards; }
+  @keyframes gh-prog { to { transform: scaleX(1); } }
+  .topics button:focus-visible, .word:focus-visible { outline: 2px solid var(--world-fg); outline-offset: 2px; }
+  .about { margin: 0; max-width: 52ch; font-size: 14px; line-height: 1.5; color: color-mix(in srgb, var(--world-fg) 72%, transparent); }
+  .about b { color: var(--world-fg); font-weight: 500; }
+  .hint {
+    position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); margin: 0;
+    font: 400 10.5px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--world-fg) 60%, transparent);
+  }
+  .hint:global(.used) { opacity: 0; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  @media (max-width: 760px) {
+    .lead { font-size: 20vw; }
+    .fill { font-size: 5.6vw; }
+    .hint { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grain, .caret { animation: none; }
+    .topics.auto button[aria-pressed="true"]::after { animation: none; }
+  }
+</style>
