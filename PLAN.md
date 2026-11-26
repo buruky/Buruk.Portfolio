@@ -2,7 +2,7 @@
 
 One step at a time. For each step, Claude builds or proposes one thing, you review it, and we only move on when you're happy. We work out the details of each step when we get to it, not before.
 
-**Where we are (2026-11-26):** Phases 0–3 done: Home is finished (glass ቡሩኽ intro and hero, the pond, the glass resting beside "Let's talk." at the end). **Next up: 4.1, the phone and speed pass**, before any new page is built.
+**Where we are (2026-11-26):** Phases 0–4 done (Home, phone pass, the page recipe on Work, glass page transitions, the island + corners header). **Next up: Phase 5, About** — starting with 5.1, the story copy.
 
 **Status key:** `[ ]` not started · `[~]` in progress · `[x]` done
 
@@ -50,7 +50,7 @@ Your story still runs as a line through time, ending in a glitchy, unfinished ch
 ## Phase 2: Skeleton
 
 - [x] **2.1 Project setup.**
-- [x] **2.2 The shell.** (2026-11-26: the header became "Corners", picked from [header drafts](https://claude.ai/artifact/RtRRqHxgpi2SRR4jfT74Fy): name top left, MENU (08) top right, sound bottom left, the section you're in bottom right via `data-section`; soft edge fades once scrolled.) Menu, page transitions (a shared colour flood for now; replaced in 4.3), sound toggle, skip-intro.
+- [x] **2.2 The shell.** (2026-11-26: the header became "Corners", picked from [header drafts](https://claude.ai/artifact/RtRRqHxgpi2SRR4jfT74Fy): name top left, MENU (08) top right, sound bottom left, the section you're in bottom right via `data-section`; soft edge fades once scrolled. At the top of each page, desktop also shows the "Island": a frosted capsule with Work, About, Studio, Contact, sound and Menu, which lifts away once you scroll past the hero.) Menu, page transitions (a shared colour flood for now; replaced in 4.3), sound toggle, skip-intro.
 - [x] **2.3 Sound.**
 
 ## Phase 3: Home
@@ -69,9 +69,9 @@ Your story still runs as a line through time, ending in a glitchy, unfinished ch
 
 Every page is built on the same layer, so these come before any new page.
 
-- [~] **4.1 Phone and speed pass.** Real phones (`npm run dev:phone`, add `?fps` to see the frame rate): frame rate, battery and heat with the three.js layer and the GPU pond on screen the whole time; the reduced-motion version of the glass and the water. Built so far: automatic quality steps (render resolution 2× → 1.5× → 1.25× → 1×, stepping down when a device can't hold ~45 fps, phones start at 1.5×, kept for the session) and the `?fps` readout. Waiting on: a check on your real phone.
-- [ ] **4.2 The page recipe.** Photo + time-of-day tint + where the glass rests, shown on one real page (probably Work, at noon). Once approved, every page uses it.
-- [ ] **4.3 The glass transition.** Replaces the shared colour flood: the glass name carries you between pages (passes in front of the screen, or the page sinks into the water). Each page's own entrance builds on it.
+- [x] **4.1 Phone and speed pass.** Automatic quality steps (render resolution 2× → 1.5× → 1.25× → 1×, stepping down when a device can't hold ~45 fps; phones start at 1.5×; kept for the session) and a `?fps` readout. Checked on a real phone 2026-11-26: ~60 fps, no heat, no glitches. Reduced motion: the intro skips to the hero and the water and letters hold still.
+- [x] **4.2 The page recipe.** Built as `src/layouts/WorldPage.astro` (GlassHero in page mode: no intro; the page's words in the hero; photo + the world's tint from `WORLD_DEEP`; the glass rests in the hero, floats behind the page, settles beside "Let's talk."; sections tagged `data-section`). First page: Work, noon over Seattle (`city-bg.jpg`, swap freely), listing all six projects. Approved 2026-11-26; every page uses it.
+- [x] **4.3 Page transitions.** Back to the 1.3 decision (docs/motion-language.md §4): every page arrives its own way, now made of tinted frosted glass ("panes") that close over the page and open onto the next in their own way: sunrise (rises on past the top), blinds (tilt open), paper stack (sheets carry on up), long shadow (sweeps on across), sun iris (sets back down), pixel dissolve (clears cell by cell), screen tear (tears away). BK Web Studios keeps a solid CRT that powers on and off. Text effects come with each page's hero via `data-arrive` (Work: streak, Home: stretch). Shared: the colour split on the corner name, the glass ቡሩኽ dipping and rising, and the cover waiting for the new glass scene. All in src/components/Cover.astro.
 
 ## Phase 5: About, your story
 

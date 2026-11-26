@@ -3,6 +3,9 @@
 // the screen holds one thing: the name (top left), MENU with the page count (top right), sound (bottom left), and where
 // you are on the page (bottom right). Persists across pages: the logo, sound toggle and menu button never reload.
 // "Where you are" reads [data-section="Label"] elements on the page; pages without them leave that corner empty.
+// At the top of a page (the hero) the "Island" from the same drafts takes over the top: a frosted-glass capsule in the
+// middle with the main pages, sound and Menu. Scrolling past the hero lifts it away and the corners take over.
+// Phones keep the corners throughout (no room for the capsule beside the name).
 import { MENU } from "@/lib/worlds";
 const count = String(MENU.length).padStart(2, "0");
 ---
@@ -18,6 +21,11 @@ const count = String(MENU.length).padStart(2, "0");
     <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-sound-label>Sound off</span>
   </button>
   <p class="where" data-where aria-hidden="true" hidden><span data-where-n></span><b data-where-name></b></p>
+  <nav class="island" aria-label="Main pages">
+    {[["/work", "Work"], ["/about", "About"], ["/bk-web-studios", "Studio"], ["/contact", "Contact"]].map(([href, label]) => <a href={href} data-island-link>{label}</a>)}
+    <button type="button" class="i-snd" data-sound-alt aria-pressed="false" aria-label="Sound"><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
+    <button type="button" class="i-menu" data-menu-alt aria-controls="site-menu">Menu</button>
+  </nav>
 </header>
 
 <script>
@@ -26,17 +34,33 @@ const count = String(MENU.length).padStart(2, "0");
   const hdr = document.querySelector<HTMLElement>(".hdr")!;
   const btn = document.querySelector<HTMLButtonElement>("[data-sound-toggle]")!;
   const label = btn.querySelector<HTMLElement>("[data-sound-label]")!;
+  const alt = document.querySelector<HTMLButtonElement>("[data-sound-alt]")!;
   function render(on: boolean) {
     btn.setAttribute("aria-pressed", String(on));
+    alt.setAttribute("aria-pressed", String(on));
+    alt.setAttribute("aria-label", on ? "Sound on" : "Sound off");
     label.textContent = on ? "Sound on" : "Sound off";
   }
   render(isSoundOn());
   onSoundChange(render);
-  btn.addEventListener("click", () => {
+  const toggleSound = () => {
     const on = !isSoundOn();
     setSound(on);
     if (on) play("toggle");
-  });
+  };
+  btn.addEventListener("click", toggleSound);
+  alt.addEventListener("click", toggleSound);
+  // the island's Menu opens the same menu (the corner button is the one the menu manages, and it shows CLOSE)
+  document.querySelector<HTMLButtonElement>("[data-menu-alt]")!.addEventListener("click", () => document.querySelector<HTMLButtonElement>("[data-menu-button]")?.click());
+  // the page you're on is underlined in the island
+  const markCurrent = () => {
+    const here = location.pathname.replace(/\/+$/, "") || "/";
+    document.querySelectorAll<HTMLAnchorElement>("[data-island-link]").forEach((a) => {
+      const p = new URL(a.href).pathname;
+      if (here === p || here.startsWith(p + "/")) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+  };
+  document.addEventListener("astro:page-load", markCurrent);
 
   // Bottom right: which section is in the middle of the screen, as "02 / 06" and its name.
   const where = hdr.querySelector<HTMLElement>("[data-where]")!;
@@ -50,16 +74,25 @@ const count = String(MENU.length).padStart(2, "0");
     if (!sections.length) { stop = null; return; }
     const total = String(sections.length).padStart(2, "0");
     const show = (i: number) => { whereN.textContent = `${String(i + 1).padStart(2, "0")} / ${total}`; whereName.textContent = sections[i].dataset.section ?? ""; };
-    show(0);
-    const io = new IntersectionObserver((es) => {
-      for (const e of es) if (e.isIntersecting) show(sections.indexOf(e.target as HTMLElement));
-    }, { rootMargin: "-50% 0px -50% 0px" });
-    sections.forEach((s) => io.observe(s));
+    // the current section is the last one whose top has passed the middle of the screen (so the gaps between
+    // sections still count as the one above, and a jump straight to the bottom lands on the right one)
+    let at = -1, raf = 0;
+    const update = () => {
+      raf = 0;
+      const mid = innerHeight / 2;
+      let i = 0;
+      sections.forEach((s, k) => { if (s.getBoundingClientRect().top <= mid) i = k; });
+      if (i !== at) { at = i; show(i); }
+    };
+    const onScrollWhere = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    addEventListener("scroll", onScrollWhere, { passive: true });
+    addEventListener("resize", onScrollWhere, { passive: true });
     // the bottom corners step aside at the very end, where the footer has its own bottom row
     const ends = Array.from(document.querySelectorAll<HTMLElement>("[data-corners-hide]"));
     const endIo = new IntersectionObserver((es) => { hdr.classList.toggle("at-end", es.some((e) => e.isIntersecting)); });
     ends.forEach((el) => endIo.observe(el));
-    stop = () => { io.disconnect(); endIo.disconnect(); hdr.classList.remove("at-end"); };
+    stop = () => { removeEventListener("scroll", onScrollWhere); removeEventListener("resize", onScrollWhere); cancelAnimationFrame(raf); endIo.disconnect(); hdr.classList.remove("at-end"); };
   }
   document.addEventListener("astro:page-load", watch);
   // past the first screen, soft fades at the top and bottom edges keep the corners readable over the page
@@ -111,6 +144,36 @@ const count = String(MENU.length).padStart(2, "0");
   @media (hover: hover) and (pointer: fine) { .menu-btn:hover [data-menu-label]::after { transform: scaleX(1); } }
   .menu-btn sup { font: 500 10px var(--font-mono); letter-spacing: 0.06em; opacity: 0.7; }
 
+  /* At the top of a page: the island, a frosted-glass capsule in the middle (draft 1). The corner MENU and sound wait
+     until you scroll past the hero, unless the menu is open (its CLOSE lives in the corner). */
+  .island {
+    top: calc(env(safe-area-inset-top, 0px) + var(--edge-y) - 4px); left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 2px; padding: 6px 6px 6px 10px; border-radius: 999px; text-shadow: none;
+    background: color-mix(in srgb, var(--world-bg) 30%, rgb(16 22 17 / 0.3));
+    -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 0 0 1px rgb(255 255 255 / 0.1), 0 14px 30px -16px rgb(0 0 0 / 0.7);
+    transition: opacity 360ms var(--ease-out), transform 460ms var(--ease-out);
+  }
+  .island a { color: inherit; text-decoration: none; font: 500 14px var(--font-body); padding: 9px 13px; border-radius: 999px; opacity: 0.85; transition: background-color var(--t-hover) ease, opacity var(--t-hover) ease; }
+  @media (hover: hover) and (pointer: fine) { .island a:hover { opacity: 1; background: rgb(255 255 255 / 0.1); } }
+  .island a[aria-current="page"] { opacity: 1; box-shadow: inset 0 -2px 0 var(--thread); border-radius: 0; padding-inline: 2px; margin-inline: 11px; }
+  .i-snd { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: none; border: 0; color: inherit; cursor: pointer; }
+  @media (hover: hover) and (pointer: fine) { .i-snd:hover { background: rgb(255 255 255 / 0.1); } }
+  .i-snd[aria-pressed="true"] .wave i { animation: hdr-wave 0.9s ease-in-out infinite; }
+  .i-snd[aria-pressed="true"] .wave i:nth-child(2) { animation-delay: -0.3s; }
+  .i-snd[aria-pressed="true"] .wave i:nth-child(3) { animation-delay: -0.6s; }
+  .i-snd[aria-pressed="true"] .wave i:nth-child(4) { animation-delay: -0.15s; }
+  .i-menu { padding: 10px 18px; border-radius: 999px; border: 0; cursor: pointer; background: var(--world-fg); color: var(--world-bg); font: 600 14px var(--font-body); }
+  .island :focus-visible { outline-offset: 2px; }
+  /* scrolled past the hero (or the menu is open): the island lifts away and the corners take over */
+  .hdr.scrolled .island, :global(html.menu-open) .island { opacity: 0; transform: translate(-50%, -14px) scale(0.96); pointer-events: none; visibility: hidden; transition: opacity 260ms var(--ease-out), transform 360ms var(--ease-out), visibility 0s 360ms; }
+  .hdr:not(.scrolled) > :is(.menu-btn, .snd) { opacity: 0; pointer-events: none; }
+  :global(html.menu-open) .hdr > .menu-btn { opacity: 1; pointer-events: auto; }
+  @media (max-width: 900px) {
+    .island { display: none; }
+    .hdr:not(.scrolled) > :is(.menu-btn, .snd) { opacity: 1; pointer-events: auto; }
+  }
+
   /* bottom left: sound, a waveform that moves while it's on */
   .snd {
     display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit;
@@ -136,7 +199,7 @@ const count = String(MENU.length).padStart(2, "0");
   /* With the menu open: MENU (now CLOSE) sits on the light panel, so it flips colour; on phones the panel covers
      everything, so the whole header flips. The bottom-right corner steps away. */
   :global(html.menu-open) .menu-btn { color: var(--world-bg); text-shadow: none; }
-  .menu-btn { transition: color var(--t-panel) var(--ease-drawer), opacity 600ms ease; }
+  .menu-btn { transition: color var(--t-panel) var(--ease-drawer), opacity 360ms ease; }
   :global(html.menu-open) .hdr > .where { opacity: 0; }
   :global(html.menu-open) .hdr > .snd { filter: blur(6px); opacity: 0.45; }
   .snd { transition: filter var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out); }

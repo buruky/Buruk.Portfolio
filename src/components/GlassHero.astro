@@ -10,6 +10,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as opentype from "opentype.js";
 import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
 import me from "@content/media/images/profile.jpg";
 import portrait from "@content/media/images/profile2.jpg";
 import place from "@content/media/images/about/seattle.jpg";
@@ -44,7 +45,20 @@ const glyphs = {
   })),
 };
 
-const photo = await getImage({ src: asmara, width: 1600, format: "webp", quality: 72 });
+/* Two modes. "home": the full intro (gate, vowel cycle, name flight) and the "I build" lockup.
+   "page": the same glass, photo and water for any other page (see src/layouts/WorldPage.astro), without the intro;
+   the page puts its own words in the default slot, and the glass rests in the hero's spot. */
+interface Props {
+  mode?: "home" | "page";
+  photo?: ImageMetadata;
+  /** the photo's colour once you've scrolled past the hero (linear RGB, 0–1): the world's tint */
+  deep?: [number, number, number];
+  /** the label for the header's "where you are" corner */
+  section?: string;
+}
+const { mode = "home", photo: photoSrc = asmara, deep = [0.16, 0.3, 0.2], section = "Home" } = Astro.props;
+const isHome = mode === "home";
+const photo = await getImage({ src: photoSrc, width: 1600, format: "webp", quality: 72 });
 const keepsakePhotos = {
   me: (await getImage({ src: me, width: 700, format: "webp", quality: 82 })).src,
   portrait: (await getImage({ src: portrait, width: 600, format: "webp", quality: 82 })).src,
@@ -52,20 +66,20 @@ const keepsakePhotos = {
 };
 
 const TOPICS = [
-  { label: "Salesforce", fill: "Salesforce apps.", href: "/work" },
-  { label: "Full stack", fill: "full-stack products.", href: "/work" },
+  { label: "Salesforce", fill: "Salesforce apps.", href: "/work#ecc-salesforce-case-management" },
+  { label: "Full stack", fill: "full-stack products.", href: "/work#fabriq" },
   { label: "Research", fill: "research with data.", href: "/research" },
   { label: "BK Web Studios", fill: "websites for small businesses.", href: "/bk-web-studios" },
 ];
 ---
-<script is:inline>
+{isHome && <script is:inline>
   // Before first paint: on the first visit this session, hold the page for the intro.
   try {
     if (!sessionStorage.getItem("bk-entered")) document.documentElement.classList.add("intro-active", "intro-logo-hidden");
   } catch (e) {}
-</script>
+</script>}
 
-<section class="gh" id="glass-hero" data-section="Home" data-photo={photo.src} data-photos={JSON.stringify(keepsakePhotos)} aria-labelledby="gh-title">
+<section class:list={["gh", { page: !isHome }]} id="glass-hero" data-section={section} data-photo={photo.src} data-photos={isHome ? JSON.stringify(keepsakePhotos) : undefined} data-deep={deep.join(",")} aria-labelledby="gh-title">
   <canvas class="gl" data-gl aria-hidden="true"></canvas>
   <div class="shade" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
@@ -87,18 +101,22 @@ const TOPICS = [
     <div class="slot" data-slot aria-hidden="true">
       <span class="fallback" lang="ti">ቡሩኽ</span>
     </div>
+    {isHome ? (
     <div class="copy" data-build>
-      <h1 id="gh-title" class="sentence">
-        <span class="sr-only">Buruk Yimesgen. </span>
-        <span class="lead">I build<span class="caret" aria-hidden="true"></span></span>
-        <span class="fill" aria-live="polite"><a class="word" data-word href="/work" hidden></a></span>
-        <span class="sr-only">Salesforce apps, full-stack products, research with data, and websites for small businesses.</span>
-      </h1>
-      <div class="topics" role="group" aria-label="What I build" data-topics>
-        {TOPICS.map((t) => <button type="button" aria-pressed="false" data-fill-text={t.fill} data-href={t.href}>{t.label}</button>)}
+        <h1 id="gh-title" class="sentence">
+          <span class="sr-only">Buruk Yimesgen. </span>
+          <span class="lead" data-arrive="stretch">I build<span class="caret" aria-hidden="true"></span></span>
+          <span class="fill" aria-live="polite"><a class="word" data-word href="/work" hidden></a></span>
+          <span class="sr-only">Salesforce apps, full-stack products, research with data, and websites for small businesses.</span>
+        </h1>
+        <div class="topics" role="group" aria-label="What I build" data-topics>
+          {TOPICS.map((t) => <button type="button" aria-pressed="false" data-fill-text={t.fill} data-href={t.href}>{t.label}</button>)}
+        </div>
+        <p class="about"><b><span lang="ti">ቡሩኽ</span> is my name, Buruk, in Ge&rsquo;ez script.</b> CS &amp; Math, University of Washington.</p>
       </div>
-      <p class="about"><b><span lang="ti">ቡሩኽ</span> is my name, Buruk, in Ge&rsquo;ez script.</b> CS &amp; Math, University of Washington.</p>
-    </div>
+    ) : (
+      <div class="copy" data-build><slot /></div>
+    )}
   </div>
   <p class="hint ui" data-hint aria-hidden="true">Grab a letter and flick it</p>
 </section>
@@ -106,6 +124,7 @@ const TOPICS = [
 <script>
   import * as THREE from "three";
   import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+  import { navigate } from "astro:transitions/client";
   import { play, unlock, setSound } from "@/lib/sound";
   import { createKeepsakes, type KeepsakeVariant } from "@/lib/keepsakes";
 
@@ -134,21 +153,24 @@ const TOPICS = [
     const canvas = $<HTMLCanvasElement>("[data-gl]");
 
     /* ---------------- "I build ___" ---------------- */
-    const build = $<HTMLElement>("[data-build]"), word = $<HTMLAnchorElement>("[data-word]"), topics = $<HTMLElement>("[data-topics]");
-    const btns = Array.from(topics.querySelectorAll<HTMLButtonElement>("button"));
+    // (page mode has no "I build" line: word and topics are missing, and everything below becomes a no-op)
+    const build = $<HTMLElement>("[data-build]"), word = root.querySelector<HTMLAnchorElement>("[data-word]"), topics = root.querySelector<HTMLElement>("[data-topics]");
+    const btns = topics ? Array.from(topics.querySelectorAll<HTMLButtonElement>("button")) : [];
     const POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     let iv = 0, idx = -1, locked = false, cycle = 0, startT = 0;
     function fill(text: string, href: string) {
+      if (!word) return;
       window.clearInterval(iv); word.hidden = false; word.href = href; build.classList.add("filled");
       if (reduce) { word.textContent = text; return; }
       let n = 0; const ticks = 12;
       iv = window.setInterval(() => {
         n++; let out = "";
         for (let k = 0; k < text.length; k++) { const ch = text[k]; out += ch === " " || ch === "." || ch === "-" || n > (k / text.length) * ticks ? ch : POOL[(Math.random() * POOL.length) | 0]; }
-        word.textContent = out; if (n >= ticks) { window.clearInterval(iv); word.textContent = text; }
+        word!.textContent = out; if (n >= ticks) { window.clearInterval(iv); word!.textContent = text; }
       }, 30);
     }
     function select(i: number, auto: boolean) {
+      if (!topics || !btns[i]) return;
       idx = i;
       btns.forEach((b, j) => b.setAttribute("aria-pressed", String(i === j)));
       topics.classList.remove("auto"); void topics.offsetWidth; if (auto && !locked) topics.classList.add("auto");
@@ -156,15 +178,17 @@ const TOPICS = [
     }
     function stopCycle() { window.clearTimeout(startT); window.clearInterval(cycle); }
     function startCycle(delay: number) {
-      stopCycle(); if (locked) return;
+      stopCycle(); if (locked || !btns.length) return;
       if (reduce) { if (idx < 0) select(0, true); return; }
       startT = window.setTimeout(() => { select((idx + 1) % btns.length, true); cycle = window.setInterval(() => { if (!document.hidden) select((idx + 1) % btns.length, true); }, 4500); }, delay);
     }
     btns.forEach((b, i) => {
-      b.addEventListener("click", () => { locked = true; stopCycle(); topics.classList.remove("auto"); select(i, false); }, on);
-      b.addEventListener("pointerenter", () => { if (locked || !fine) return; stopCycle(); topics.classList.remove("auto"); if (idx !== i) select(i, false); }, on);
+      // hover (or focus) shows the words; a click goes to that part of the site
+      b.addEventListener("click", () => { locked = true; stopCycle(); topics?.classList.remove("auto"); select(i, false); void navigate(b.dataset.href ?? "/work"); }, on);
+      b.addEventListener("focus", () => { if (locked) return; stopCycle(); topics?.classList.remove("auto"); if (idx !== i) select(i, false); }, on);
+      b.addEventListener("pointerenter", () => { if (locked || !fine) return; stopCycle(); topics?.classList.remove("auto"); if (idx !== i) select(i, false); }, on);
     });
-    topics.addEventListener("pointerleave", () => { if (!locked && fine) startCycle(4500); }, on);
+    topics?.addEventListener("pointerleave", () => { if (!locked && fine) startCycle(4500); }, on);
     ac.signal.addEventListener("abort", stopCycle);
 
     /* ---------------- 3D ---------------- */
@@ -335,7 +359,9 @@ const TOPICS = [
     });
     const bg = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), bgMat); bg.position.z = BG_Z; scene.add(bg);
     let BRIGHT = 0.8; // set in layout(): phones get a darker photo so the glass's own edges and reflections stand out
-    const DEEP = new THREE.Color(0.16, 0.3, 0.2); // behind the sections: the photo sinks into a morning-green glow
+    // behind the sections the photo sinks into the world's own colour (morning green on Home, noon blue on Work…)
+    const deepRGB = (root.dataset.deep ?? "0.16,0.3,0.2").split(",").map(Number);
+    const DEEP = new THREE.Color(deepRGB[0], deepRGB[1], deepRGB[2]);
     let bgLevel = 0;
     const setBg = (t: number) => { bgLevel = t; };
     let imgAspect = 1.5;
@@ -469,7 +495,8 @@ const TOPICS = [
       W = canvas.clientWidth || innerWidth; H = canvas.clientHeight || innerHeight;
       r3.setSize(W, H, false); camera.aspect = W / H; camera.fov = W / H > 1 ? 32 : 50; camera.updateProjectionMatrix();
       const narrow = W / H < 1;
-      BRIGHT = narrow ? 0.55 : 0.8; // portrait crops put the bright sky right behind the letters
+      // portrait crops put the bright sky right behind the letters; other pages' photos (WorldPage) sit a little darker too
+      BRIGHT = root.classList.contains("page") ? (narrow ? 0.5 : 0.62) : narrow ? 0.55 : 0.8;
       intro.y = narrow ? 0.9 : 0.45; intro.s = narrow ? 0.62 : Math.min(1.05, (W / H) / 1.45);
       fitBackground(); measureSlot(); placeLatin(latinT); placeHello();
     }
@@ -701,6 +728,10 @@ const TOPICS = [
     let away = 0, flagT = 0; // 0 in the hero → 1 once the hero has scrolled off: the glass is floating in the background
     // The end of Home: the footer leaves a box ([data-glass-spot]) and the name comes out from behind the veil to rest in it.
     let endT = 0;
+    // Page transitions (Cover.astro): on the way out the letters drop into the water; on a page you arrive at by
+    // transition they come up from below into their spot.
+    let sinkT = 0, sinking = false, riseT = html.classList.contains("surfacing") || html.dataset.arriving === "1" ? 0 : 1;
+    document.addEventListener("bk:sink", () => { sinking = true; }, on);
     const spot = document.querySelector<HTMLElement>("[data-glass-spot]");
     const end = { x: 0, y: 0, s: 1 };
     function measureEnd() {
@@ -771,7 +802,11 @@ const TOPICS = [
       slot.y = -((slotDocY - scrollY) / H * 2 - 1) * halfH();
       slotNow.y = slot.y; // follow the page exactly while scrolling
       const hx = intro.x + (slotNow.x - intro.x) * poseT, hy = intro.y + (slotNow.y - intro.y) * poseT, hs = intro.s + (slotNow.s - intro.s) * poseT;
-      const zName = -3.2 * away * (1 - endT) * (1 - menuT);
+      sinkT += ((sinking ? 1 : 0) - sinkT) * (reduce ? 1 : Math.min(1, dt * 3.5));
+      // arriving by transition: hold below the surface until the water starts draining, then rise
+      const holding = html.dataset.arriving === "1" && !html.classList.contains("surfacing");
+      if (!holding) riseT += (1 - riseT) * (reduce ? 1 : Math.min(1, dt * 2.2));
+      const zName = -3.2 * away * (1 - endT) * (1 - menuT) - 0.4 * sinkT;
       // the open space left of the drawer, in world units at the name's depth
       const drawer = Math.min(520, W), spaceX = (W - drawer) / 2 / W * 2 - 1;
       const hwz = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.position.z - zName) * camera.aspect;
@@ -780,7 +815,9 @@ const TOPICS = [
       const bx = fx + (end.x - fx) * endT, by = fy + (end.y - fy) * endT;
       // in the hero it keeps its height (above "I build"); in the background it settles near the middle
       const my = by * (1 - away) + 0.15 * away;
-      name.position.set(bx + (spaceX * hwz - bx) * menuT, by + (my - by) * menuT, zName);
+      // dropping into the water on the way out / rising from below on arrival (page transitions)
+      const tideY = -0.7 * sinkT - 0.7 * (1 - riseT); // a small dip as you leave and a rise as you arrive: the thread between pages
+      name.position.set(bx + (spaceX * hwz - bx) * menuT, by + (my - by) * menuT + tideY, zName);
       const roomS = (((W - drawer) / W) * 2 * hwz * 0.8) / rowW; // fit the space beside the drawer
       const sFloat = hs * (1 - 0.05 * away), sBase = sFloat + (end.s - sFloat) * endT;
       name.scale.setScalar(sBase + (Math.min(roomS, sBase) - sBase) * menuT);
@@ -834,6 +871,8 @@ const TOPICS = [
       name.rotation.set(0, 0, 0); void tilt; // the scene holds still under the pointer; only the light follows it
 
       r3.render(scene, camera);
+      // the first frame compiles the shaders (a long frame): tell the page transition it's safe to drain the water now
+      if (!html.dataset.glassReady) requestAnimationFrame(() => { html.dataset.glassReady = "1"; document.dispatchEvent(new CustomEvent("bk:glass-ready")); });
     });
 
     ac.signal.addEventListener("abort", () => {
@@ -997,6 +1036,21 @@ const TOPICS = [
     .fill { font-size: 5.6vw; }
     .hint { display: none; }
   }
+  /* Page mode (WorldPage): the page's words sit bottom left, the glass name rests upper right; stacked on phones.
+     A little shorter than Home's hero so the first section peeks in. */
+  .gh.page { height: 88svh; min-height: 520px; }
+  .gh.page .stage {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+    justify-items: stretch; text-align: left; column-gap: clamp(24px, 4vw, 72px);
+  }
+  .gh.page .slot { grid-column: 2; grid-row: 1; align-self: center; width: 100%; height: min(44svh, 400px); margin-top: 8vh; } /* over the busier middle of the photo, where the glass has something to bend */
+  .gh.page .copy { grid-column: 1; grid-row: 1; align-self: end; align-items: flex-start; }
+  @media (max-width: 760px) {
+    .gh.page .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .gh.page .slot { grid-column: 1; grid-row: 1; width: calc(100% + 24px); height: 26svh; margin: 0 -12px; }
+    .gh.page .copy { grid-column: 1; grid-row: 2; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .grain, .caret { animation: none; }
     :global(html.menu-open) .copy { transform: none; }

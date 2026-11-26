@@ -1,38 +1,261 @@
 ---
-// The colour flood between worlds. Persists across pages; driven by the transition engine below.
+// Page transitions (docs/motion-language.md §4, approved in the 1.3 playground: every page arrives its own way).
+// Each destination has its own screen effect, drawn from its time of day; its hero can add a text effect by marking an
+// element with data-arrive="streak" | "stretch" (more arrive with their pages). Shared by all: about a second, the same
+// curves, a 120 ms colour split on the corner name, and the direction rule (going later in the day comes from the top,
+// earlier from the bottom). The glass ቡሩኽ is the thread between pages: it dips as you leave (GlassHero listens for
+// bk:sink) and rises into its spot on arrival (GlassHero reads html.surfacing). Persists across pages.
+// Reduced motion: a 200 ms colour crossfade.
 ---
 <div id="cover" class="cover" aria-hidden="true" hidden transition:persist="site-cover"></div>
 
 <script>
   import { navigate } from "astro:transitions/client";
-  import { worldFor, WORLD_TIME, WORLD_SOUND } from "@/lib/worlds";
+  import { worldFor, WORLD_BG, WORLD_TIME, WORLD_SOUND, type World } from "@/lib/worlds";
   import { play } from "@/lib/sound";
 
   const EO = "cubic-bezier(0.23, 1, 0.32, 1)";
   const EIO = "cubic-bezier(0.77, 0, 0.175, 1)";
   const cover = document.getElementById("cover")!;
+  const html = document.documentElement;
   const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
   let busy = false;
   let pending: string | null = null;
   let safety = 0;
+  let arriving: World = "morning";
 
-  function floodIn(world: string, later: boolean): Promise<unknown> {
-    cover.dataset.world = world;
-    cover.hidden = false;
-    if (reduce()) {
-      return cover.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "ease", fill: "forwards" }).finished;
-    }
-    // Later in the day floods down from the top (night falling); earlier rises from the bottom (sunrise).
-    const from = later ? "inset(0 0 100% 0)" : "inset(100% 0 0 0)";
-    return cover.animate([{ clipPath: from, opacity: 1 }, { clipPath: "inset(0 0 0 0)", opacity: 1 }], { duration: 450, easing: EIO, fill: "forwards" }).finished;
+  const A = (el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) => el.animate(kf, o).finished;
+  function layer(css: string, parent: HTMLElement = cover) {
+    const d = document.createElement("div");
+    d.style.cssText = `position:absolute;${css}`;
+    parent.appendChild(d);
+    return d;
+  }
+  const frames = (n: number) => new Promise<void>((res) => { const f = () => (--n <= 0 ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); });
+
+  /* ---------- screen effects, one per destination world ----------
+     Every effect (except BK Web Studios, its own retro world) is made of "panes": tinted frosted glass with a bright top
+     edge, so the page shows blurred through it, like the glass name. Each closes over the page you're leaving (SCREEN)
+     and then opens onto the new one in its own way (OUT). */
+  function pane(css: string, bg: string, cls = "pane") {
+    const d = layer(`${css};--bg:${bg}`);
+    d.className = cls;
+    return d;
+  }
+  const all = (sel: string) => Array.from(cover.querySelectorAll<HTMLElement>(sel));
+  const SCREEN: Record<World, (bg: string, later: boolean) => Promise<unknown>> = {
+    // Home · sunrise: a frosted pane rises from below with a warm glowing edge
+    morning: (bg) => {
+      const d = pane("left:0;right:0;top:-12%;height:124%", bg, "pane sun");
+      return A(d, [{ transform: "translateY(100%)" }, { transform: "translateY(0)" }], { duration: 620, easing: EIO, fill: "forwards" });
+    },
+    // Work · blinds: frosted slats tilt shut like real blinds
+    noon: (bg, later) => {
+      const N = 8;
+      cover.style.perspective = "1400px";
+      return Promise.all(Array.from({ length: N }, (_, i) => {
+        const s = pane(`left:0;right:0;top:${(i * 100) / N}%;height:${100 / N + 0.4}%;transform-origin:50% 0%`, bg, "pane slat");
+        const k = later ? i : N - 1 - i;
+        return A(s, [{ transform: "rotateX(-88deg)", opacity: 0 }, { transform: "rotateX(0deg)", opacity: 1 }], { duration: 520, delay: k * 40, easing: EO, fill: "backwards" });
+      }));
+    },
+    // Education, Skills, Resume · paper stack: three frosted sheets slide up, lightest first
+    afternoon: (bg) => Promise.all([0.45, 0.65, 0.82].map((amt, i) => {
+      const s = pane(`inset:0;border-radius:14px 14px 0 0;--amt:${amt * 100}%`, bg, "pane sheet");
+      return A(s, [{ transform: "translateY(102%)" }, { transform: "translateY(0)" }], { duration: 480, delay: i * 80, easing: EO, fill: "backwards" });
+    })),
+    // About · long shadow: a frosted pane sweeps in diagonally behind a soft shadow
+    golden: (bg) => {
+      const from = "polygon(0 0,0 0,-40% 100%,-40% 100%)", to = "polygon(0 0,140% 0,100% 100%,-40% 100%)";
+      const band = layer("inset:0;background:rgba(40,18,0,.28)");
+      const d = pane("inset:0", bg);
+      void A(band, [{ clipPath: from }, { clipPath: to }], { duration: 600, easing: EIO, fill: "forwards" });
+      return A(d, [{ clipPath: from }, { clipPath: to }], { duration: 600, delay: 60, easing: EIO, fill: "both" });
+    },
+    // the leap (dusk) uses the same long shadow for now
+    dusk: (bg, later) => SCREEN.golden(bg, later),
+    // BK Web Studios · CRT power-on: a bright line opens into a scanlined screen (solid: it's its own retro world)
+    bkws: (bg) => {
+      const d = layer(`inset:0;background:${bg}`);
+      d.className = "crt";
+      layer("inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px)", d);
+      return A(d, [
+        { transform: "scaleX(0) scaleY(.006)", filter: "brightness(3)" },
+        { transform: "scaleX(1) scaleY(.006)", filter: "brightness(3)", offset: 0.35 },
+        { transform: "scaleX(1) scaleY(1)", filter: "brightness(1)" },
+      ], { duration: 460, easing: EIO, fill: "forwards" });
+    },
+    // Contact · sun iris: a frosted circle grows from the horizon
+    sunset: (bg) => {
+      const d = pane("inset:0", bg);
+      return A(d, [{ clipPath: "circle(0% at 50% 100%)" }, { clipPath: "circle(150% at 50% 100%)" }], { duration: 640, easing: EIO, fill: "forwards" });
+    },
+    // Research · pixel dissolve: frosted glass appears cell by cell, like stars coming out
+    night: (bg) => {
+      const d = pane("inset:0", bg, "pane cells");
+      const W = innerWidth, H = innerHeight, S = Math.max(26, Math.round(Math.min(W, H) / 24));
+      const cols = Math.ceil(W / S), rows = Math.ceil(H / S);
+      // the mask is a tiny canvas (one pixel per cell), stretched over the screen with crisp edges
+      const cv = document.createElement("canvas"); cv.width = cols; cv.height = rows;
+      const k = cv.getContext("2d")!; k.fillStyle = "#000";
+      const order = Array.from({ length: cols * rows }, (_, i) => i);
+      for (let i = order.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [order[i], order[j]] = [order[j], order[i]]; }
+      Object.assign(d.style, { maskSize: `${cols * S}px ${rows * S}px`, webkitMaskSize: `${cols * S}px ${rows * S}px`, maskRepeat: "no-repeat", webkitMaskRepeat: "no-repeat" });
+      d.dataset.cells = JSON.stringify({ cols, rows });
+      (d as HTMLElement & { _mask?: unknown })._mask = { cv, k, order };
+      const paint = () => { const u = `url(${cv.toDataURL()})`; d.style.maskImage = u; d.style.webkitMaskImage = u; };
+      paint();
+      const D = 520, t0 = performance.now(); let done = 0;
+      return new Promise<void>((res) => {
+        const tick = (now: number) => {
+          const p = Math.min(1, (now - t0) / D), n = Math.floor(order.length * p);
+          for (; done < n; done++) { const c = order[done]; k.fillRect(c % cols, (c / cols) | 0, 1, 1); }
+          paint();
+          if (p < 1) requestAnimationFrame(tick); else { d.style.maskImage = d.style.webkitMaskImage = "none"; res(); }
+        };
+        requestAnimationFrame(tick);
+      });
+    },
+    // 404 · screen tear: frosted slices jump in sideways with a colour split
+    midnight: (bg) => {
+      const N = 7;
+      return Promise.all(Array.from({ length: N }, (_, i) => {
+        const s = pane(`left:0;right:0;top:${(i * 100) / N}%;height:${100 / N + 0.4}%`, bg, "pane torn");
+        const off = (Math.random() * 120 - 60) | 0;
+        s.dataset.off = String(off);
+        return A(s, [{ transform: `translateX(${off}%)` }, { transform: `translateX(${-off / 3}%)`, offset: 0.5 }, { transform: "translateX(0)" }], { duration: 340, easing: "steps(5, end)", fill: "forwards" });
+      }));
+    },
+  };
+
+  /* ---------- how each effect opens onto the new page ---------- */
+  const OUT: Partial<Record<World, () => Promise<unknown>>> = {
+    // Home: the pane keeps rising, off the top, like the sun coming up
+    morning: () => Promise.all(all(".pane").map((d) => A(d, [{ transform: "translateY(0)" }, { transform: "translateY(-105%)" }], { duration: 700, easing: EIO, fill: "forwards" }))),
+    // Work: the blinds tilt open, top to bottom
+    noon: () => Promise.all(all(".slat").map((s, i) =>
+      A(s, [{ transform: "rotateX(0deg)", opacity: 1 }, { transform: "rotateX(88deg)", opacity: 0 }], { duration: 560, delay: i * 40, easing: EIO, fill: "forwards" }))),
+    // Education…: the sheets carry on up and off, top sheet first
+    afternoon: () => Promise.all(all(".sheet").reverse().map((s, i) =>
+      A(s, [{ transform: "translateY(0)" }, { transform: "translateY(-104%)" }], { duration: 560, delay: i * 80, easing: EIO, fill: "forwards" }))),
+    // About: the sweep carries on off the far side, the shadow trailing
+    golden: () => {
+      const to = "polygon(140% 0,140% 0,100% 100%,100% 100%)";
+      const [band, d] = Array.from(cover.children) as HTMLElement[];
+      void A(band, [{ clipPath: "polygon(0 0,140% 0,100% 100%,-40% 100%)" }, { clipPath: to }], { duration: 640, delay: 60, easing: EIO, fill: "forwards" });
+      return A(d, [{ clipPath: "polygon(0 0,140% 0,100% 100%,-40% 100%)" }, { clipPath: to }], { duration: 640, easing: EIO, fill: "forwards" });
+    },
+    dusk: () => OUT.golden!(),
+    // BK Web Studios: the screen powers off into a line
+    bkws: () => Promise.all(all(".crt").map((d) => A(d, [
+      { transform: "scaleX(1) scaleY(1)", filter: "brightness(1)" },
+      { transform: "scaleX(1) scaleY(.006)", filter: "brightness(3)", offset: 0.6 },
+      { transform: "scaleX(0) scaleY(.006)", filter: "brightness(3)" },
+    ], { duration: 420, easing: EIO, fill: "forwards" }))),
+    // Contact: the sun sets back into the horizon
+    sunset: () => Promise.all(all(".pane").map((d) => A(d, [{ clipPath: "circle(150% at 50% 100%)" }, { clipPath: "circle(0% at 50% 100%)" }], { duration: 640, easing: EIO, fill: "forwards" }))),
+    // Research: the glass clears cell by cell
+    night: () => {
+      const d = all(".cells")[0];
+      const m = (d as HTMLElement & { _mask?: { cv: HTMLCanvasElement; k: CanvasRenderingContext2D; order: number[] } })._mask;
+      if (!d || !m) return Promise.resolve();
+      const { cols } = JSON.parse(d.dataset.cells ?? "{}") as { cols: number };
+      const paint = () => { const u = `url(${m.cv.toDataURL()})`; d.style.maskImage = u; d.style.webkitMaskImage = u; };
+      paint();
+      const D = 560, t0 = performance.now(); let done = 0;
+      return new Promise<void>((res) => {
+        const tick = (now: number) => {
+          const p = Math.min(1, (now - t0) / D), n = Math.floor(m.order.length * p);
+          for (; done < n; done++) { const c = m.order[done]; m.k.clearRect(c % cols, (c / cols) | 0, 1, 1); }
+          paint();
+          if (p < 1) requestAnimationFrame(tick); else res();
+        };
+        requestAnimationFrame(tick);
+      });
+    },
+    // 404: the slices tear away sideways
+    midnight: () => Promise.all(all(".torn").map((s) => {
+      const off = Number(s.dataset.off ?? 40) || 40, dir = off > 0 ? 1 : -1;
+      return A(s, [{ transform: "translateX(0)", opacity: 1 }, { transform: `translateX(${dir * 30}%)`, opacity: 1, offset: 0.5 }, { transform: `translateX(${dir * 110}%)`, opacity: 0 }], { duration: 360, easing: "steps(5, end)", fill: "forwards" });
+    })),
+  };
+
+  /* ---------- text effects, owned by each page's hero (data-arrive) ---------- */
+  function splitChars(el: HTMLElement) {
+    if (el.dataset.split) return Array.from(el.querySelectorAll<HTMLElement>(".ch"));
+    el.dataset.split = "1";
+    el.setAttribute("aria-label", (el.textContent ?? "").trim());
+    const out: HTMLElement[] = [];
+    const walk = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        // each word's letters sit together in a no-wrap box, so lines still break only between words
+        const frag = document.createDocumentFragment();
+        for (const part of (node.textContent ?? "").split(/(\s+)/)) {
+          if (!part) continue;
+          if (/^\s+$/.test(part)) { frag.append(document.createTextNode(" ")); continue; }
+          const w = document.createElement("span"); w.setAttribute("aria-hidden", "true");
+          w.style.cssText = "display:inline-block;white-space:nowrap";
+          for (const ch of part) {
+            const s = document.createElement("span"); s.className = "ch"; s.style.display = "inline-block"; s.textContent = ch;
+            w.append(s); out.push(s);
+          }
+          frag.append(w);
+        }
+        node.parentNode!.replaceChild(frag, node);
+      } else node.childNodes.forEach(walk);
+    };
+    Array.from(el.childNodes).forEach(walk);
+    return out;
+  }
+  const TEXT: Record<string, (el: HTMLElement) => void> = {
+    // Work: letters streak in with a speed stretch
+    streak: (el) => {
+      const rest = getComputedStyle(el).fontStretch;
+      splitChars(el).forEach((c, i) => c.animate(
+        [{ transform: "translateX(-.6em)", fontStretch: "150%", opacity: 0 }, { transform: "none", fontStretch: rest, opacity: 1 }],
+        { duration: 480, delay: i * 18, easing: EO, fill: "backwards" },
+      ));
+    },
+    // Home: the words stretch out from narrow
+    stretch: (el) => {
+      el.animate([{ fontStretch: "50%", opacity: 0 }, { fontStretch: getComputedStyle(el).fontStretch, opacity: 1 }], { duration: 650, delay: 120, easing: EO, fill: "backwards" });
+    },
+  };
+
+  /* ---------- the trip ---------- */
+  function logoSplit() {
+    const n = document.querySelector<HTMLElement>(".hdr .name");
+    if (!n || reduce()) return;
+    n.classList.add("rgb-split");
+    setTimeout(() => n.classList.remove("rgb-split"), 120);
   }
 
-  function hideCover(): Promise<void> {
-    if (cover.hidden) return Promise.resolve();
-    return cover.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: "ease", fill: "forwards" }).finished.then(() => {
-      cover.getAnimations().forEach((a) => a.cancel());
-      cover.hidden = true;
-    });
+  function leave(to: World, later: boolean): Promise<unknown> {
+    cover.replaceChildren();
+    cover.hidden = false;
+    cover.style.opacity = ""; cover.style.perspective = "";
+    const bg = WORLD_BG[to];
+    if (reduce()) { const d = layer(`inset:0;background:${bg}`); return A(d, [{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "ease", fill: "forwards" }); }
+    document.dispatchEvent(new CustomEvent("bk:sink")); // the glass dips
+    setTimeout(logoSplit, 220);
+    return SCREEN[to](bg, later);
+  }
+
+  async function arrive(): Promise<void> {
+    if (cover.hidden) return;
+    const done = () => { cover.getAnimations({ subtree: true }).forEach((a) => a.cancel()); cover.replaceChildren(); cover.hidden = true; html.classList.remove("surfacing"); delete html.dataset.arriving; };
+    // keep the screen covered until the new page's glass scene has drawn its first (slow, shader-compiling) frame,
+    // so that hitch happens out of sight; pages without the scene, or a slow device, go after 900 ms at most
+    if (!reduce() && document.getElementById("glass-hero") && !html.dataset.glassReady) {
+      await new Promise<void>((res) => { const t = setTimeout(res, 900); document.addEventListener("bk:glass-ready", () => { clearTimeout(t); res(); }, { once: true }); });
+    }
+    await frames(2);
+    html.classList.add("surfacing"); // the glass rises into its spot
+    if (!reduce()) document.querySelectorAll<HTMLElement>("[data-arrive]").forEach((el) => TEXT[el.dataset.arrive ?? ""]?.(el));
+    const out = reduce() ? undefined : OUT[arriving];
+    if (out) await out();
+    else await A(cover, [{ opacity: 1 }, { opacity: 0 }], { duration: reduce() ? 200 : 160, easing: "ease", fill: "forwards" });
+    done();
   }
 
   /** Headings marked data-reveal rise line by line (motion tier: reveal). Content is visible without this. */
@@ -52,33 +275,52 @@
 
   document.addEventListener("astro:before-preparation", (ev) => {
     if (ev.from.pathname === ev.to.pathname) return; // same page (e.g. hash links)
-    if (busy) { ev.preventDefault(); pending = ev.to.href; return; } // queue instead of breaking the flood
+    if (busy) { ev.preventDefault(); pending = ev.to.href; return; } // queue instead of breaking the transition
     busy = true;
     window.clearTimeout(safety);
-    safety = window.setTimeout(() => { busy = false; void hideCover(); }, 6000); // never get stuck
+    safety = window.setTimeout(() => { busy = false; void arrive(); }, 6000); // never get stuck
     document.dispatchEvent(new CustomEvent("bk:navigate"));
     const from = worldFor(ev.from.pathname);
-    const to = worldFor(ev.to.pathname);
-    const later = WORLD_TIME[to] >= WORLD_TIME[from];
-    play(WORLD_SOUND[to]);
+    arriving = worldFor(ev.to.pathname);
+    const later = WORLD_TIME[arriving] >= WORLD_TIME[from];
+    play(WORLD_SOUND[arriving]);
     const load = ev.loader;
-    ev.loader = async () => { await Promise.all([floodIn(to, later), load()]); };
+    ev.loader = async () => { await Promise.all([leave(arriving, later), load()]); };
   });
+
+  // the new page's scripts run before the cover lifts: the glass starts below its spot and waits
+  document.addEventListener("astro:after-swap", () => { delete html.dataset.glassReady; if (busy && !reduce()) html.dataset.arriving = "1"; });
 
   document.addEventListener("bk:intro-reveal", reveal);
 
   document.addEventListener("astro:page-load", () => {
     reveal();
-    if (busy) void hideCover().then(finish);
+    if (busy) void arrive().then(finish);
   });
 </script>
 
 <style>
-  .cover {
-    position: fixed;
-    inset: 0;
-    z-index: 90;
-    background: var(--world-bg);
-    pointer-events: auto;
+  .cover { position: fixed; inset: 0; z-index: 90; pointer-events: auto; overflow: hidden; }
+  /* Panes: tinted frosted glass with a bright top edge catching the light and a soft shadow under it */
+  .cover :global(.pane) {
+    background:
+      linear-gradient(to bottom, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.04) 45%, rgb(0 0 0 / 0.06)),
+      color-mix(in srgb, var(--bg) var(--amt, 78%), transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(1.35); backdrop-filter: blur(16px) saturate(1.35);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), inset 0 -1px 0 rgb(0 0 0 / 0.12), 0 8px 18px -10px rgb(0 0 0 / 0.45);
+    backface-visibility: hidden; will-change: transform, opacity;
   }
+  /* sunrise: a warm glow along the rising edge */
+  .cover :global(.pane.sun) {
+    background:
+      linear-gradient(to bottom, rgb(255 236 170 / 0) 0, rgb(255 236 170 / 0.45) 5%, rgb(255 236 170 / 0.08) 16%, transparent 30%),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0.03) 45%, rgb(0 0 0 / 0.06)),
+      color-mix(in srgb, var(--bg) 78%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 6%); mask-image: linear-gradient(to bottom, transparent 0, #000 6%);
+  }
+  .cover :global(.pane.sheet) { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 -10px 30px rgb(0 0 0 / 0.14); }
+  .cover :global(.pane.torn) { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), -4px 0 0 rgb(255 59 59 / 0.75), 4px 0 0 rgb(56 225 255 / 0.75); }
+  .cover :global(.pane.cells) { -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; image-rendering: pixelated; }
+  /* the shared 120 ms colour split on the corner name */
+  :global(.hdr .name.rgb-split) { text-shadow: -3px 1px 0 rgb(255 59 59 / 0.9), 3px -1px 0 rgb(56 225 255 / 0.9) !important; }
 </style>

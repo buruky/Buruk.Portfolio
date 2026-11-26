@@ -1,0 +1,50 @@
+---
+// The page recipe (step 4.2). Every page after Home is built from this:
+//   1. a photo of its own, softly blurred, behind everything (with the water: click for ripples)
+//   2. the page's time-of-day colour as a see-through tint over that photo, not a flat fill
+//   3. the glass ቡሩኽ, resting in the hero's spot, floating behind the page as you scroll, and settling beside
+//      "Let's talk." at the end
+//   4. sections tagged with data-section="…" so the header's bottom-right corner can say where you are
+//
+// Usage:
+//   <WorldPage title="Work" photo={img} section="Work">
+//     <Fragment slot="hero"><h1 id="gh-title">…</h1></Fragment>   ← the hero's words (the h1 needs id="gh-title")
+//     <section data-section="…">…</section>                     ← the page
+//   </WorldPage>
+import type { ImageMetadata } from "astro";
+import Base from "@/layouts/Base.astro";
+import GlassHero from "@/components/GlassHero.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import { worldFor, WORLD_DEEP } from "@/lib/worlds";
+
+interface Props {
+  title: string;
+  description?: string;
+  photo: ImageMetadata;
+  /** label for the hero in the header's "where you are" corner */
+  section?: string;
+}
+const { title, description, photo, section = title } = Astro.props;
+const world = worldFor(Astro.url.pathname);
+---
+<Base title={title} description={description}>
+  <main id="main">
+    <GlassHero mode="page" photo={photo} deep={WORLD_DEEP[world]} section={section}>
+      <slot name="hero" />
+    </GlassHero>
+    <div class="hillside">
+      <div class="veiled"><slot /></div>
+      <SiteFooter />
+    </div>
+  </main>
+</Base>
+
+<style>
+  /* Same layering as Home: the page sits on a see-through veil of its world's colour over the glass layer. */
+  .hillside { position: relative; z-index: 1; }
+  .veiled {
+    --veil: color-mix(in srgb, color-mix(in srgb, var(--world-bg) 78%, #000) 58%, transparent);
+    background: linear-gradient(to bottom, rgb(5 5 6 / 0.7) 0, var(--veil) clamp(160px, 26vh, 300px),
+      var(--veil) calc(100% - clamp(200px, 40vh, 420px)), transparent 100%);
+  }
+</style>

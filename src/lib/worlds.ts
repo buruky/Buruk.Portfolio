@@ -14,6 +14,13 @@ export const WORLD_BG: Record<World, string> = {
   sunset: "#b83a36", night: "#0b1433", midnight: "#070612", bkws: "#ede7dd",
 };
 
+/** What the page photo sinks into once you scroll past the hero (a multiply tint, linear RGB 0–1), per world.
+ *  Used by WorldPage / GlassHero. Morning is Home's green; the others follow each world's colour. */
+export const WORLD_DEEP: Record<World, [number, number, number]> = {
+  morning: [0.16, 0.3, 0.2], noon: [0.2, 0.36, 0.78], afternoon: [0.55, 0.62, 0.45], golden: [0.7, 0.45, 0.16],
+  dusk: [0.3, 0.22, 0.6], sunset: [0.62, 0.24, 0.22], night: [0.08, 0.11, 0.3], midnight: [0.06, 0.05, 0.14], bkws: [0.8, 0.76, 0.7],
+};
+
 /** The sound each world makes as you arrive (docs/sound-kit.md). */
 export const WORLD_SOUND = {
   morning: "sunrise", noon: "blinds", afternoon: "paper", golden: "shadow", dusk: "shadow",
