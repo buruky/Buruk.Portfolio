@@ -178,6 +178,14 @@ const SOUNDS = {
   glass0: (c, o, t) => note(c, o, hz(0, 5), t, 0.08, 0.9),
   glass1: (c, o, t) => note(c, o, hz(2, 5), t, 0.08, 0.9),
   glass2: (c, o, t) => note(c, o, hz(3, 5), t, 0.08, 0.9),
+  // Home: a click on the page drops a ripple. A soft water drop: one quiet tone dipping slightly in pitch, low-passed.
+  drop: (c, o, t) => {
+    const f = hz(Math.floor(Math.random() * 5), 5), os = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+    os.type = "sine"; os.frequency.setValueAtTime(f * 1.06, t); os.frequency.exponentialRampToValueAtTime(f * 0.94, t + 0.18);
+    lp.type = "lowpass"; lp.frequency.value = 1400;
+    env(g, t, 0.012, 0.022, 0.31);
+    os.connect(lp).connect(g).connect(o); os.start(t); os.stop(t + 0.4);
+  },
 } satisfies Record<string, Recipe>;
 
 export type SoundName = keyof typeof SOUNDS;
