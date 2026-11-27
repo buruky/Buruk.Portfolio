@@ -1,0 +1,33 @@
+---
+// Project cover mockups (docs/project-covers.md), for review in the dev server at /covers-preview.
+// Dev only: in a build getStaticPaths returns nothing, so the page never ships.
+import Base from "@/layouts/Base.astro";
+import ShotCover from "@/components/ShotCover.astro";
+import { projects } from "@/lib/projects";
+
+export function getStaticPaths() {
+  return import.meta.env.DEV ? [{ params: { dev: undefined } }] : [];
+}
+---
+<Base title="Cover mockups" world="noon">
+  <main class="wrap">
+    <h1>Project covers: proof marks</h1>
+    <p class="note">Each project's real screenshot, held by crop marks. Hero size, then the 420px Work-hover size.</p>
+    {projects.map((p) => (
+      <section class="row">
+        <div class="big"><ShotCover p={p} /></div>
+        <div class="small"><ShotCover p={p} /><span class="cap">420px · Work hover</span></div>
+      </section>
+    ))}
+  </main>
+</Base>
+
+<style>
+  .wrap { padding: clamp(96px, 12vw, 140px) clamp(16px, 4vw, 56px) 96px; display: grid; gap: clamp(40px, 6vw, 72px); }
+  h1 { margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 122%; font-size: clamp(36px, 6vw, 80px); line-height: 0.9; }
+  .note { margin: -24px 0 0; max-width: 60ch; opacity: 0.85; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 32px; align-items: end; }
+  .small { display: grid; gap: 10px; }
+  .cap { font: 500 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+  @media (max-width: 1000px) { .row { grid-template-columns: minmax(0, 1fr); } .small { display: none; } }
+</style>

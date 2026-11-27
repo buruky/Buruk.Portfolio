@@ -1,0 +1,74 @@
+---
+// Project cover (docs/project-covers.md, round 3, owner's pick "proof marks"): the project's REAL screenshot on the
+// page's own colour, no background and no frame. Printer's crop marks and a registration target hold it like a proof
+// sheet; the site's mono labels sit around it. Sized in cqi (1% of the cover's width) so one cover reads the same from
+// a phone thumb to a hero. MOCKUP: shown at /covers-preview, not wired into any page yet.
+import type { Project } from "@/lib/projects";
+import eccPipeline from "@content/media/images/screenshots/ecc-cover-pipeline.png"; // demo video 26.5 s, captions cropped
+
+interface Props { p: Project }
+const { p } = Astro.props;
+
+// ECC's listed screenshot carries overlays, so its cover uses a clean frame from the demo video; the rest use their own.
+const SHOT: Record<string, typeof eccPipeline> = { "ecc-salesforce-case-management": eccPipeline };
+// The mark: a real logo once there is one; until then the shortest name people would say.
+const MARK: Record<string, string> = {
+  "ecc-salesforce-case-management": "ECC",
+  "quantum-computing-research": "Quantum",
+  "nasa-grace-climate-research": "NASA GRACE",
+};
+// The slug line under the proof: what the screenshot shows.
+const CAPTION: Record<string, string> = {
+  "ecc-salesforce-case-management": "Supervisor view · Case pipeline",
+  fabriq: "Landing page",
+  "between-worlds": "In game",
+  "quantum-computing-research": "Grover's search circuit",
+  "nasa-grace-climate-research": "Actual vs predicted · São Francisco",
+  "beaches-and-barrels": "In game",
+};
+const shot = SHOT[p.slug] ?? p.img;
+const mark = MARK[p.slug] ?? p.short;
+---
+<figure class="sc" aria-label={`${p.short} cover`}>
+  {shot && (
+    <div class="box">
+      <img src={shot.src} width={shot.width} height={shot.height} alt="" />
+      <i class="cm tl"></i><i class="cm tr"></i><i class="cm bl"></i><i class="cm br"></i>
+      <i class="reg"></i>
+      {CAPTION[p.slug] && <p class="slug">{CAPTION[p.slug]}</p>}
+    </div>
+  )}
+  <p class="lbl tl">[{p.index}] · {p.lane.label}</p>
+  {p.stat && <p class="lbl tr">{p.stat}</p>}
+  <figcaption class="mark">{mark}</figcaption>
+</figure>
+
+<style>
+  .sc { container-type: inline-size; position: relative; margin: 0; aspect-ratio: 16 / 10; color: var(--world-fg, #fff); }
+  /* the proof: centred, shrink-wrapped to the screenshot, never taller than the space between the labels */
+  .box { position: absolute; left: 50%; top: 17cqi; translate: -50% 0; }
+  .box img { display: block; width: auto; height: auto; max-width: 86cqi; max-height: 30cqi; box-shadow: 0 0.3cqi 1.2cqi rgb(0 0 0 / 0.18); }
+
+  /* crop marks just outside each corner, a registration target above; thin, in the page's ink */
+  .cm { position: absolute; width: 3.2cqi; height: 3.2cqi; opacity: 0.75; }
+  .cm::before, .cm::after { content: ""; position: absolute; background: currentColor; }
+  .cm::before { height: max(1px, 0.09cqi); width: 2.4cqi; }
+  .cm::after { width: max(1px, 0.09cqi); height: 2.4cqi; }
+  .cm.tl { left: -3.2cqi; top: -3.2cqi; } .cm.tl::before { left: 0; bottom: 0; } .cm.tl::after { right: 0; top: 0; }
+  .cm.tr { right: -3.2cqi; top: -3.2cqi; } .cm.tr::before { right: 0; bottom: 0; } .cm.tr::after { left: 0; top: 0; }
+  .cm.bl { left: -3.2cqi; bottom: -3.2cqi; } .cm.bl::before { left: 0; top: 0; } .cm.bl::after { right: 0; bottom: 0; }
+  .cm.br { right: -3.2cqi; bottom: -3.2cqi; } .cm.br::before { right: 0; top: 0; } .cm.br::after { left: 0; bottom: 0; }
+  .reg {
+    position: absolute; left: 50%; top: -4.6cqi; width: 2.6cqi; height: 2.6cqi; translate: -50% 0; opacity: 0.75;
+    border: max(1px, 0.09cqi) solid currentColor; border-radius: 50%;
+    background: linear-gradient(currentColor, currentColor) center / max(1px, 0.09cqi) 140% no-repeat,
+                linear-gradient(currentColor, currentColor) center / 140% max(1px, 0.09cqi) no-repeat;
+  }
+
+  /* labels: the site's mono labels. The slug line sits above the proof's top-left mark, like a print slug. */
+  .lbl, .slug { margin: 0; font: 500 max(10px, 1.35cqi) var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; white-space: nowrap; }
+  .lbl { position: absolute; top: 4cqi; } .lbl.tl { left: 7%; } .lbl.tr { right: 7%; }
+  .slug { position: absolute; left: 0; bottom: calc(100% + 4.4cqi); }
+  .mark { position: absolute; left: 7%; bottom: 4cqi; font-family: var(--font-display); font-weight: 900; font-stretch: 122%; font-size: 5.4cqi; line-height: 0.86; letter-spacing: -0.025em; white-space: nowrap; }
+  @container (max-width: 640px) { .slug { display: none; } .mark { font-size: 6cqi; } .lbl.tr { display: none; } }
+</style>
