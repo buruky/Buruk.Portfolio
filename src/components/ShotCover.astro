@@ -6,8 +6,11 @@
 import type { Project } from "@/lib/projects";
 import eccPipeline from "@content/media/images/screenshots/ecc-cover-pipeline.png"; // demo video 26.5 s, captions cropped
 
-interface Props { p: Project }
-const { p } = Astro.props;
+// bare: just the proof, as big as the cover allows (the Work row already shows the labels and name).
+// clip: the project's looping clip, played inside the same proof box as the screenshot so nothing changes size.
+// autoplay: the clip plays from the start, over the screenshot (the project page hero).
+interface Props { p: Project; bare?: boolean; clip?: string; autoplay?: boolean }
+const { p, bare = false, clip, autoplay = false } = Astro.props;
 
 // ECC's listed screenshot carries overlays, so its cover uses a clean frame from the demo video; the rest use their own.
 const SHOT: Record<string, typeof eccPipeline> = { "ecc-salesforce-case-management": eccPipeline };
@@ -29,18 +32,21 @@ const CAPTION: Record<string, string> = {
 const shot = SHOT[p.slug] ?? p.img;
 const mark = MARK[p.slug] ?? p.short;
 ---
-<figure class="sc" aria-label={`${p.short} cover`}>
+<figure class:list={["sc", { bare, clip: !!clip }]} aria-label={`${p.short} cover`}>
   {shot && (
     <div class="box">
       <img src={shot.src} width={shot.width} height={shot.height} alt="" />
+      {clip && <video src={clip} muted loop playsinline autoplay={autoplay} preload={autoplay ? "auto" : "none"}></video>}
       <i class="cm tl"></i><i class="cm tr"></i><i class="cm bl"></i><i class="cm br"></i>
       <i class="reg"></i>
-      {CAPTION[p.slug] && <p class="slug">{CAPTION[p.slug]}</p>}
+      {!bare && CAPTION[p.slug] && <p class="slug">{CAPTION[p.slug]}</p>}
     </div>
   )}
-  <p class="lbl tl">[{p.index}] · {p.lane.label}</p>
-  {p.stat && <p class="lbl tr">{p.stat}</p>}
-  <figcaption class="mark">{mark}</figcaption>
+  {!bare && <>
+    <p class="lbl tl">[{p.index}] · {p.lane.label}</p>
+    {p.stat && <p class="lbl tr">{p.stat}</p>}
+    <figcaption class="mark">{mark}</figcaption>
+  </>}
 </figure>
 
 <style>
@@ -48,6 +54,13 @@ const mark = MARK[p.slug] ?? p.short;
   /* the proof: centred, shrink-wrapped to the screenshot, never taller than the space between the labels */
   .box { position: absolute; left: 50%; top: 17cqi; translate: -50% 0; }
   .box img { display: block; width: auto; height: auto; max-width: 86cqi; max-height: 30cqi; box-shadow: 0 0.3cqi 1.2cqi rgb(0 0 0 / 0.18); }
+  /* bare: the proof fills the cover, leaving room for the marks */
+  .bare .box { top: 50%; translate: -50% -50%; }
+  .bare .box img { max-width: 84cqi; max-height: 50cqi; }
+  /* with a clip, the proof is the clip's 16:10 box: the screenshot fills it, and the clip fades in over it in place */
+  .clip .box img { width: 80cqi; height: 50cqi; object-fit: cover; object-position: 0 0; }
+  .box video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 400ms var(--ease-out); }
+  .box video.live, .box video[autoplay] { opacity: 1; }
 
   /* crop marks just outside each corner, a registration target above; thin, in the page's ink */
   .cm { position: absolute; width: 3.2cqi; height: 3.2cqi; opacity: 0.75; }

@@ -1,11 +1,13 @@
 ---
-// A project's own page (step 6.1 → filled out per project in 6.2–6.5): full screen first. The project's clip (or its
-// screenshot) fills the screen with the title over it; then what it is, what I did, what it's built with, the links,
+// A project's own page (step 6.1 → filled out per project in 6.2–6.5): full screen first. The screenshot fills the
+// screen with the title over it; a project with a clip blurs that screenshot into light and plays the clip crisp, at
+// about its own size, in its proof-marks cover on the right (stretched full screen, a 1280px clip goes soft); then what it is, what I did, what it's built with, the links,
 // and the next project. Data: src/lib/projects.ts (content/site.json).
 import { Image } from "astro:assets";
 import Base from "@/layouts/Base.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
 import CaseStudy from "@/components/CaseStudy.astro";
+import ShotCover from "@/components/ShotCover.astro";
 import { projects, type Project } from "@/lib/projects";
 
 export function getStaticPaths() {
@@ -16,10 +18,10 @@ const { p, next } = Astro.props as { p: Project; next: Project };
 <Base title={p.short} description={p.line}>
   <main id="main" class="pj">
     <section class="stage" data-section={p.short} aria-labelledby="pj-title">
-      <div class:list={["media", { contain: p.contain }]} aria-hidden="true">
-        {p.img && <Image src={p.img} alt="" widths={[960, 1600, 2200]} sizes="100vw" loading="eager" />}
-        {p.video && <video src={p.video} autoplay muted loop playsinline preload="auto"></video>}
+      <div class:list={["media", { contain: p.contain && !p.video, soft: p.video }]} aria-hidden="true">
+        {p.img && <Image src={p.img} alt="" widths={p.video ? [640] : [960, 1600, 2200]} sizes={p.video ? "640px" : "100vw"} loading="eager" />}
       </div>
+      {p.video && <div class="proof" aria-hidden="true"><ShotCover p={p} bare clip={p.video} autoplay /></div>}
       <div class="over">
         <p class="kicker"><span>{p.index}</span><span>{p.kind ?? p.lane.label}</span></p>
         <h1 id="pj-title" class="title" data-arrive="streak">{p.short}</h1>
@@ -61,6 +63,13 @@ const { p, next } = Astro.props as { p: Project; next: Project };
   </main>
 </Base>
 
+<script>
+  // reduced motion: the hero clip rests on its first frame
+  document.addEventListener("astro:page-load", () => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) document.querySelectorAll<HTMLVideoElement>(".proof video").forEach((v) => { v.autoplay = false; v.pause(); });
+  });
+</script>
+
 <style>
   .pj { position: relative; background: linear-gradient(to bottom, #0b1530, color-mix(in srgb, var(--world-bg) 55%, #0b1530) 60%, var(--world-bg)); }
 
@@ -70,6 +79,9 @@ const { p, next } = Astro.props as { p: Project; next: Project };
   .media :global(img), .media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0%; }
   .media.contain { background: #f4f1ea; }
   .media.contain :global(img) { object-fit: contain; padding: 6vh 6vw 30vh; }
+  .media.soft :global(img) { filter: blur(28px) saturate(1.2) brightness(0.8); scale: 1.15; }
+  /* top right, clear of the title: its long second line starts about halfway down */
+  .proof { position: absolute; z-index: 1; right: max(16px, env(safe-area-inset-right, 0px)); top: max(100px, 13vh); width: min(38vw, 960px); }
   .stage::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(5 10 25 / 0.45) 0, transparent 26%, transparent 42%, rgb(5 10 25 / 0.88) 100%); pointer-events: none; }
   .over { position: relative; z-index: 1; width: 100%; padding: 0 max(24px, env(safe-area-inset-right, 0px)) clamp(56px, 10vh, 110px) max(24px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; justify-items: start; }
   .kicker { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font: 500 12px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
@@ -107,6 +119,7 @@ const { p, next } = Astro.props as { p: Project; next: Project };
   .back { max-width: 1180px; margin: 28px auto clamp(60px, 10vh, 120px); padding: 0 max(24px, env(safe-area-inset-left, 0px)); }
   .back a { color: inherit; font: 500 13px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
 
+  @media (max-width: 900px) { .proof { left: 12px; right: 12px; top: max(76px, 9vh); width: auto; } }
   @media (max-width: 760px) {
     .cols { grid-template-columns: minmax(0, 1fr); }
     .media.contain :global(img) { padding: 14vh 6vw 40vh; }

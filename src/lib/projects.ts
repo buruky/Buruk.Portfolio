@@ -1,7 +1,7 @@
 // Projects for the Work index (/work) and the full-screen project pages (/work/[slug]), from content/site.json.
-// Each project can have a short looping clip, close to a GIF: put it in content/media/videos/ and set
-// "previewVideo": "videos/<name>.mp4" on the project (MP4/H.264 or WebM, muted, 3–8 s, 16:10, ideally under ~2 MB).
-// Until then, ECC falls back to its demo video and the rest show their screenshot.
+// Each project can have a short looping clip, close to a GIF: save it as content/media/videos/<slug>.mp4
+// (MP4/H.264, muted, 3–8 s, 16:10, ideally under ~2 MB), or point "previewVideo" at another file.
+// Projects without one show only their cover.
 import type { ImageMetadata } from "astro";
 import site from "@/lib/site";
 
@@ -34,7 +34,7 @@ export const projects = (site.projects as Raw[]).map((p, i) => ({
   contain: p.screenshot.fit === "contain",
   lane: LANE[p.lane] ?? { key: "other", label: p.lane },
   stat: STAT[p.slug],
-  video: media(videos, p.previewVideo ?? p.demoVideo),
+  video: media(videos, p.previewVideo ?? `videos/${p.slug}.mp4`),
   paper: media(papers, p.paperUrl),
   demo: media(videos, p.demoVideo),
 }));
