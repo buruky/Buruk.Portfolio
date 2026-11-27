@@ -1,20 +1,18 @@
 ---
-// Home: selected work as "glow frames" (step 3.4, after jordangilroy.com). Each project is a clean frame floating
-// over a huge, blurred glow of its own screenshot, so the page picks up the project's light. Frames grow into
-// place as they scroll in (CSS scroll-driven animation where supported; static otherwise).
-import { Image } from "astro:assets";
-import site from "@/lib/site";
-import ecc from "@content/media/images/screenshots/ecc-my-cases.png"; // frame from videos/ecc-demo.mp4 at 36.3s, captions cropped
-import fabriq from "@content/media/images/screenshots/fabriq.png";
-import GraceChart from "@/components/GraceChart.astro"; // GRACE is drawn from the paper's results table, not a screenshot
+// Home: selected work, with the same proof-mark covers as /work (ShotCover). Each project's real screenshot sits in
+// its crop marks; when the project reaches the middle of the screen, its clip (if it has one) starts in the same box
+// after a short delay, like the Work hover. Frames grow into place as they scroll in (CSS scroll-driven animation
+// where supported; static otherwise).
+import ShotCover from "@/components/ShotCover.astro";
+import { projects } from "@/lib/projects";
 
 const FEATURED = [
-  { slug: "ecc-salesforce-case-management", img: ecc, pos: "0% 0%", title: "ECC Case Management", line: "A Salesforce app for Eritrean Community Connections, a nonprofit serving immigrant families.", stat: "10", statLabel: "staff use it every day", href: "/work/ecc-salesforce-case-management" },
-  { slug: "fabriq", img: fabriq, pos: "100% 50%", title: "Fabriq", line: "An AI fashion app: build a digital closet, get outfits generated from what you own.", stat: "3rd", statLabel: "of 10+ teams at a hackathon", href: "/work/fabriq" },
-  { slug: "nasa-grace-climate-research", img: null, pos: "50% 50%", title: "NASA GRACE", line: "Filling gaps in NASA satellite water data with machine learning.", stat: "2.25×", statLabel: "lower error than the other 4 models", href: "/work/nasa-grace-climate-research" },
+  { slug: "ecc-salesforce-case-management", title: "ECC Case Management", line: "A Salesforce app for Eritrean Community Connections, a nonprofit serving immigrant families.", stat: "10", statLabel: "staff use it every day", href: "/work/ecc-salesforce-case-management" },
+  { slug: "fabriq", title: "Fabriq", line: "An AI fashion app: build a digital closet, get outfits generated from what you own.", stat: "3rd", statLabel: "of 10+ teams at a hackathon", href: "/work/fabriq" },
+  { slug: "nasa-grace-climate-research", title: "NASA GRACE", line: "Filling gaps in NASA satellite water data with machine learning.", stat: "2.25×", statLabel: "lower error than the other 4 models", href: "/work/nasa-grace-climate-research" },
 ].map((f) => {
-  const p = site.projects.find((x) => x.slug === f.slug);
-  return { ...f, lane: p?.lane ?? "", stack: (p?.techStack ?? []).slice(0, 4) };
+  const p = projects.find((x) => x.slug === f.slug)!;
+  return { ...f, p, lane: p.lane.label, stack: p.techStack.slice(0, 4) };
 });
 const pad = (n: number) => String(n).padStart(2, "0");
 ---
@@ -30,15 +28,8 @@ const pad = (n: number) => String(n).padStart(2, "0");
   <ol class="list">
     {FEATURED.map((p, i) => (
       <li class="project" data-work-item>
-        <div class={p.img ? "glow" : "glow glow-night"} aria-hidden="true">
-          {p.img && <Image src={p.img} alt="" width={240} style={`object-position: ${p.pos}`} />}
-        </div>
-        <a class="frame" href={p.href} tabindex="-1" aria-hidden="true" data-gloss="3">
-          {p.img ? (
-            <Image src={p.img} alt="" widths={[640, 960, 1280]} sizes="(max-width: 760px) 92vw, 60vw" style={`object-position: ${p.pos}`} />
-          ) : (
-            <GraceChart />
-          )}
+        <a class="frame" href={p.href} tabindex="-1" aria-hidden="true">
+          <ShotCover p={p.p} bare clip={p.p.video} />
         </a>
         <div class="meta">
           <div class="top">
@@ -63,23 +54,35 @@ const pad = (n: number) => String(n).padStart(2, "0");
 </section>
 
 <script>
-  // The counter in the sticky column follows whichever project is in the middle of the screen.
+  // The counter in the sticky column follows whichever project is in the middle of the screen, and that project's
+  // clip starts (after CLIP_DELAY, fading in once it's playing) while the others stop and rewind.
+  const CLIP_DELAY = 700;
   function init() {
     const items = Array.from(document.querySelectorAll<HTMLElement>("[data-work-item]"));
     const now = document.querySelector<HTMLElement>("[data-work-now]");
     const dots = Array.from(document.querySelectorAll<HTMLElement>("[data-work-dot]"));
     if (!items.length || !now || now.dataset.bound) return;
     now.dataset.bound = "1";
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let clipTimer = 0;
     const io = new IntersectionObserver((es) => {
       for (const e of es) {
         if (!e.isIntersecting) continue;
         const i = items.indexOf(e.target as HTMLElement);
         now.textContent = String(i + 1).padStart(2, "0");
         dots.forEach((d, k) => d.classList.toggle("on", k === i));
+        clearTimeout(clipTimer);
+        items.forEach((it, k) => {
+          const v = it.querySelector("video");
+          if (!v) return;
+          if (k === i && !reduce) {
+            clipTimer = window.setTimeout(() => { v.addEventListener("playing", () => v.classList.add("live"), { once: true }); void v.play().catch(() => {}); }, CLIP_DELAY);
+          } else if (k !== i) { v.pause(); v.classList.remove("live"); v.currentTime = 0; }
+        });
       }
     }, { rootMargin: "-50% 0px -50% 0px" });
     items.forEach((it) => io.observe(it));
-    document.addEventListener("astro:before-swap", () => io.disconnect(), { once: true });
+    document.addEventListener("astro:before-swap", () => { clearTimeout(clipTimer); io.disconnect(); }, { once: true });
   }
   document.addEventListener("astro:page-load", init);
 </script>
@@ -107,27 +110,8 @@ const pad = (n: number) => String(n).padStart(2, "0");
     display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(24px, 4vw, 64px); align-items: stretch;
   }
 
-  /* The glow: the project's own screenshot, blown up and blurred, blooming out from behind the frame (never behind
-     the text, so the copy keeps its contrast). Edges fade into the page. */
-  .glow {
-    position: absolute; z-index: -1; inset: -22% 32% -22% -10%; pointer-events: none;
-    -webkit-mask-image: radial-gradient(closest-side, #000 30%, transparent 100%);
-    mask-image: radial-gradient(closest-side, #000 30%, transparent 100%);
-    opacity: 0.5;
-  }
-  /* the drawn GRACE figure has no screenshot to blur, so its glow is plain paper-white light, like the other frames */
-  .glow-night { background: radial-gradient(55% 50% at 45% 55%, #ffffff 0%, rgb(255 255 255 / 0.4) 45%, transparent 75%); }
-  .glow :global(img) { width: 100%; height: 100%; object-fit: cover; filter: blur(60px) saturate(2); transform: scale(1.1); }
-
-  /* The frame: clean, rounded, with a thin lit edge and a deep soft shadow so it floats over its glow */
-  .frame {
-    display: block; border-radius: 16px; overflow: hidden; align-self: center;
-    box-shadow:
-      0 0 0 1px rgb(255 255 255 / 0.14),
-      0 50px 90px -36px rgb(0 0 0 / 0.75),
-      0 18px 36px -24px rgb(0 0 0 / 0.5);
-  }
-  .frame :global(img) { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; transition: scale 900ms var(--ease-out); }
+  /* The frame: the project's proof-mark cover (no box of its own; the crop marks hold it) */
+  .frame { display: block; align-self: center; color: inherit; }
 
   /* Meta column: index and lane at the top, the story in the middle, stack and link at the bottom (like a spec sheet) */
   .meta { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; min-width: 0; padding: 4px 0; }
@@ -151,7 +135,6 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .view span { display: inline-block; transition: transform var(--t-ui) var(--ease-out); }
 
   @media (hover: hover) and (pointer: fine) {
-    .project:hover .frame :global(img) { scale: 1.03; }
     .project:hover .view span { transform: translate(2px, -2px); }
   }
 
@@ -159,12 +142,10 @@ const pad = (n: number) => String(n).padStart(2, "0");
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
       .frame { animation: frame-in linear both; animation-timeline: view(); animation-range: entry 0% cover 40%; }
-      .glow { animation: glow-in linear both; animation-timeline: view(); animation-range: entry 10% cover 50%; }
       .meta { animation: meta-in linear both; animation-timeline: view(); animation-range: entry 10% cover 35%; }
     }
   }
   @keyframes frame-in { from { scale: 0.88; translate: 0 60px; opacity: 0.4; } to { scale: 1; translate: 0 0; opacity: 1; } }
-  @keyframes glow-in { from { opacity: 0; scale: 0.75; } to { opacity: 0.5; scale: 1; } }
   @keyframes meta-in { from { opacity: 0; translate: 0 30px; } to { opacity: 1; translate: 0 0; } }
 
   /* Narrower screens: the column becomes a small sticky label riding along the top */
@@ -182,7 +163,6 @@ const pad = (n: number) => String(n).padStart(2, "0");
   }
   @media (max-width: 760px) {
     .project { grid-template-columns: 1fr; }
-    .glow { inset: -12% -20% 40% -20%; } /* phones: frame on top, so the glow stays above the text */
     .bottom { align-items: flex-end; }
   }
 </style>

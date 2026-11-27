@@ -665,6 +665,26 @@ const TOPICS = [
     grabZones.forEach((z) => { z.addEventListener("pointerup", release, on); z.addEventListener("pointercancel", release, on); });
     if (!reduce) addEventListener("pointermove", (e) => { px = (e.clientX / innerWidth) * 2 - 1; py = (e.clientY / innerHeight) * 2 - 1; }, { passive: true, signal: ac.signal });
 
+    // Overscroll stand-in (the page itself doesn't bounce, base.css): only momentum does it. Scrolling up fast from
+    // lower down and hitting the top carries on into the glass name, which dips and springs back; a fresh scroll-up
+    // while already at the top does nothing. pullT is how hard (0–1), eased into pullNow each frame.
+    let pullT = 0, pullNow = 0, prevY = scrollY, prevT = performance.now(), carryUntil = 0;
+    if (!reduce) {
+      addEventListener("scroll", () => {
+        const now = performance.now();
+        if (scrollY <= 0 && prevY > 0) {
+          const v = prevY / Math.max(8, now - prevT); // px per ms on the way in
+          if (v > 0.5) { pullT = Math.min(1, pullT + v / 4); carryUntil = now + 160; }
+        }
+        prevY = scrollY; prevT = now;
+      }, { passive: true, signal: ac.signal });
+      // the trackpad's leftover momentum after arriving keeps pulling, as long as it keeps coming without a pause
+      addEventListener("wheel", (e) => {
+        const now = performance.now();
+        if (scrollY <= 0 && e.deltaY < 0 && now < carryUntil) { pullT = Math.min(1, pullT - e.deltaY / 380); carryUntil = now + 160; }
+      }, { passive: true, signal: ac.signal });
+    }
+
     /* ---------------- the gate's keepsakes, floating in the pond (src/lib/keepsakes.ts) ---------------- */
     // which version of the gate: one print of Buruk (chosen), or ?keepsakes=prints for the three-photo version
     const variant: KeepsakeVariant = new URLSearchParams(location.search).get("keepsakes") === "prints" ? "prints" : "me";
@@ -812,7 +832,9 @@ const TOPICS = [
       const my = by * (1 - away) + 0.15 * away;
       // dropping into the water on the way out / rising from below on arrival (page transitions)
       const tideY = -0.7 * sinkT - 0.7 * (1 - riseT); // a small dip as you leave and a rise as you arrive: the thread between pages
-      name.position.set(bx + (spaceX * hwz - bx) * menuT, by + (my - by) * menuT + tideY, zName);
+      pullT -= pullT * Math.min(1, dt * 3.5); // let go and the pull fades…
+      pullNow += (pullT - pullNow) * Math.min(1, dt * 9); // …and the name follows it, softly
+      name.position.set(bx + (spaceX * hwz - bx) * menuT, by + (my - by) * menuT + tideY - 0.6 * pullNow, zName);
       if (setDepth > 0) name.position.y -= setDepth * rowH * end.s * 1.3 * endT; // setting: down through the horizon
       const roomS = (((W - drawer) / W) * 2 * hwz * 0.8) / rowW; // fit the space beside the drawer
       const sFloat = hs * (1 - 0.05 * away), sBase = sFloat + (end.s - sFloat) * endT;
