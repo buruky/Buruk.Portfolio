@@ -12,7 +12,7 @@ const count = String(MENU.length).padStart(2, "0");
 ---
 <header class="hdr" transition:persist="site-header">
   <a class="logo" href="/" aria-label="Buruk Yimesgen, home">
-    <span class="name" aria-hidden="true"><span data-fly-line>Buruk</span><br /><span data-fly-line>Yimesgen</span></span>
+    <span class="name" aria-hidden="true"><span class="roll"><span data-fly-line>Buruk</span><span class="ge" lang="ti">ብሩኽ</span></span><br /><span class="stretch" data-fly-line>Yimesgen</span></span>
     <span class="sub" aria-hidden="true">Software engineer · Seattle</span>
   </a>
   <button type="button" class="menu-btn" data-menu-button aria-expanded="false" aria-controls="site-menu">
@@ -168,6 +168,20 @@ const count = String(MENU.length).padStart(2, "0");
   /* top left: the name */
   .logo { display: flex; flex-direction: column; gap: 8px; color: inherit; text-decoration: none; }
   .name { font: 900 22px/0.95 var(--font-display); font-stretch: 122%; text-transform: uppercase; letter-spacing: -0.02em; }
+  /* hover (or keyboard focus): BURUK rolls up to show ብሩኽ, the same name in Ge'ez, and YIMESGEN stretches wide */
+  .roll { display: inline-grid; vertical-align: top; overflow: hidden; height: 0.95em; }
+  .roll > span { grid-area: 1 / 1; transition: translate 420ms var(--ease-out), opacity 300ms var(--ease-out); }
+  .ge { translate: 0 100%; opacity: 0; font-family: var(--font-geez); font-weight: 400; font-size: 1.08em; line-height: 0.9; letter-spacing: 0.04em; text-transform: none; }
+  .stretch { display: inline-block; transition: font-stretch 480ms var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .logo:hover .roll > [data-fly-line] { translate: 0 -100%; opacity: 0; }
+    .logo:hover .ge { translate: 0 0; opacity: 1; }
+    .logo:hover .stretch { font-stretch: 150%; }
+  }
+  .logo:focus-visible .roll > [data-fly-line] { translate: 0 -100%; opacity: 0; }
+  .logo:focus-visible .ge { translate: 0 0; opacity: 1; }
+  .logo:focus-visible .stretch { font-stretch: 150%; }
+  @media (prefers-reduced-motion: reduce) { .roll > span, .stretch { transition-duration: 0ms; } }
   .sub { font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
 
   /* top right: MENU with the page count */

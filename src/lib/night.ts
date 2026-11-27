@@ -26,19 +26,25 @@ function apply(on: boolean) {
   document.dispatchEvent(new CustomEvent("bk:night", { detail: { on } }));
 }
 
-/** Flip it. From a switch: the new light spreads out as a circle from that point (600 ms), then it's remembered. */
+/** Flip it. From a switch, a band of the new light sweeps across the screen like a moving horizon (~900 ms): night
+ *  comes down from the top, day rises from the bottom, each with a soft glowing edge (cool moonlight / warm sunrise).
+ *  The page changes while the band covers it, so you see the old light ahead of the band and the new light behind it.
+ *  Then it's remembered. Reduced motion: it simply switches. */
 export function setNight(on: boolean, from?: { x: number; y: number }) {
   try { localStorage.setItem(KEY, on ? "on" : "off"); } catch { /* in-memory only */ }
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const vt = (document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } }).startViewTransition;
-  if (!vt || reduce || !from) { apply(on); return; }
-  const html = document.documentElement;
-  html.classList.add("night-flip"); // this view transition only: no page-level cross-fade
-  const t = vt.call(document, () => apply(on));
-  const r = Math.hypot(Math.max(from.x, innerWidth - from.x), Math.max(from.y, innerHeight - from.y));
-  t.ready.then(() => {
-    const a = html.animate({ clipPath: [`circle(0px at ${from.x}px ${from.y}px)`, `circle(${r}px at ${from.x}px ${from.y}px)`] },
-      { duration: 600, easing: "cubic-bezier(0.77, 0, 0.175, 1)", pseudoElement: "::view-transition-new(root)" });
-    a.finished.finally(() => html.classList.remove("night-flip"));
-  }).catch(() => html.classList.remove("night-flip"));
+  document.querySelector(".night-sweep")?.remove();
+  if (reduce || !from) { apply(on); return; }
+  const band = document.createElement("div");
+  band.className = "night-sweep";
+  band.dataset.tone = on ? "moon" : "sun";
+  band.setAttribute("aria-hidden", "true");
+  document.body.append(band);
+  // down for night, up for day; it covers the screen, the light changes underneath, then it carries on off the far side
+  const dir = on ? 1 : -1;
+  const cover = band.animate({ transform: [`translateY(${-dir * 100}%)`, "translateY(0%)"] }, { duration: 430, easing: "cubic-bezier(0.55, 0, 1, 0.45)", fill: "forwards" });
+  cover.finished.then(() => {
+    apply(on);
+    return band.animate({ transform: ["translateY(0%)", `translateY(${dir * 100}%)`] }, { duration: 520, easing: "cubic-bezier(0.23, 1, 0.32, 1)", fill: "forwards" }).finished;
+  }).finally(() => band.remove());
 }

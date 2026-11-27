@@ -55,8 +55,16 @@
 [data-night="on"][data-world="bkws"]      { --world-bg: #0f0d0c; --world-fg: #f4efe8; --world-accent: #e8955a; }
 [data-night="on"] { color-scheme: dark; }
 
-/* the switch's reveal: only the circle (src/lib/night.ts), no page-wide cross-fade */
-html.night-flip::view-transition-old(root), html.night-flip::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+/* the Day / Night sweep (src/lib/night.ts): a full-screen band of the new light with a glowing edge on each side */
+.night-sweep { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; }
+.night-sweep::before, .night-sweep::after { content: ""; position: absolute; left: 0; right: 0; height: 26vh; }
+.night-sweep::before { bottom: 100%; } .night-sweep::after { top: 100%; }
+.night-sweep[data-tone="moon"] { background: #070b1c; }
+.night-sweep[data-tone="moon"]::before { background: linear-gradient(to bottom, transparent, rgb(130 160 235 / 0.35) 75%, rgb(205 220 255 / 0.7)); }
+.night-sweep[data-tone="moon"]::after { background: linear-gradient(to top, transparent, rgb(130 160 235 / 0.35) 75%, rgb(205 220 255 / 0.7)); }
+.night-sweep[data-tone="sun"] { background: #f6e8cf; }
+.night-sweep[data-tone="sun"]::before { background: linear-gradient(to bottom, transparent, rgb(255 180 100 / 0.4) 75%, rgb(255 226 170 / 0.85)); }
+.night-sweep[data-tone="sun"]::after { background: linear-gradient(to top, transparent, rgb(255 180 100 / 0.4) 75%, rgb(255 226 170 / 0.85)); }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
