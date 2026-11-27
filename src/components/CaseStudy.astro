@@ -1,0 +1,155 @@
+---
+// A project's case study (step 6.2 onward): sections come from the project's "caseStudy" list in content/site.json, so
+// every case study is written there and rendered the same way. Section types: text, versions (built it twice),
+// lifecycle (a case's stages lighting up in order), roles, impact (big numbers), video (the project's demo).
+interface Section {
+  type: "text" | "versions" | "lifecycle" | "roles" | "impact" | "video";
+  label: string;
+  title?: string;
+  body?: string;
+  note?: string;
+  stages?: string[];
+  exits?: string[];
+  items?: { tag?: string; name?: string; kind?: string; stack?: string[]; line?: string; big?: string; small?: string }[];
+}
+interface Props { sections: Section[]; video?: string }
+const { sections, video } = Astro.props;
+---
+<div class="cs" data-case-study>
+  {sections.map((s) => (
+    <section class:list={["blk", `blk-${s.type}`]} data-section={s.label} data-reveal-blk>
+      <p class="label">{s.label}</p>
+      {s.title && <h2>{s.title}</h2>}
+      {s.body && <p class="body">{s.body}</p>}
+
+      {s.type === "versions" && (
+        <div class="versions">
+          {s.items?.map((v, i) => (
+            <>
+              {i > 0 && <span class="arrow" aria-hidden="true">→</span>}
+              <article class:list={["ver", { now: i === (s.items!.length - 1) }]}>
+                <p class="tag">{v.tag} · {v.kind}</p>
+                <h3>{v.name}</h3>
+                <p>{v.line}</p>
+                <ul class="chips">{v.stack?.map((t) => <li>{t}</li>)}</ul>
+              </article>
+            </>
+          ))}
+        </div>
+      )}
+
+      {s.type === "lifecycle" && (
+        <>
+          <ol class="flow">
+            {s.stages?.map((st, i) => <li style={`--i:${i}`}><span class="n">{String(i + 1).padStart(2, "0")}</span>{st}</li>)}
+          </ol>
+          {s.exits && <p class="exits">Side exits: {s.exits.map((e) => <span>{e}</span>)}</p>}
+        </>
+      )}
+
+      {s.type === "roles" && (
+        <ul class="roles">
+          {s.items?.map((r) => <li><h3>{r.name}</h3><p>{r.line}</p></li>)}
+        </ul>
+      )}
+
+      {s.type === "impact" && (
+        <ul class="impact">
+          {s.items?.map((m) => <li><span class="big">{m.big}</span><span class="small">{m.small}</span></li>)}
+        </ul>
+      )}
+
+      {s.type === "video" && video && (
+        <div class="player"><video src={video} controls preload="metadata" playsinline></video></div>
+      )}
+
+      {s.note && <p class="note">{s.note}</p>}
+    </section>
+  ))}
+</div>
+
+<script>
+  function init() {
+    const root = document.querySelector<HTMLElement>("[data-case-study]");
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = "1";
+    const blocks = root.querySelectorAll<HTMLElement>("[data-reveal-blk]");
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) { blocks.forEach((b) => b.classList.add("in")); return; }
+    root.classList.add("anim");
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.25 });
+    blocks.forEach((b) => io.observe(b));
+    document.addEventListener("astro:before-swap", () => io.disconnect(), { once: true });
+  }
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+  .cs { max-width: 1180px; margin: 0 auto; padding: 0 max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px)); display: grid; gap: clamp(90px, 16vh, 170px); }
+  .blk { display: grid; gap: 16px; }
+  .anim .blk { opacity: 0; translate: 0 30px; transition: opacity 800ms var(--ease-out), translate 900ms var(--ease-out); }
+  .anim .blk.in { opacity: 1; translate: 0 0; }
+  .label { margin: 0; font: 500 12px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--thread) 55%, #fff); }
+  h2 { margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 115%; font-size: clamp(34px, 5vw, 72px); line-height: 0.95; letter-spacing: -0.015em; text-wrap: balance; max-width: 18ch; }
+  .body { margin: 8px 0 0; max-width: 60ch; font-size: clamp(18px, 1.6vw, 22px); line-height: 1.6; opacity: 0.92; }
+  .note { margin: 18px 0 0; max-width: 64ch; font-size: 16px; line-height: 1.6; opacity: 0.85; }
+
+  /* glass surfaces shared by the cards */
+  .ver, .roles li, .flow li, .impact li {
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.05));
+    -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 24px 50px -28px rgb(0 0 0 / 0.6);
+  }
+
+  /* built it twice */
+  .versions { margin-top: 22px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: clamp(16px, 2.5vw, 36px); }
+  .ver { display: grid; gap: 10px; padding: 28px; border-radius: 20px; }
+  .ver:not(.now) { opacity: 0.72; rotate: -1.5deg; }
+  .ver.now { rotate: 1deg; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), inset 0 0 0 1.5px color-mix(in srgb, var(--thread) 60%, transparent), 0 30px 60px -28px rgb(0 0 0 / 0.7); }
+  .ver .tag { margin: 0; font: 500 11px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; }
+  .ver h3 { margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 110%; font-size: clamp(24px, 2.4vw, 34px); line-height: 1; }
+  .ver p { margin: 0; font-size: 16px; line-height: 1.55; }
+  .arrow { font-size: 34px; opacity: 0.8; }
+  .chips { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips li { padding: 6px 11px; border-radius: 999px; font: 500 11.5px var(--font-mono); background: rgb(255 255 255 / 0.12); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18); }
+
+  /* lifecycle: the stages light up one after another when the section scrolls in */
+  .flow { list-style: none; margin: 26px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; counter-reset: st; }
+  .flow li { position: relative; display: grid; gap: 8px; padding: 18px 18px 20px; border-radius: 16px; font: 700 clamp(15px, 1.3vw, 18px)/1.25 var(--font-body); }
+  .flow .n { font: 500 11px var(--font-mono); letter-spacing: 0.1em; opacity: 0.7; }
+  .flow li::after { content: "→"; position: absolute; right: -13px; top: 50%; translate: 0 -50%; font-size: 14px; opacity: 0.6; }
+  .flow li:nth-child(4n)::after, .flow li:last-child::after { content: none; }
+  .anim .flow li { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 0 0 1px rgb(255 255 255 / 0.14); transition: box-shadow 500ms var(--ease-out) calc(300ms + var(--i) * 160ms); }
+  .blk.in .flow li, .flow li { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 0 0 1.5px color-mix(in srgb, var(--thread) 70%, transparent), 0 20px 40px -26px rgb(0 0 0 / 0.6); }
+  .anim .blk:not(.in) .flow li { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 0 0 1px rgb(255 255 255 / 0.14); }
+  .flow li:last-child { background: linear-gradient(to bottom, color-mix(in srgb, var(--thread) 40%, transparent), rgb(255 255 255 / 0.05)); }
+  .exits { margin: 14px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 500 12px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .exits span { padding: 6px 11px; border-radius: 999px; border: 1px dashed rgb(255 255 255 / 0.45); }
+
+  /* roles */
+  .roles { list-style: none; margin: 22px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .roles li { padding: 24px; border-radius: 18px; display: grid; gap: 8px; }
+  .roles h3 { margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 110%; font-size: 24px; }
+  .roles p { margin: 0; font-size: 15.5px; line-height: 1.5; opacity: 0.9; }
+
+  /* impact: big numbers */
+  .impact { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .impact li { padding: 24px 22px; border-radius: 18px; display: grid; gap: 10px; align-content: end; min-height: 170px; }
+  .impact .big { font-family: var(--font-display); font-weight: 900; font-stretch: 112%; font-size: clamp(34px, 4vw, 60px); line-height: 0.9; }
+  .impact li:first-child .big { font-size: clamp(26px, 2.6vw, 40px); }
+  .impact .small { font: 500 12px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+
+  /* the demo */
+  .player { margin-top: 18px; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.2), 0 40px 80px -36px rgb(0 0 0 / 0.75); background: #000; }
+  .player video { display: block; width: 100%; height: auto; }
+
+  @media (max-width: 900px) {
+    .versions { grid-template-columns: minmax(0, 1fr); }
+    .arrow { rotate: 90deg; justify-self: center; }
+    .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .flow li:nth-child(4n)::after { content: "→"; }
+    .flow li:nth-child(2n)::after { content: none; }
+    .roles, .impact { grid-template-columns: minmax(0, 1fr); }
+    .impact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) { .anim .blk, .anim .flow li { transition: none; } }
+</style>

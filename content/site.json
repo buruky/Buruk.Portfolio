@@ -37,7 +37,7 @@
       "start": "March 2026",
       "end": "Present",
       "points": [
-        "Streamlined case intake from hours to minutes with a 9-stage lifecycle across 4 custom Salesforce objects.",
+        "Streamlined case intake from hours to minutes with an 8-stage lifecycle across 4 custom Salesforce objects.",
         "Built Apex, Lightning Web Components and Visualforce functionality for a case management app used daily by 10 staff across 3 roles.",
         "Architected a reusable multi-program framework (WAMAS, PRIME, Other) on Nonprofit Success Pack with configurable per-program eligibility.",
         "Own maintenance and administration, including Salesforce dashboards that monitor case data."
@@ -159,7 +159,119 @@
         "fit": "cover",
         "position": "center",
         "aspect": null
-      }
+      },
+      "caseStudy": [
+        {
+          "type": "text",
+          "label": "The client",
+          "title": "Eritrean Community Connections",
+          "body": "A Washington nonprofit that supports immigrant families. My first real client, and the story comes full circle: it starts in Asmara, and my first production software serves the Eritrean community here."
+        },
+        {
+          "type": "text",
+          "label": "The problem",
+          "title": "Intake took hours per client.",
+          "body": "Every new client meant hours of case data entry before anyone could start helping. Staff in different roles needed different views of the same cases, and each program had its own eligibility rules."
+        },
+        {
+          "type": "versions",
+          "label": "Built it twice",
+          "title": "Two versions, one job.",
+          "items": [
+            {
+              "tag": "v1",
+              "name": "ECCManager",
+              "kind": "Mobile app",
+              "stack": [
+                "React Native",
+                "Expo",
+                "Firebase"
+              ],
+              "line": "A mobile app with role-based access: the first version of the tool."
+            },
+            {
+              "tag": "v2",
+              "name": "ECC Case Management",
+              "kind": "Salesforce app",
+              "stack": [
+                "Apex",
+                "LWC",
+                "Visualforce",
+                "NPSP",
+                "Flows"
+              ],
+              "line": "The nonprofit asked to move onto Salesforce, so I rebuilt it there on the Nonprofit Success Pack, extending standard nonprofit data instead of replacing it."
+            }
+          ]
+        },
+        {
+          "type": "lifecycle",
+          "label": "How a case moves",
+          "title": "Eight stages, intake to closed.",
+          "stages": [
+            "Initiation",
+            "Ready for Eligibility",
+            "Active – Supervisor Review",
+            "Assigned",
+            "In Progress",
+            "Submitted for Closure",
+            "Supervisor Final Review",
+            "Closed"
+          ],
+          "exits": [
+            "Rejected",
+            "NMI"
+          ],
+          "note": "Record-triggered Flows move cases forward and keep the status honest; Approval Processes route the steps that need a supervisor's sign-off. Cases can't be moved by hand or reopened once they reach a final status."
+        },
+        {
+          "type": "roles",
+          "label": "Who uses it",
+          "title": "Three roles, one system.",
+          "items": [
+            {
+              "name": "Intake",
+              "line": "Opens cases and captures the client's details."
+            },
+            {
+              "name": "Supervisor",
+              "line": "Reviews, approves and signs off on closure."
+            },
+            {
+              "name": "Case Manager",
+              "line": "Works the case day to day with a service plan."
+            }
+          ]
+        },
+        {
+          "type": "impact",
+          "label": "Impact",
+          "items": [
+            {
+              "big": "Hours → minutes",
+              "small": "case intake"
+            },
+            {
+              "big": "10",
+              "small": "staff use it every day"
+            },
+            {
+              "big": "3",
+              "small": "roles: Intake, Supervisor, Case Manager"
+            },
+            {
+              "big": "4",
+              "small": "custom objects behind the lifecycle"
+            }
+          ],
+          "note": "A reusable multi-program framework (WAMAS, PRIME and others) with per-program eligibility, so new programs onboard without a rebuild. A System Health dashboard flags bottlenecks and data-quality issues."
+        },
+        {
+          "type": "video",
+          "label": "See it",
+          "title": "From intake to closed case."
+        }
+      ]
     },
     {
       "slug": "fabriq",

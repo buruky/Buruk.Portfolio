@@ -1,0 +1,114 @@
+---
+// A project's own page (step 6.1 → filled out per project in 6.2–6.5): full screen first. The project's clip (or its
+// screenshot) fills the screen with the title over it; then what it is, what I did, what it's built with, the links,
+// and the next project. Data: src/lib/projects.ts (content/site.json).
+import { Image } from "astro:assets";
+import Base from "@/layouts/Base.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import CaseStudy from "@/components/CaseStudy.astro";
+import { projects, type Project } from "@/lib/projects";
+
+export function getStaticPaths() {
+  return projects.map((p, i) => ({ params: { slug: p.slug }, props: { p, next: projects[(i + 1) % projects.length] } }));
+}
+const { p, next } = Astro.props as { p: Project; next: Project };
+---
+<Base title={p.short} description={p.line}>
+  <main id="main" class="pj">
+    <section class="stage" data-section={p.short} aria-labelledby="pj-title">
+      <div class:list={["media", { contain: p.contain }]} aria-hidden="true">
+        {p.img && <Image src={p.img} alt="" widths={[960, 1600, 2200]} sizes="100vw" loading="eager" />}
+        {p.video && <video src={p.video} autoplay muted loop playsinline preload="auto"></video>}
+      </div>
+      <div class="over">
+        <p class="kicker"><span>{p.index}</span><span>{p.kind ?? p.lane.label}</span></p>
+        <h1 id="pj-title" class="title" data-arrive="streak">{p.short}</h1>
+        <p class="lede">{p.line}</p>
+        {p.stat && <span class="stat">{p.stat}</span>}
+      </div>
+      <a class="down" href="#about-project" aria-label="Read about the project">↓</a>
+    </section>
+
+    <section class="body" id="about-project" data-section="About the project">
+      <div class="cols">
+        <div class="story">
+          <h2>What it is</h2>
+          <p>{p.description}</p>
+        </div>
+        <dl class="facts">
+          <div><dt>Role</dt><dd>{p.role}</dd></div>
+          <div><dt>Built with</dt><dd><ul class="stack">{p.techStack.map((t) => <li>{t}</li>)}</ul></dd></div>
+          {p.demoLogin && <div><dt>Try it</dt><dd>Log in with <code>{p.demoLogin.email}</code> / <code>{p.demoLogin.password}</code></dd></div>}
+        </dl>
+      </div>
+      <p class="links">
+        {p.liveUrl && <a href={p.liveUrl} target="_blank" rel="noopener">Live site <span aria-hidden="true">↗</span></a>}
+        {p.repoUrl && <a href={p.repoUrl} target="_blank" rel="noopener">Code <span aria-hidden="true">↗</span></a>}
+        {p.videoUrl && <a href={p.videoUrl} target="_blank" rel="noopener">Demo video <span aria-hidden="true">↗</span></a>}
+        {p.paper && <a href={p.paper} target="_blank" rel="noopener">Read the paper (PDF) <span aria-hidden="true">↗</span></a>}
+      </p>
+    </section>
+
+    {p.caseStudy && <CaseStudy sections={p.caseStudy as never} video={p.demo ?? p.video} />}
+
+    <a class="next" href={`/work/${next.slug}`} data-section="Next project">
+      <span class="next-k">Next project</span>
+      <span class="next-n">{next.short} <span aria-hidden="true">→</span></span>
+      {next.img && <span class="next-img" aria-hidden="true"><Image src={next.img} alt="" width={900} /></span>}
+    </a>
+    <p class="back"><a href="/work">← All projects</a></p>
+    <SiteFooter />
+  </main>
+</Base>
+
+<style>
+  .pj { position: relative; background: linear-gradient(to bottom, #0b1530, color-mix(in srgb, var(--world-bg) 55%, #0b1530) 60%, var(--world-bg)); }
+
+  /* full screen: the clip / screenshot fills it, a shade keeps the title readable */
+  .stage { position: relative; height: 100svh; min-height: 560px; overflow: hidden; display: flex; align-items: flex-end; color: #fff; }
+  .media { position: absolute; inset: 0; background: #0d1526; }
+  .media :global(img), .media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0%; }
+  .media.contain { background: #f4f1ea; }
+  .media.contain :global(img) { object-fit: contain; padding: 6vh 6vw 30vh; }
+  .stage::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(5 10 25 / 0.45) 0, transparent 26%, transparent 42%, rgb(5 10 25 / 0.88) 100%); pointer-events: none; }
+  .over { position: relative; z-index: 1; width: 100%; padding: 0 max(24px, env(safe-area-inset-right, 0px)) clamp(56px, 10vh, 110px) max(24px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; justify-items: start; }
+  .kicker { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font: 500 12px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+  .title { margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 122%; font-size: clamp(48px, 9vw, 160px); line-height: 0.86; letter-spacing: -0.025em; text-wrap: balance; max-width: 14ch; text-shadow: 0 0.05em 0.5em rgb(0 0 0 / 0.4); }
+  .lede { margin: 0; max-width: 52ch; font-size: clamp(16px, 1.4vw, 20px); line-height: 1.5; opacity: 0.92; }
+  .stat {
+    padding: 10px 16px; border-radius: 999px; rotate: -2deg; font: 800 15px/1 var(--font-display); font-stretch: 108%;
+    background: rgb(255 255 255 / 0.14); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), inset 0 0 0 1px rgb(255 255 255 / 0.18);
+  }
+  .down { position: absolute; z-index: 1; right: max(24px, env(safe-area-inset-right, 0px)); bottom: clamp(56px, 10vh, 110px); width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; color: #fff; text-decoration: none; font-size: 20px; background: rgb(255 255 255 / 0.14); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25); }
+
+  /* the details */
+  .body { padding: clamp(70px, 12vh, 140px) max(24px, env(safe-area-inset-right, 0px)) clamp(40px, 8vh, 80px) max(24px, env(safe-area-inset-left, 0px)); max-width: 1180px; margin: 0 auto; scroll-margin-top: 80px; }
+  .cols { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(32px, 6vw, 96px); }
+  h2 { margin: 0 0 18px; font: 500 12px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; }
+  .story p { margin: 0; font-size: clamp(18px, 1.6vw, 22px); line-height: 1.6; max-width: 58ch; }
+  .facts { margin: 0; display: grid; gap: 26px; align-content: start; }
+  .facts dt { margin-bottom: 8px; font: 500 12px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; }
+  .facts dd { margin: 0; font-size: 16px; line-height: 1.5; }
+  .facts code { font: 500 13px var(--font-mono); padding: 2px 6px; border-radius: 6px; background: rgb(255 255 255 / 0.14); }
+  .stack { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .stack li { padding: 7px 12px; border-radius: 999px; font: 500 12px var(--font-mono); letter-spacing: 0.06em; background: rgb(255 255 255 / 0.12); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2); }
+  .links { margin: clamp(40px, 7vh, 64px) 0 0; display: flex; flex-wrap: wrap; gap: 12px 28px; }
+  .links a { color: inherit; text-decoration: none; font: 500 13px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--thread); padding-bottom: 4px; }
+
+  /* next project: a big band with its screenshot glowing through */
+  .next { position: relative; display: grid; gap: 10px; margin: clamp(60px, 10vh, 120px) max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px)); padding: clamp(40px, 8vh, 80px) clamp(24px, 4vw, 56px); border-radius: 22px; overflow: hidden; isolation: isolate; color: #fff; text-decoration: none; background: #0d1526; }
+  .next-img { position: absolute; inset: 0; z-index: -1; opacity: 0.45; transition: opacity 500ms var(--ease-out), scale 900ms var(--ease-out); }
+  .next-img :global(img) { width: 100%; height: 100%; object-fit: cover; filter: blur(2px); }
+  .next::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to right, rgb(5 10 25 / 0.85), rgb(5 10 25 / 0.2)); }
+  .next-k { font: 500 12px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
+  .next-n { font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(34px, 6vw, 96px); line-height: 0.92; }
+  @media (hover: hover) and (pointer: fine) { .next:hover .next-img { opacity: 0.7; scale: 1.03; } }
+  .back { max-width: 1180px; margin: 28px auto clamp(60px, 10vh, 120px); padding: 0 max(24px, env(safe-area-inset-left, 0px)); }
+  .back a { color: inherit; font: 500 13px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  @media (max-width: 760px) {
+    .cols { grid-template-columns: minmax(0, 1fr); }
+    .media.contain :global(img) { padding: 14vh 6vw 40vh; }
+  }
+</style>

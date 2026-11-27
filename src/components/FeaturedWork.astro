@@ -9,9 +9,9 @@ import fabriq from "@content/media/images/screenshots/fabriq.png";
 import GraceChart from "@/components/GraceChart.astro"; // GRACE is drawn from the paper's results table, not a screenshot
 
 const FEATURED = [
-  { slug: "ecc-salesforce-case-management", img: ecc, pos: "0% 0%", title: "ECC Case Management", line: "A Salesforce app for Eritrean Community Connections, a nonprofit serving immigrant families.", stat: "10", statLabel: "staff use it every day", href: "/work#ecc" },
-  { slug: "fabriq", img: fabriq, pos: "100% 50%", title: "Fabriq", line: "An AI fashion app: build a digital closet, get outfits generated from what you own.", stat: "3rd", statLabel: "of 10+ teams at a hackathon", href: "/work#fabriq" },
-  { slug: "nasa-grace-climate-research", img: null, pos: "50% 50%", title: "NASA GRACE", line: "Filling gaps in NASA satellite water data with machine learning.", stat: "2.25×", statLabel: "lower error than the other 4 models", href: "/research#nasa-grace" },
+  { slug: "ecc-salesforce-case-management", img: ecc, pos: "0% 0%", title: "ECC Case Management", line: "A Salesforce app for Eritrean Community Connections, a nonprofit serving immigrant families.", stat: "10", statLabel: "staff use it every day", href: "/work/ecc-salesforce-case-management" },
+  { slug: "fabriq", img: fabriq, pos: "100% 50%", title: "Fabriq", line: "An AI fashion app: build a digital closet, get outfits generated from what you own.", stat: "3rd", statLabel: "of 10+ teams at a hackathon", href: "/work/fabriq" },
+  { slug: "nasa-grace-climate-research", img: null, pos: "50% 50%", title: "NASA GRACE", line: "Filling gaps in NASA satellite water data with machine learning.", stat: "2.25×", statLabel: "lower error than the other 4 models", href: "/work/nasa-grace-climate-research" },
 ].map((f) => {
   const p = site.projects.find((x) => x.slug === f.slug);
   return { ...f, lane: p?.lane ?? "", stack: (p?.techStack ?? []).slice(0, 4) };

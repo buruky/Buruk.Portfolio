@@ -2,7 +2,7 @@
 
 One step at a time. For each step, Claude builds or proposes one thing, you review it, and we only move on when you're happy. We work out the details of each step when we get to it, not before.
 
-**Where we are (2026-11-26):** Phases 0–4 done (Home, phone pass, the page recipe on Work, glass page transitions, the island + corners header). **Next up: Phase 5, About** — starting with 5.1, the story copy.
+**Where we are (2026-11-26):** Phases 0–4 done; About done for now; Work index (6.1) done with full-screen project pages. **Next up: 6.2, the ECC case study**, or Phase 7 BK Web Studios.
 
 **Status key:** `[ ]` not started · `[~]` in progress · `[x]` done
 
@@ -81,12 +81,12 @@ Every page is built on the same layer, so these come before any new page.
 - [ ] **5.4 Places (new).** Skipped for now (2026-11-26). The 3D paper-terrain maps: Asmara → Seattle → Sweden → Japan → Rio, travelled as you scroll.
 - [ ] **5.5 Leap of faith.** The turning point where the page flips (dusk).
 - [ ] **5.6 Chapter 07.** The line still drawing into a glitchy, time-travel future (midnight).
-- [~] **5.7 Small details.** "Off the clock." hobbies section after the story (src/components/Hobbies.astro, copy in site.json → copy.about.hobbies): tilted frosted cards for Seahawks, basketball, movies & shows, travel, spreading into a fan as they scroll in. Waiting on your review and your own one-liners.
+- [x] **5.7 Small details.** "Off the clock." hobbies section after the story (src/components/Hobbies.astro, copy in site.json → copy.about.hobbies): tilted frosted cards for Seahawks, basketball, movies & shows, travel, spreading into a fan as they scroll in. Lines are placeholders for your own.
 
 ## Phase 6: Work
 
-- [ ] **6.1 Projects index.** All projects, with hover previews (tap on mobile), built from Home's glow frames.
-- [ ] **6.2 Case study: ECC.** This also sets the template.
+- [x] **6.1 Projects index.** /work is a quiet list of project names (filter row: All · Salesforce · Full stack · Research); hovering a row expands it in place to show its one-liner, stat and short clip; clicking opens its full-screen page /work/[slug] (clip or screenshot filling the screen, title over it, then what it is, role, stack, links, next project). Shared data in src/lib/projects.ts; clips via "previewVideo" in site.json. Phones: rows with thumbnails. Clips to come from you.
+- [~] **6.2 Case study: ECC.** /work/ecc-salesforce-case-management now carries a case study written in content/site.json (project → caseStudy) and drawn by src/components/CaseStudy.astro (the template for the others): the client, the problem, built it twice (ECCManager → Salesforce), the case lifecycle from the repo's Status picklist, three roles, impact numbers, the demo video. Waiting on your review and a few facts.
 - [ ] **6.3 Case study: Fabriq.**
 - [ ] **6.4 Research: Quantum and NASA GRACE.** Paper reader plus an interactive chart; the night pond with the moon on the water.
 - [ ] **6.5 Lighter pages.** Between Worlds and Beaches & Barrels.

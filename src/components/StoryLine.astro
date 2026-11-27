@@ -126,7 +126,7 @@ const TILT = [-4, 3, -2.5, 3.5, -3, 2.5];
           </svg>
         </figure>
       </div>
-      <figure class="snap torn" style="--tilt:3deg" data-sl-snap>
+      <figure class="snap" style="--tilt:3deg" data-sl-snap>
         <Image src={ending.img} alt="" widths={[280, 420, 560]} sizes="(max-width: 760px) 46vw, 260px" />
       </figure>
     </li>
@@ -348,10 +348,7 @@ const TILT = [-4, 3, -2.5, 3.5, -3, 2.5];
   .stop.lit .snap { opacity: 1; scale: 1; }
   .snap :global(img) { width: 100%; height: 100%; object-fit: cover; }
 
-  /* what's next: the print tears and the title won't hold still */
-  .torn { filter: saturate(0.85); }
-  .sl.ended .torn { animation: torn 3.2s steps(1) infinite; }
-  @keyframes torn { 0%, 100% { clip-path: none; } 41% { clip-path: inset(0 0 46% 0); translate: 6px 0; } 43% { clip-path: none; translate: 0 0; } 77% { clip-path: inset(38% 0 0 0); translate: -5px 0; } 79% { clip-path: none; translate: 0 0; } }
+  /* what's next: the title won't hold still */
   .glitch { position: relative; }
   .sl.ended .glitch::before, .sl.ended .glitch::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; }
   .sl.ended .glitch::before { color: rgb(255 74 61 / 0.8); animation: g1 2.6s steps(1) infinite; }
@@ -381,6 +378,6 @@ const TILT = [-4, 3, -2.5, 3.5, -3, 2.5];
     .aside, .curve .trace, .curve .dip { transition: none; }
     .stop.lit .seal .spin, .stop.lit .pulse-dot, .stop.lit .loading .dots3 circle { animation: none; }
     .words, .snap { transition: none; opacity: 1; transform: none; scale: 1; }
-    .sl.ended .trail, .sl.ended .torn, .sl.ended .glitch::before, .sl.ended .glitch::after { animation: none; }
+    .sl.ended .trail, .sl.ended .glitch::before, .sl.ended .glitch::after { animation: none; }
   }
 </style>

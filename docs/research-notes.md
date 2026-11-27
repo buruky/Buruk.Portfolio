@@ -21,7 +21,7 @@ Also: "125% lower MSE" can't be literally true, because nothing can be more than
 **Stats you could use (beyond 6 projects / 2 majors / GPA):**
 - **10 staff** use your ECC app every day, across **3 roles**
 - Case intake cut from **hours to minutes**
-- **9-stage** case lifecycle over **4** custom Salesforce objects
+- **8-stage** case lifecycle (plus two side exits; corrected 2026-11-26 from the repo) over **4** custom Salesforce objects
 - **70+ students** taught as a course facilitator, across **5 quarters**
 - **+10%** exam scores above course average, **+35%** student engagement
 - **15+ years / 10,000+ data points** of NASA GRACE satellite data
@@ -71,7 +71,7 @@ Also: "125% lower MSE" can't be literally true, because nothing can be more than
 ## 4. GitHub → material for case studies
 
 **ECC (full case study)**
-- The `ECC` repo has a strong README: impact numbers, roles, the multi-program framework (WAMAS, PRIME). The Apex/LWC source can be used for code excerpts and a diagram of the 9-stage lifecycle.
+- The `ECC` repo has a strong README: impact numbers, roles, the multi-program framework (WAMAS, PRIME). The Apex/LWC source can be used for code excerpts and a diagram of the 8-stage lifecycle.
 - There's also **`ECCManager`**: a React Native + Expo + Firebase mobile app for the same nonprofit, with role-based access and a long `HOW_IT_WORKS.md`. **Question:** was this an earlier version before Salesforce? If so, "I built it twice and here's why we moved to Salesforce" is a great case-study story.
 
 **Fabriq (full case study)**

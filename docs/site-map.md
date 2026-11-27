@@ -56,7 +56,7 @@ flowchart TD
 | **/** Home | Ge'ez intro (every visit, 2–4 s, skippable) → name flies into the nav → a motion piece showing your directions (Salesforce, full stack, data and research) → doors into Work, About, BKWS | Work, About, BKWS |
 | **/about** | Your story as a line: 01 Asmara → 02 Running Start → 03 advisors say switch → 04 the leap: math + CS → 05 nonprofits (ECC) → 06 BK Web Studios → 07 the glitchy unknown (with a hidden OutTheGC easter egg). Photos and images per chapter, stats, small details (Seahawks, superheroes, Eritrea), a map of places. | Chapters link to ECC, NASA GRACE, BKWS |
 | **/work** | All 6 projects, filterable by area (Salesforce, Full stack, Research), with hover previews. Full case studies are marked as such. The two research projects link to their /research pages. | Each project page, /research |
-| **/work/ecc** | Full case study: the nonprofit, the problem, "built it twice" (ECCManager → Salesforce), the 9-stage lifecycle, impact. Demo video. | Next project, About ch. 05 |
+| **/work/ecc** | Full case study: the nonprofit, the problem, "built it twice" (ECCManager → Salesforce), the 8-stage lifecycle, impact. Demo video. | Next project, About ch. 05 |
 | **/work/fabriq** | Full case study: hackathon, team of 4, AI outfits, what's next (FabriqAWS). Live demo + demo login. | Next project |
 | **/work/between-worlds** | Light: what it is, poster and sprites, a "play it" link. | Next project |
 | **/work/beaches-and-barrels** | Light: what it is, screenshots, repo link. | Next project |
