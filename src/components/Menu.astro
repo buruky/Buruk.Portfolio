@@ -1,27 +1,96 @@
 ---
-import { MENU } from "@/lib/worlds";
+// The menu, rebuilt 2026-11-27 as a map of the worlds. Each row is a page with its time of day; pointing at one (or
+// focusing it) turns the whole panel into that world: its own photo, blurred, under its time-of-day colour, just as
+// the page itself looks. The name stretches wider (Anybody's width axis, the site's "stretch"). At the bottom: the
+// email to copy, LinkedIn and GitHub. Persists across pages. Phones: the panel covers the screen; no hover, so it
+// rests on the page you're on.
+import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import { MENU, worldFor, WORLD_BG, type World } from "@/lib/worlds";
+import site from "@/lib/site";
+import work from "@content/media/images/city-bg.jpg";
+import about from "@content/media/images/about/asmara-sunset.jpg";
+import contact from "@content/media/images/contact-sunset.jpg";
+import research from "@content/media/images/research-moon.jpg";
+import resume from "@content/media/images/about/uw-tacoma-campus.jpg";
+
+const PHOTO: Record<string, ImageMetadata | undefined> = { "/work": work, "/about": about, "/contact": contact, "/research": research, "/resume": resume };
+const WHEN: Record<World, string> = {
+  morning: "Morning", noon: "Noon", afternoon: "Afternoon", golden: "Golden hour", dusk: "Dusk",
+  sunset: "Sunset", night: "Night", midnight: "Midnight", bkws: "Own world",
+};
+const WHAT: Record<string, string> = {
+  "/work": "6 projects", "/about": "Asmara → Seattle", "/bk-web-studios": "My studio",
+  "/contact": "Say hi", "/research": "2 papers", "/resume": "One page",
+};
+const items = await Promise.all(MENU.map(async (m, i) => {
+  const world = worldFor(m.href), photo = PHOTO[m.href];
+  return {
+    ...m, world, n: String(i + 1).padStart(2, "0"), when: WHEN[world], what: WHAT[m.href] ?? "",
+    tint: WORLD_BG[world], img: photo ? (await getImage({ src: photo, width: 720, format: "webp", quality: 70 })).src : null,
+  };
+}));
+const { email, linkedin, github } = site.profile;
 ---
 <div id="site-menu" class="menu" role="dialog" aria-modal="true" aria-label="Site menu" inert transition:persist="site-menu">
+  <!-- the worlds behind the panel: one layer per page, shown while its row is pointed at -->
+  <div class="worlds" aria-hidden="true">
+    {items.map((it) => (
+      <div class:list={["world", { bkws: it.world === "bkws" }]} data-world-layer={it.href} style={`--tint:${it.tint};${it.img ? `--img:url(${it.img})` : ""}`}></div>
+    ))}
+  </div>
+
   <nav aria-label="Main">
-    <ul>
-      {MENU.map((item, i) => (
-        <li class={item.size} style={`--i:${i}`}>
-          <a href={item.href}>{item.label}</a>
+    <ol class="rows">
+      {items.map((it, i) => (
+        <li class:list={[it.size, { long: it.label.length > 10 }]} style={`--i:${i}`}>
+          <a href={it.href} data-world-link={it.href}>
+            <span class="n" aria-hidden="true">{it.n}</span>
+            <span class="label">{it.label}</span>
+            <span class="meta"><span class="when">{it.when}</span><span class="what">{it.what}</span></span>
+          </a>
         </li>
       ))}
-    </ul>
+    </ol>
   </nav>
+
+  <div class="reach">
+    <button type="button" class="email" data-copy-email={email}>
+      <span class="addr">{email}</span><span class="hint" data-copy-hint aria-live="polite">Click to copy</span>
+    </button>
+    <p class="socials">
+      <a href={linkedin} target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a>
+      <a href={github} target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+    </p>
+  </div>
 </div>
 
 <script>
   import { play } from "@/lib/sound";
+  import { bindSignOff } from "@/lib/sign-off";
 
   const menu = document.getElementById("site-menu")!;
   const button = document.querySelector<HTMLButtonElement>("[data-menu-button]")!;
   const label = button.querySelector<HTMLElement>("[data-menu-label]")!;
+  const layers = Array.from(menu.querySelectorAll<HTMLElement>("[data-world-layer]"));
   let open = false;
+  bindSignOff();
 
-  function links() { return Array.from(menu.querySelectorAll<HTMLAnchorElement>("a")); }
+  function focusables() { return Array.from(menu.querySelectorAll<HTMLElement>("a, button")); }
+  function pageLinks() { return Array.from(menu.querySelectorAll<HTMLAnchorElement>("[data-world-link]")); }
+
+  // the world showing behind the panel: the one pointed at, else the page you're on
+  let here = "";
+  function show(href: string | null) {
+    const target = href ?? here;
+    layers.forEach((l) => l.classList.toggle("on", l.dataset.worldLayer === target));
+    pageLinks().forEach((a) => a.classList.toggle("lit", !!href && a.dataset.worldLink === href));
+  }
+  pageLinks().forEach((a) => {
+    a.addEventListener("pointerenter", () => show(a.dataset.worldLink!));
+    a.addEventListener("focus", () => { if (a.matches(":focus-visible")) show(a.dataset.worldLink!); });
+  });
+  menu.querySelector(".rows")!.addEventListener("pointerleave", () => show(null));
 
   function setOpen(next: boolean, { silent = false } = {}) {
     if (next === open) return;
@@ -32,7 +101,7 @@ import { MENU } from "@/lib/worlds";
     label.textContent = open ? "Close" : "Menu";
     document.documentElement.classList.toggle("menu-open", open);
     if (!silent) play(open ? "menuOpen" : "menuClose");
-    if (open) links()[0]?.focus({ preventScroll: true });
+    if (open) { show(null); pageLinks()[0]?.focus({ preventScroll: true }); }
     else if (!silent) button.focus({ preventScroll: true });
   }
 
@@ -43,83 +112,120 @@ import { MENU } from "@/lib/worlds";
     if (e.key === "Escape") { e.preventDefault(); setOpen(false); return; }
     if (e.key === "Tab") {
       // keep focus inside the menu and its toggle button
-      const items: HTMLElement[] = [button, ...links()];
+      const items: HTMLElement[] = [button, ...focusables()];
       const i = items.indexOf(document.activeElement as HTMLElement);
-      const next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i === items.length - 1 ? 0 : i + 1);
+      const nx = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i === items.length - 1 ? 0 : i + 1);
       e.preventDefault();
-      items[next]?.focus();
+      items[nx]?.focus();
     }
   });
   // Close when a navigation starts (fired by the transition engine).
   document.addEventListener("bk:navigate", () => setOpen(false, { silent: true }));
 
-  // Mark the current page.
+  // Mark the current page, and make it the world the panel rests on.
   document.addEventListener("astro:page-load", () => {
-    const here = location.pathname.replace(/\/+$/, "") || "/";
-    links().forEach((a) => {
+    const path = location.pathname.replace(/\/+$/, "") || "/";
+    here = "";
+    pageLinks().forEach((a) => {
       const url = new URL(a.href), target = url.pathname.replace(/\/+$/, "") || "/";
-      // section links (/resume#skills) aren't pages of their own: only the page's own link is "current"
-      if (!url.hash && (target === here || here.startsWith(target + "/"))) a.setAttribute("aria-current", "page");
-      else a.removeAttribute("aria-current");
+      const cur = !url.hash && (target === path || path.startsWith(target + "/"));
+      if (cur) { a.setAttribute("aria-current", "page"); here = a.dataset.worldLink!; } else a.removeAttribute("aria-current");
     });
+    show(null);
   });
 </script>
 
 <style>
   .menu {
-    position: fixed;
-    inset: 0 0 0 auto;
-    width: min(520px, 100%);
-    z-index: 80;
-    background: var(--world-fg);
-    color: var(--world-bg);
-    padding: calc(env(safe-area-inset-top, 0px) + 96px) max(28px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 32px) 32px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    transform: translateX(100%);
-    visibility: hidden;
+    position: fixed; inset: 0 0 0 auto; width: min(640px, 100%); z-index: 80; overflow: hidden;
+    display: grid; grid-template-rows: minmax(0, 1fr) auto; color: #fbf8f2;
+    background: #121214; /* under the worlds: Home, and anywhere without a photo */
+    box-shadow: -40px 0 80px -40px rgb(0 0 0 / 0.6);
+    transform: translateX(100%); visibility: hidden;
     transition: transform var(--t-panel) var(--ease-drawer), visibility 0s linear var(--t-panel);
   }
-  .menu.open {
-    transform: none;
-    visibility: visible;
-    transition: transform var(--t-panel) var(--ease-drawer), visibility 0s;
+  .menu.open { transform: none; visibility: visible; transition: transform var(--t-panel) var(--ease-drawer), visibility 0s; }
+
+  /* the worlds: each page's photo, blurred and sunk into its time-of-day colour, crossfading as you point */
+  .worlds { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+  .world {
+    position: absolute; inset: 0; opacity: 0; transition: opacity 460ms var(--ease-out);
+    background: color-mix(in srgb, var(--tint) 45%, #08080a);
   }
-  ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 18px; }
-  li {
-    opacity: 0;
-    transform: translateX(14px);
-    transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out);
+  .world::before {
+    content: ""; position: absolute; inset: -48px; background: var(--img, none) center / cover;
+    filter: blur(20px) saturate(1.25) brightness(0.62); transform: scale(1.08); transition: transform 1600ms var(--ease-out);
   }
-  .open li {
-    opacity: 1;
-    transform: none;
-    transition-delay: calc(var(--i) * 30ms + 60ms);
+  .world::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 55%, transparent), rgb(0 0 0 / 0.45)); }
+  .world.on { opacity: 1; }
+  .world.on::before { transform: scale(1); }
+  /* BK Web Studios has no photo: its night paper with a faint ember pixel grid */
+  .world.bkws { background: #0f0d0c; }
+  .world.bkws::before { inset: 0; filter: none; transform: none; background: radial-gradient(circle at 1px 1px, rgb(213 125 59 / 0.4) 1.3px, transparent 1.7px) 0 0 / 16px 16px; }
+  .world.bkws::after { background: linear-gradient(160deg, rgb(213 125 59 / 0.18), rgb(0 0 0 / 0.5)); }
+
+  nav, .reach { position: relative; z-index: 1; }
+  nav { overflow-y: auto; overscroll-behavior: contain; padding: calc(env(safe-area-inset-top, 0px) + 100px) max(28px, env(safe-area-inset-right, 0px)) 16px 36px; }
+  .rows { list-style: none; margin: 0; padding: 0; display: grid; }
+  li { opacity: 0; transform: translateX(22px); transition: opacity var(--t-ui) var(--ease-out), transform 460ms var(--ease-out); }
+  .open li { opacity: 1; transform: none; transition-delay: calc(var(--i) * 45ms + 90ms); }
+  li + li { border-top: 1px solid rgb(255 255 255 / 0.14); }
+
+  a[data-world-link] {
+    display: grid; grid-template-columns: 2em minmax(0, 1fr) auto; align-items: center; gap: 0 14px;
+    padding: 15px 0 13px; color: inherit; text-decoration: none; min-height: 44px;
   }
-  li.big, li.mid { flex-basis: 100%; }
-  li.mid { margin-top: 14px; }
-  li.small:first-of-type, li.small { margin-top: 18px; }
-  a {
-    color: inherit;
-    text-decoration: none;
-    display: inline-block;
-    min-height: 44px;
-    text-underline-offset: 6px;
-    text-decoration-thickness: 2px;
+  .n { font: 500 11px var(--font-mono); letter-spacing: 0.06em; opacity: 0.55; transition: opacity var(--t-ui) ease, color var(--t-ui) ease; }
+  .label {
+    font-family: var(--font-display); font-weight: 900; font-stretch: 100%; letter-spacing: -0.015em; white-space: nowrap;
+    font-size: clamp(32px, 5vw, 50px); line-height: 1; text-shadow: 0 2px 24px rgb(0 0 0 / 0.25);
+    transition: font-stretch 560ms var(--ease-out);
   }
-  .big a { font-family: var(--font-display); font-weight: 900; font-stretch: 115%; font-size: clamp(40px, 9vw, 62px); line-height: 1.05; }
-  .mid a { font-family: var(--font-display); font-weight: 700; font-stretch: 105%; font-size: 28px; line-height: 1.3; }
-  .small a { font-family: var(--font-body); font-weight: 600; font-size: 17px; line-height: 44px; }
-  a[aria-current="page"] { text-decoration-line: underline; text-decoration-color: var(--thread); }
-  @media (hover: hover) and (pointer: fine) {
-    a { transition: text-decoration-color var(--t-hover) ease; text-decoration-line: underline; text-decoration-color: transparent; }
-    a:hover { text-decoration-color: currentColor; }
-    a[aria-current="page"] { text-decoration-color: var(--thread); }
+  .mid .label, .small .label { font-size: clamp(26px, 3.6vw, 36px); font-weight: 800; }
+  /* a long name (BK Web Studios) is set smaller and stretches less, so it never runs into its time of day */
+  .long .label { font-size: clamp(26px, 3.9vw, 40px); }
+  .long a.lit .label { font-stretch: 112%; }
+  .meta {
+    display: grid; justify-items: end; gap: 4px; text-align: right; white-space: nowrap;
+    font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.55;
+    transition: opacity var(--t-ui) ease, translate 460ms var(--ease-out);
+  }
+  .meta .what { text-transform: none; letter-spacing: 0.04em; opacity: 0.8; }
+  a.lit .label { font-stretch: 130%; }
+  a.lit .meta { opacity: 1; translate: -4px 0; }
+  a.lit .n { opacity: 1; }
+  a[aria-current="page"] .n { color: var(--thread); opacity: 1; }
+  a[aria-current="page"] .label { text-decoration: underline; text-decoration-color: var(--thread); text-decoration-thickness: 3px; text-underline-offset: 9px; }
+  a[data-world-link]:focus { outline: none; }
+  a[data-world-link]:focus-visible .label { text-decoration: underline; text-decoration-color: currentColor; text-decoration-thickness: 3px; text-underline-offset: 9px; }
+
+  /* reach me: the email to copy and two links, always at the bottom */
+  .reach {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px;
+    padding: 18px max(28px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 22px) 36px;
+    border-top: 1px solid rgb(255 255 255 / 0.14); background: rgb(0 0 0 / 0.22);
+    opacity: 0; transition: opacity var(--t-ui) var(--ease-out);
+  }
+  .open .reach { opacity: 1; transition-delay: 340ms; }
+  .email { display: grid; gap: 3px; justify-items: start; padding: 4px 0; min-height: 44px; border: 0; background: none; color: inherit; cursor: pointer; text-align: left; }
+  .email .addr { font: 700 17px var(--font-body); overflow-wrap: anywhere; }
+  .email .hint { font: 500 10px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+  .email.copied .hint { opacity: 1; color: var(--thread); }
+  .socials { margin: 0; display: flex; gap: 20px; }
+  .socials a { color: inherit; font: 600 14px var(--font-body); text-underline-offset: 4px; display: inline-flex; align-items: center; min-height: 44px; }
+  :is(.email, .socials a):focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+  @media (hover: hover) and (pointer: fine) { .socials a:not(:hover) { text-decoration-color: transparent; } }
+
+  @media (max-width: 640px) {
+    nav { padding-left: max(22px, env(safe-area-inset-left, 0px)); padding-right: max(22px, env(safe-area-inset-right, 0px)); }
+    .reach { padding-left: max(22px, env(safe-area-inset-left, 0px)); padding-right: max(22px, env(safe-area-inset-right, 0px)); }
+    .meta .what { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .menu, .menu.open, li, .open li { transition-duration: 0ms, 0s; transform: none; }
-    li { opacity: 1; }
+    .menu, .menu.open, li, .open li, .world, .world::before, .label, .meta { transition-duration: 0ms !important; transition-delay: 0ms !important; }
+    li { opacity: 1; transform: none; }
   }
+
   :global(html.menu-open) { overflow: hidden; }
   /* With the menu open, the page beside the drawer goes soft and steps back (like the hero's words), so the menu and
      the glass name are what you read. Phones skip it: there the menu covers the whole screen. */

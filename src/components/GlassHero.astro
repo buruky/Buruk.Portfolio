@@ -803,7 +803,7 @@ const TOPICS = [
       if (!holding) riseT += (1 - riseT) * (reduce ? 1 : Math.min(1, dt * 2.2));
       const zName = -3.2 * away * (1 - endT) * (1 - menuT) - 0.4 * sinkT;
       // the open space left of the drawer, in world units at the name's depth
-      const drawer = Math.min(520, W), spaceX = (W - drawer) / 2 / W * 2 - 1;
+      const drawer = Math.min(640, W), spaceX = (W - drawer) / 2 / W * 2 - 1;
       const hwz = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.position.z - zName) * camera.aspect;
       const fx = hx * (1 - away), fy = hy * (1 - away) + 0.1 * away;
       // …and at the end of Home it slides to the side, into the footer's spot (which scrolls with the page)

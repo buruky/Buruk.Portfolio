@@ -254,13 +254,13 @@ const count = String(MENU.length).padStart(2, "0");
 
   /* With the menu open: MENU (now CLOSE) sits on the light panel, so it flips colour; on phones the panel covers
      everything, so the whole header flips. The bottom-right corner steps away. */
-  :global(html.menu-open) .menu-btn { color: var(--world-bg); text-shadow: none; }
+  :global(html.menu-open) .menu-btn { color: #fbf8f2; text-shadow: none; }
   .menu-btn { transition: color var(--t-panel) var(--ease-drawer), opacity 360ms ease; }
   :global(html.menu-open) .hdr > .where { opacity: 0; }
   :global(html.menu-open) .hdr > .bl { filter: blur(6px); opacity: 0.45; }
   .bl { transition: filter var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out); }
   @media (max-width: 640px) {
-    :global(html.menu-open) .hdr { color: var(--world-bg); text-shadow: none; }
+    :global(html.menu-open) .hdr { color: #fbf8f2; text-shadow: none; }
     :global(html.menu-open) .hdr > :is(.bl, .sub) { opacity: 0; }
   }
   .hdr { transition: color var(--t-panel) var(--ease-drawer); }
