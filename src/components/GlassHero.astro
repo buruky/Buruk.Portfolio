@@ -5,45 +5,14 @@
 // into the header logo while the photo comes up and the letters rise into the hero (layout "C · Lockup").
 // Samples: intro https://claude.ai/artifact/MQ9CURwH2sanqiL37P4azM · layout https://claude.ai/artifact/7D8tUuMh5kZeFqXSEXoQUU
 //
-// The letter outlines are read from Abyssinica SIL here, at build time, so the browser gets only the shapes it needs.
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import * as opentype from "opentype.js";
+// The letter outlines come from src/lib/glyphs.ts (read from Abyssinica SIL at build time).
 import { getImage } from "astro:assets";
 import type { ImageMetadata } from "astro";
 import me from "@content/media/images/profile.jpg";
 import portrait from "@content/media/images/profile2.jpg";
 import place from "@content/media/images/about/seattle.jpg";
 import asmara from "@content/media/images/about/asmara-harnet-avenue.jpg";
-
-// ብ ሩ ኽ: each letter's family of 7 vowel forms, which form is the one in the name, and the sound it makes.
-const FAMILIES = [
-  { forms: [0x1260, 0x1261, 0x1262, 0x1263, 0x1264, 0x1265, 0x1266], t: 5, lat: "BU" },
-  { forms: [0x1228, 0x1229, 0x122a, 0x122b, 0x122c, 0x122d, 0x122e], t: 1, lat: "RU" },
-  { forms: [0x12b8, 0x12b9, 0x12ba, 0x12bb, 0x12bc, 0x12bd, 0x12be], t: 5, lat: "K" },
-];
-const fontFile = readFileSync(join(process.cwd(), "node_modules/@fontsource/abyssinica-sil/files/abyssinica-sil-ethiopic-400-normal.woff"));
-const font = opentype.parse(fontFile.buffer.slice(fontFile.byteOffset, fontFile.byteOffset + fontFile.byteLength));
-const upm = font.unitsPerEm;
-// Outlines as flat command lists in font units, y pointing down: ["M", x, y, "L", x, y, "Q", x1, y1, x, y, "C", …, "Z"]
-const glyphs = {
-  upm,
-  families: FAMILIES.map((f) => ({
-    t: f.t,
-    lat: f.lat,
-    forms: f.forms.map((cp) => {
-      const g = font.charToGlyph(String.fromCodePoint(cp));
-      const d: (string | number)[] = [];
-      for (const c of g.getPath(0, 0, upm).commands) {
-        d.push(c.type);
-        if (c.type === "Q") d.push(Math.round(c.x1), Math.round(c.y1));
-        if (c.type === "C") d.push(Math.round(c.x1), Math.round(c.y1), Math.round(c.x2), Math.round(c.y2));
-        if (c.type !== "Z") d.push(Math.round(c.x), Math.round(c.y));
-      }
-      return { adv: g.advanceWidth ?? upm, d };
-    }),
-  })),
-};
+import { glyphs } from "@/lib/glyphs";
 
 /* Two modes. "home": the full intro (gate, vowel cycle, name flight) and the "I build" lockup.
    "page": the same glass, photo and water for any other page (see src/layouts/WorldPage.astro), without the intro;
@@ -81,7 +50,7 @@ const TOPICS = [
   } catch (e) {}
 </script>}
 
-<section class:list={["gh", { page: !isHome }]} id="glass-hero" data-section={section} data-photo={photo.src} data-photos={isHome ? JSON.stringify(keepsakePhotos) : undefined} data-deep={deep.join(",")} aria-labelledby="gh-title">
+<section class:list={["gh", { page: !isHome }]} id="glass-hero" data-glass-scene data-section={section} data-photo={photo.src} data-photos={isHome ? JSON.stringify(keepsakePhotos) : undefined} data-deep={deep.join(",")} aria-labelledby="gh-title">
   <canvas class="gl" data-gl aria-hidden="true"></canvas>
   <div class="shade" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
@@ -129,6 +98,7 @@ const TOPICS = [
   import { navigate } from "astro:transitions/client";
   import { play, unlock, setSound } from "@/lib/sound";
   import { createKeepsakes, type KeepsakeVariant } from "@/lib/keepsakes";
+  import { glassMaterial, shapes, EO, EIO } from "@/lib/glass";
 
   type GlyphData = { upm: number; families: { t: number; lat: string; forms: { adv: number; d: (string | number)[] }[] }[] };
   type Letter = {
@@ -141,8 +111,6 @@ const TOPICS = [
   const SIZE = 2.2;            // world height of a letter before fitting
   const DIM = 0.08;            // how much of the photo glows through during the intro
   const ANN = 0.4;             // how small the letters get when they sit over BURUK
-  const EO = (t: number) => 1 - Math.pow(1 - t, 3);
-  const EIO = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
   function init(root: HTMLElement) {
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -388,28 +356,12 @@ const TOPICS = [
       img.src = root.dataset.photo ?? "";
     }
 
-    const glass = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff, metalness: 0, roughness: 0.05, transmission: 1, thickness: 1.6, ior: 1.6,
-      attenuationColor: new THREE.Color(0xffe6c4), attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.02,
-      specularIntensity: 1, envMapIntensity: 1.8, iridescence: 0.35, iridescenceIOR: 1.3, iridescenceThicknessRange: [200, 600],
-    });
+    const glass = glassMaterial();
 
     /* ---------------- the letters ---------------- */
     const data = JSON.parse($<HTMLScriptElement>("[data-glyphs]").textContent ?? "{}") as GlyphData;
     const k = SIZE / data.upm;
-    function shapes(d: (string | number)[]) {
-      const sp = new THREE.ShapePath(); let i = 0;
-      const n = () => (d[i++] as number) * k;
-      while (i < d.length) {
-        const c = d[i++];
-        if (c === "M") { const x = n(), y = n(); sp.moveTo(x, -y); }
-        else if (c === "L") { const x = n(), y = n(); sp.lineTo(x, -y); }
-        else if (c === "Q") { const x1 = n(), y1 = n(), x = n(), y = n(); sp.quadraticCurveTo(x1, -y1, x, -y); }
-        else if (c === "C") { const x1 = n(), y1 = n(), x2 = n(), y2 = n(), x = n(), y = n(); sp.bezierCurveTo(x1, -y1, x2, -y2, x, -y); }
-      }
-      return sp.toShapes(false);
-    }
-    const extrude = (d: (string | number)[], fast: boolean) => new THREE.ExtrudeGeometry(shapes(d), {
+    const extrude = (d: (string | number)[], fast: boolean) => new THREE.ExtrudeGeometry(shapes(d, k), {
       depth: SIZE * 0.22, curveSegments: fast ? 10 : 18, bevelEnabled: true,
       bevelThickness: SIZE * 0.035, bevelSize: SIZE * 0.022, bevelSegments: fast ? 4 : 8,
     });

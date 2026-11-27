@@ -1,0 +1,172 @@
+---
+// BK Web Studios (step 7.2): the five heroes. bkwebstudios.com can swap its whole first screen between five designs
+// (?style=…); here they play in a BKWS window with the phone version beside it. Five tabs; it cycles on its own while
+// in view and stops for good once you pick one. Each switch redraws top to bottom like an old screen.
+// Data: content/site.json → bkWebStudios.heroes (screenshots in content/media/images/bkws/heroes/).
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import site from "@/lib/site";
+
+const bk = site.bkWebStudios;
+const H = bk.heroes;
+const shots = import.meta.glob<{ default: ImageMetadata }>("../../content/media/images/bkws/heroes/*.png", { eager: true });
+const img = (p: string) => shots[`../../content/media/${p}`].default;
+const url = (key: string) => `${bk.siteUrl.replace(/\/$/, "")}/?style=${key}`;
+const host = new URL(bk.siteUrl).host.replace(/^www\./, "");
+const n = (i: number) => String(i + 1).padStart(2, "0");
+---
+<section class="heroes" data-section="Five heroes" aria-labelledby="heroes-title" data-heroes>
+  <div class="head">
+    <p class="kick">bkwebstudios.com · {n(H.items.length - 1)} hero styles</p>
+    <h2 id="heroes-title">{H.title}</h2>
+    <p class="body">{H.body}</p>
+  </div>
+
+  <div class="stage">
+    <figure class="win" aria-hidden="true">
+      <div class="bar"><span class="sq"></span><span class="addr">{host}/?style=<b data-key>{H.items[0].key}</b></span><span class="sq"></span></div>
+      <div class="screen">
+        {H.items.map((h, i) => (
+          <Image class:list={["shot", { on: i === 0 }]} src={img(h.desktop)} alt="" widths={[720, 1100, 1440]} sizes="(max-width: 900px) 92vw, 760px" loading={i === 0 ? "eager" : "lazy"} data-i={i} />
+        ))}
+      </div>
+    </figure>
+    <figure class="phone" aria-hidden="true">
+      <div class="screen">
+        {H.items.map((h, i) => (
+          <Image class:list={["shot", { on: i === 0 }]} src={img(h.phone)} alt="" widths={[240, 390]} sizes="(max-width: 900px) 30vw, 200px" loading={i === 0 ? "eager" : "lazy"} data-i={i} />
+        ))}
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div class="tabs" role="tablist" aria-label="Hero styles">
+      {H.items.map((h, i) => (
+        <button type="button" role="tab" id={`hero-tab-${h.key}`} aria-selected={i === 0 ? "true" : "false"} aria-controls="hero-panel" tabindex={i === 0 ? 0 : -1} data-i={i}>
+          <span class="num">{n(i)}</span>{h.name}
+        </button>
+      ))}
+    </div>
+    <div class="panel" id="hero-panel" role="tabpanel" aria-labelledby={`hero-tab-${H.items[0].key}`}>
+      {H.items.map((h, i) => (
+        <p class="desc" data-i={i} hidden={i !== 0}>
+          <span class="count">{n(i)} / {n(H.items.length - 1)}</span>
+          <span class="line">{h.line}</span>
+          <a href={url(h.key)} target="_blank" rel="noopener">See it live <span aria-hidden="true">↗</span><span class="sr">: {h.name} style on {host}</span></a>
+        </p>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  function init(root: HTMLElement) {
+    if (root.dataset.bound) return;
+    root.dataset.bound = "1";
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>("[role=tab]"));
+    const shots = (i: number) => root.querySelectorAll<HTMLElement>(`.shot[data-i="${i}"]`);
+    const descs = Array.from(root.querySelectorAll<HTMLElement>(".desc"));
+    const panel = root.querySelector<HTMLElement>("[role=tabpanel]")!;
+    const keyEl = root.querySelector<HTMLElement>("[data-key]")!;
+    const keys = tabs.map((t) => t.id.replace("hero-tab-", ""));
+    let cur = 0, auto = 0, manual = false, visible = false;
+
+    function show(i: number, focus = false) {
+      if (i === cur) return;
+      const prev = cur; cur = i;
+      tabs.forEach((t, j) => { t.setAttribute("aria-selected", String(j === i)); t.tabIndex = j === i ? 0 : -1; });
+      if (focus) tabs[i].focus();
+      descs.forEach((d, j) => (d.hidden = j !== i));
+      panel.setAttribute("aria-labelledby", tabs[i].id);
+      keyEl.textContent = keys[i];
+      // the new screen redraws over the old one, top to bottom; the old one stays underneath until it's covered
+      shots(prev).forEach((s) => { s.classList.remove("on"); s.classList.add("was"); });
+      shots(i).forEach((s) => {
+        s.classList.add("on");
+        const a = reduce
+          ? s.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "ease" })
+          : s.animate([{ clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)" }], { duration: 420, easing: "cubic-bezier(0.77, 0, 0.175, 1)" });
+        a.finished.then(() => shots(prev).forEach((p) => { if (!p.classList.contains("on")) p.classList.remove("was"); })).catch(() => {});
+      });
+    }
+
+    const stop = () => { manual = true; clearInterval(auto); };
+    tabs.forEach((t, i) => t.addEventListener("click", () => { stop(); show(i); }));
+    root.querySelector(".tabs")!.addEventListener("keydown", (e) => {
+      const k = (e as KeyboardEvent).key;
+      const to = k === "ArrowRight" ? (cur + 1) % tabs.length : k === "ArrowLeft" ? (cur - 1 + tabs.length) % tabs.length : k === "Home" ? 0 : k === "End" ? tabs.length - 1 : -1;
+      if (to < 0) return; e.preventDefault(); stop(); show(to, true);
+    });
+
+    // cycles on its own only while on screen, and never again once you've picked one
+    const run = () => { clearInterval(auto); if (!manual && visible && !reduce) auto = window.setInterval(() => show((cur + 1) % tabs.length), 4200); };
+    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) run(); else clearInterval(auto); }, { threshold: 0.45 });
+    io.observe(root.querySelector(".stage")!);
+    root.addEventListener("pointerenter", () => clearInterval(auto));
+    root.addEventListener("pointerleave", run);
+    document.addEventListener("astro:before-swap", () => { io.disconnect(); clearInterval(auto); }, { once: true });
+  }
+  document.addEventListener("astro:page-load", () => { const r = document.querySelector<HTMLElement>("[data-heroes]"); if (r) init(r); });
+</script>
+
+<style>
+  /* BKWS's own vocabulary: paper, ink lines, bone faces, hard dune shadows, Silkscreen for labels */
+  .heroes {
+    --ink: #1d1a18; --dune: #2a2f33; --bone: #f4efe8; --linen: #e8e0d4; --ember: #d57d3b; --teal: #2e6170;
+    --pixel: "Silkscreen", ui-monospace, monospace;
+    max-width: 1180px; margin: 0 auto; display: grid; gap: clamp(28px, 4vw, 48px);
+    padding: clamp(40px, 8vh, 90px) max(24px, env(safe-area-inset-right, 0px)) clamp(72px, 14vh, 140px) max(24px, env(safe-area-inset-left, 0px));
+  }
+  .head { display: grid; gap: 14px; max-width: 62ch; }
+  .kick { margin: 0; font: 400 12px var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--teal); }
+  h2 { margin: 0; font: 400 clamp(30px, 4.4vw, 56px)/1 var(--pixel); letter-spacing: -0.01em; text-wrap: balance; }
+  .body { margin: 0; font: 400 clamp(16px, 1.4vw, 18px)/1.6 var(--font-body); color: color-mix(in srgb, var(--ink) 82%, transparent); }
+
+  /* the window and the phone */
+  .stage { position: relative; padding-right: clamp(0px, 14%, 170px); padding-bottom: clamp(40px, 7vw, 80px); }
+  .win { margin: 0; background: var(--bone); border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--dune); }
+  .bar { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 2px solid var(--ink);
+    background: repeating-linear-gradient(to bottom, var(--ink) 0 1.5px, transparent 1.5px 4px) center / calc(100% - 20px) 13px no-repeat, var(--bone); }
+  .bar .sq { width: 14px; height: 14px; border: 2px solid var(--ink); background: var(--bone); flex: none; }
+  .addr { margin: 0 auto; padding: 1px 12px; background: var(--bone); font: 400 12px var(--pixel); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .addr b { font-weight: 400; color: var(--ember); }
+  .screen { position: relative; overflow: hidden; background: var(--ink); isolation: isolate; }
+  .win .screen { aspect-ratio: 1440 / 900; }
+  .shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; visibility: hidden; }
+  .shot.on, .shot.was { visibility: visible; }
+  .shot.on { z-index: 1; }
+
+  .phone { position: absolute; z-index: 2; right: 0; bottom: 0; width: clamp(110px, 19%, 210px); margin: 0;
+    padding: 8px; border-radius: 26px; background: var(--ink); box-shadow: 6px 6px 0 var(--dune); rotate: 2deg; }
+  .phone .screen { aspect-ratio: 390 / 844; border-radius: 19px; }
+
+  /* tabs: BKWS buttons (bone face, ink line, hard shadow that presses in); the chosen one is ember */
+  .controls { display: grid; gap: 18px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tabs button {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px; cursor: pointer;
+    background: var(--bone); color: var(--ink); border: 1.5px solid var(--ink); box-shadow: 3px 3px 0 var(--dune);
+    font: 400 14px var(--pixel); letter-spacing: 0.03em;
+    transition: translate 120ms var(--ease-out), box-shadow 120ms var(--ease-out), background-color 160ms ease, color 160ms ease;
+  }
+  .tabs .num { font: 500 11px var(--font-mono); opacity: 0.6; }
+  .tabs button[aria-selected="true"] { background: var(--ember); }
+  .tabs button:active { translate: 3px 3px; box-shadow: 0 0 0 var(--dune); }
+  @media (hover: hover) and (pointer: fine) { .tabs button:not([aria-selected="true"]):hover { background: var(--linen); } }
+  .tabs button:focus-visible, .desc a:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+  .desc { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; font: 400 16px/1.5 var(--font-body); }
+  .desc[hidden] { display: none; }
+  .count { font: 500 12px var(--font-mono); color: var(--teal); }
+  .desc a { color: var(--ink); font-weight: 600; text-underline-offset: 3px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  @media (max-width: 600px) {
+    .stage { padding-right: 0; padding-bottom: 70px; }
+    .phone { width: 30%; right: -4px; bottom: 0; }
+    .tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tabs button { justify-content: flex-start; }
+    .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  }
+</style>

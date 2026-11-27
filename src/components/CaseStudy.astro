@@ -10,6 +10,7 @@ interface Section {
   note?: string;
   stages?: string[];
   exits?: string[];
+  exitsLabel?: string;
   items?: { tag?: string; name?: string; kind?: string; stack?: string[]; line?: string; big?: string; small?: string }[];
 }
 interface Props { sections: Section[]; video?: string }
@@ -43,7 +44,7 @@ const { sections, video } = Astro.props;
           <ol class="flow">
             {s.stages?.map((st, i) => <li style={`--i:${i}`}><span class="n">{String(i + 1).padStart(2, "0")}</span>{st}</li>)}
           </ol>
-          {s.exits && <p class="exits">Side exits: {s.exits.map((e) => <span>{e}</span>)}</p>}
+          {s.exits && <p class="exits">{s.exitsLabel ?? "Side exits"}: {s.exits.map((e) => <span>{e}</span>)}</p>}
         </>
       )}
 

@@ -2,7 +2,7 @@
 
 One step at a time. For each step, Claude builds or proposes one thing, you review it, and we only move on when you're happy. We work out the details of each step when we get to it, not before.
 
-**Where we are (2026-11-26):** Phases 0–4 done; About done for now; Work index (6.1) done with full-screen project pages. **Next up: 6.2, the ECC case study**, or Phase 7 BK Web Studios.
+**Where we are (2026-11-26):** Phases 0–4 done; About done for now; Work index (6.1) done with full-screen project pages; the rest of Work (6.2–6.5) is parked for later (2026-11-26). **Phase 7: 7.1 world swap and 7.2 the BKWS page built; waiting on your review. Then Phase 8 (Education, Skills, Resume).**
 
 **Status key:** `[ ]` not started · `[~]` in progress · `[x]` done
 
@@ -85,16 +85,18 @@ Every page is built on the same layer, so these come before any new page.
 
 ## Phase 6: Work
 
+Parked on 2026-11-26: good enough for now; come back after the other pages.
+
 - [x] **6.1 Projects index.** /work is a quiet list of project names (filter row: All · Salesforce · Full stack · Research); hovering a row expands it in place to show its one-liner, stat and short clip; clicking opens its full-screen page /work/[slug] (clip or screenshot filling the screen, title over it, then what it is, role, stack, links, next project). Shared data in src/lib/projects.ts; clips via "previewVideo" in site.json. Phones: rows with thumbnails. Clips to come from you.
 - [~] **6.2 Case study: ECC.** /work/ecc-salesforce-case-management now carries a case study written in content/site.json (project → caseStudy) and drawn by src/components/CaseStudy.astro (the template for the others): the client, the problem, built it twice (ECCManager → Salesforce), the case lifecycle from the repo's Status picklist, three roles, impact numbers, the demo video. Waiting on your review and a few facts.
-- [ ] **6.3 Case study: Fabriq.**
+- [~] **6.3 Case study: Fabriq.** Drafted in content/site.json (project → caseStudy): the hackathon, the problem, how the AI picks an outfit (from the repo's api/generate-outfit.js), the numbers, FabriqAWS as what's next. Parked 2026-11-26. Open: the stack (README says Next.js + NeonDB; the repo is React + Supabase + Cloudinary), what FabriqAWS is built with.
 - [ ] **6.4 Research: Quantum and NASA GRACE.** Paper reader plus an interactive chart; the night pond with the moon on the water.
 - [ ] **6.5 Lighter pages.** Between Worlds and Beaches & Barrels.
 
 ## Phase 7: BK Web Studios
 
-- [ ] **7.1 The world swap.** Entering BKWS changes the whole atmosphere: the glass letters break up into BKWS's pixel font and the retro-OS world takes over.
-- [ ] **7.2 The page.** What BKWS is and does, client sites in device mockups (never linked), and a big "visit the site" call to action.
+- [x] **7.1 The world swap.** Built 2026-11-26 from the [prototype](https://claude.ai/artifact/HFZg3MvjjM1NkAts5Lo612) (src/components/BkwsSwap.astro): you arrive through the CRT with the glass ብሩኽ over a blurred Seattle; it snaps to a grid of glass cubes, they tumble out and restack into BKWS in Silkscreen (four cubes per pixel block), each block turning solid ember with a hard dune shadow; the light turns to BKWS paper and scanlines come on (~2.6 s, once per arrival, then it stops drawing). Reduced motion / no WebGL: the finished blocks in CSS. The ብሩኽ outlines now come from src/lib/glyphs.ts (shared with GlassHero); the cover waits on any `[data-glass-scene]`.
+- [~] **7.2 The page.** What BKWS is and does, client sites in device mockups (never linked), and a big "visit the site" call to action. **Must show off the 5 heroes** of bkwebstudios.com (its hero switcher, `?style=`): Editorial (`flash`), Cinematic (`summit`), Minimal, Retro, Collage. Built first (2026-11-26, src/components/BkwsHeroes.astro, data in site.json → bkWebStudios.heroes): "Same site, new look.", a BKWS window plus a phone showing each hero (screenshots of the live site), five tabs, a top-to-bottom redraw on each switch, cycling on its own while in view until you pick one, and a "See it live" link per style. Then (same day): the client sites (src/components/BkwsClients.astro): Always with Compassion, Isaiah Café, Simret, Galilee, each on a laptop with its phone beside it, its type and what I did (my words from bkwebstudios.com), never linked; "Four steps, about two weeks." (from $750); and a big ember "bkwebstudios.com ↗" to end. No booking on the portfolio. Reordered for UX (2026-11-26): hero (84% tall, "Scroll ▾" cue, the next section peeks in) → what it is + three facts → client work (the proof) → the five heroes, framed as "the studio's own site is a project too" → four steps → one big way out. Waiting on your review.
 
 ## Phase 8: Education, Skills, Resume
 

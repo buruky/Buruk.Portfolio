@@ -253,7 +253,7 @@
     const done = () => { cover.getAnimations({ subtree: true }).forEach((a) => a.cancel()); cover.replaceChildren(); cover.hidden = true; html.classList.remove("surfacing"); delete html.dataset.arriving; };
     // keep the screen covered until the new page's glass scene has drawn its first (slow, shader-compiling) frame,
     // so that hitch happens out of sight; pages without the scene, or a slow device, go after 900 ms at most
-    if (!reduce() && document.getElementById("glass-hero") && !html.dataset.glassReady) {
+    if (!reduce() && document.querySelector("[data-glass-scene]") && !html.dataset.glassReady) {
       await new Promise<void>((res) => { const t = setTimeout(res, 900); document.addEventListener("bk:glass-ready", () => { clearTimeout(t); res(); }, { once: true }); });
     }
     await frames(2);

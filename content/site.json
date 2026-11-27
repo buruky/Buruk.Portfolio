@@ -129,7 +129,75 @@
     "logo": null,
     "siteUrl": "https://www.bkwebstudios.com/",
     "role": "Founder & Lead Developer",
-    "cta": "Book a free call"
+    "cta": "Book a free call",
+    "heroes": {
+      "title": "Same site, new look.",
+      "body": "The studio's own site is a project too: it can swap its whole first screen between five designs. Same words, same buttons, a different studio each time. Try them here, or on the site itself.",
+      "items": [
+        {
+          "key": "flash",
+          "name": "Editorial",
+          "line": "Magazine type and a portrait on black.",
+          "desktop": "images/bkws/heroes/flash-desk.png",
+          "phone": "images/bkws/heroes/flash-phone.png"
+        },
+        {
+          "key": "summit",
+          "name": "Cinematic",
+          "line": "A full-bleed sunset behind frosted glass.",
+          "desktop": "images/bkws/heroes/summit-desk.png",
+          "phone": "images/bkws/heroes/summit-phone.png"
+        },
+        {
+          "key": "minimal",
+          "name": "Minimal",
+          "line": "Giant type and a single orchid.",
+          "desktop": "images/bkws/heroes/minimal-desk.png",
+          "phone": "images/bkws/heroes/minimal-phone.png"
+        },
+        {
+          "key": "retro",
+          "name": "Retro",
+          "line": "An old operating system: pixel type and a dithered Seattle.",
+          "desktop": "images/bkws/heroes/retro-desk.png",
+          "phone": "images/bkws/heroes/retro-phone.png"
+        },
+        {
+          "key": "collage",
+          "name": "Collage",
+          "line": "Torn paper over a marble head.",
+          "desktop": "images/bkws/heroes/collage-desk.png",
+          "phone": "images/bkws/heroes/collage-phone.png"
+        }
+      ]
+    },
+    "work": {
+      "title": "Built for real businesses.",
+      "body": "Sites for small businesses and community groups, designed and built by hand. Shown here, not linked: they belong to their owners."
+    },
+    "process": {
+      "title": "Four steps, about two weeks.",
+      "timeline": "Most sites within 2 weeks",
+      "price": "Websites from $750",
+      "steps": [
+        {
+          "name": "Free call",
+          "line": "15 minutes to talk about your goals, pages and budget."
+        },
+        {
+          "name": "Design",
+          "line": "A homepage mockup, with two rounds of changes."
+        },
+        {
+          "name": "Build",
+          "line": "The full site, shared on a preview link for your review."
+        },
+        {
+          "name": "Launch",
+          "line": "Domain connected, site live, and a short walkthrough."
+        }
+      ]
+    }
   },
   "lanes": [
     "Salesforce/CRM",
@@ -298,7 +366,81 @@
         "fit": "cover",
         "position": "center",
         "aspect": "video"
-      }
+      },
+      "caseStudy": [
+        {
+          "type": "text",
+          "label": "The hackathon",
+          "title": "Third of 10+ teams.",
+          "body": "Fabriq started at a hackathon. I led a team of four and built across the whole stack: the frontend, the backend, the API and the database, plus keeping each user's state straight across the app. We placed 3rd in a track of more than ten teams."
+        },
+        {
+          "type": "text",
+          "label": "The problem",
+          "title": "You forget what you own.",
+          "body": "Clothes get buried in the closet, you buy something you already have, and getting dressed takes longer than it should. Fabriq keeps your whole wardrobe in one place: add a photo of each piece, sort it by category, and save the outfits you like."
+        },
+        {
+          "type": "lifecycle",
+          "label": "How it picks an outfit",
+          "title": "From a photo to your own clothes.",
+          "stages": [
+            "You upload an outfit you like",
+            "The AI describes its top, bottom and shoes",
+            "A second pass picks matches from your closet",
+            "The code checks it's one top, one bottom, one pair of shoes"
+          ],
+          "exitsLabel": "If the AI fails",
+          "exits": [
+            "A fallback outfit from your closet"
+          ],
+          "note": "Both AI steps use OpenAI's GPT-4o mini, and they run in a Vercel serverless function, so the API key never reaches the browser. If the model's answer comes back broken or incomplete, the code fills the gaps from your wardrobe instead of showing an error."
+        },
+        {
+          "type": "impact",
+          "label": "By the numbers",
+          "items": [
+            {
+              "big": "3rd",
+              "small": "of 10+ teams"
+            },
+            {
+              "big": "4",
+              "small": "on the team, which I led"
+            },
+            {
+              "big": "2",
+              "small": "AI passes per outfit"
+            },
+            {
+              "big": "3",
+              "small": "pieces: top, bottom, shoes"
+            }
+          ]
+        },
+        {
+          "type": "versions",
+          "label": "What's next",
+          "title": "Rebuilding it properly.",
+          "items": [
+            {
+              "tag": "v1",
+              "name": "Fabriq",
+              "kind": "Hackathon build",
+              "line": "Built fast for the competition: accounts, a digital closet, and AI outfits from a photo."
+            },
+            {
+              "tag": "v2",
+              "name": "FabriqAWS",
+              "kind": "In progress",
+              "stack": [
+                "AWS"
+              ],
+              "line": "A rebuild on AWS for deeper security and better data handling, with a new look: a pastel punk-zine collage."
+            }
+          ]
+        }
+      ]
     },
     {
       "slug": "between-worlds",
@@ -409,29 +551,12 @@
         "fit": "cover",
         "position": "center",
         "aspect": "video"
-      }
-    },
-    {
-      "slug": "galilee-afh",
-      "name": "Galilee Adult Family Home",
-      "lane": "Full Stack",
-      "description": "A website for Galilee, an adult family home in Mountlake Terrace, WA.",
-      "techStack": [
-        "Next.js",
-        "React",
-        "TypeScript",
-        "Tailwind CSS"
-      ],
-      "role": "Freelance / commissioned developer",
-      "liveUrl": "https://galilee-afh.vercel.app",
-      "repoUrl": "https://github.com/buruky/galileeAFH",
-      "paperUrl": null,
-      "demoVideo": null,
-      "screenshot": {
-        "src": "images/screenshots/galilee-afh.png",
-        "fit": "cover",
-        "position": "top",
-        "aspect": "video"
+      },
+      "type": "Adult family home",
+      "did": "Designed and built from scratch: photo galleries of the suites, living spaces and backyard, a map, and a Schedule a Visit button up front.",
+      "mockups": {
+        "desktop": "images/bkws/clients/always-with-compassion-desk.png",
+        "phone": "images/bkws/clients/always-with-compassion-phone.png"
       }
     },
     {
@@ -456,6 +581,65 @@
         "fit": "cover",
         "position": "center",
         "aspect": "video"
+      },
+      "type": "Café and catering",
+      "did": "I'm this café's developer. I took over the site, moved its hosting, locked down its security, and added Square online ordering.",
+      "mockups": {
+        "desktop": "images/bkws/clients/isaiah-cafe-desk.png",
+        "phone": "images/bkws/clients/isaiah-cafe-phone.png"
+      }
+    },
+    {
+      "slug": "simret",
+      "name": "Simret Consulting & Coaching",
+      "lane": "Full Stack",
+      "description": "A website for Simret Consulting & Coaching: Dr. Kebreab Hailegiorgis coaches individuals, couples, and premarital pairs toward real connection.",
+      "techStack": [],
+      "role": "Freelance / commissioned developer",
+      "liveUrl": "https://simretcc.com/",
+      "repoUrl": "https://github.com/buruky/SimretConsultingCoaching",
+      "paperUrl": null,
+      "demoVideo": null,
+      "screenshot": {
+        "src": "images/screenshots/simret.png",
+        "fit": "cover",
+        "position": "top",
+        "aspect": "video"
+      },
+      "type": "Coaching and counseling",
+      "did": "Designed and built from scratch, with online booking and payments built right into the page, so clients book and pay for sessions in one step.",
+      "mockups": {
+        "desktop": "images/bkws/clients/simret-desk.png",
+        "phone": "images/bkws/clients/simret-phone.png"
+      }
+    },
+    {
+      "slug": "galilee-afh",
+      "name": "Galilee Adult Family Home",
+      "lane": "Full Stack",
+      "description": "A website for Galilee, an adult family home in Mountlake Terrace, WA.",
+      "techStack": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Tailwind CSS"
+      ],
+      "role": "Freelance / commissioned developer",
+      "liveUrl": "https://galileeafh.net/",
+      "repoUrl": "https://github.com/buruky/galileeAFH",
+      "paperUrl": null,
+      "demoVideo": null,
+      "screenshot": {
+        "src": "images/screenshots/galilee-afh.png",
+        "fit": "cover",
+        "position": "top",
+        "aspect": "video"
+      },
+      "type": "Adult family home",
+      "did": "Designed and built from scratch: a page for each level of care, a room-by-room photo tour, a live Google reviews feed, and Schedule a Tour and call buttons up front.",
+      "mockups": {
+        "desktop": "images/bkws/clients/galilee-afh-desk.png",
+        "phone": "images/bkws/clients/galilee-afh-phone.png"
       }
     }
   ],

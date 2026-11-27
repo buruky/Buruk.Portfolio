@@ -1,7 +1,111 @@
 ---
+// BK Web Studios (Phase 7): its own world. 7.1 the world swap (BkwsSwap: the glass ብሩኽ restacks into BKWS);
+// 7.2, the page, in the order a visitor needs it: what it is → the client work (BkwsClients, never linked, the
+// proof) → the studio's own site as a project (BkwsHeroes, its five heroes) → how working together goes → one big
+// way out to bkwebstudios.com (the only exit, at the end). No booking on the portfolio: that's the studio site's job.
 import Base from "@/layouts/Base.astro";
-import StandIn from "@/components/StandIn.astro";
+import BkwsSwap from "@/components/BkwsSwap.astro";
+import BkwsHeroes from "@/components/BkwsHeroes.astro";
+import BkwsClients from "@/components/BkwsClients.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import site from "@/lib/site";
+
+const bk = site.bkWebStudios;
+const host = new URL(bk.siteUrl).host.replace(/^www\./, "");
+const P = bk.process;
 ---
-<Base title="BK Web Studios">
-  <StandIn lines={["BK Web", "Studios."]} note="Its own world, in BK Web Studios colours." />
+<Base title={bk.name} description={bk.description}>
+  <main id="main" class="bk">
+    <BkwsSwap />
+    <section class="intro" id="studio" data-section="The studio">
+      <p class="lede">{bk.description}</p>
+      <div class="row">
+        <dl class="facts">
+          <div><dt>Role</dt><dd>{bk.role}</dd></div>
+          <div><dt>Based in</dt><dd>Seattle, WA</dd></div>
+        </dl>
+        <a class="visit" href={bk.siteUrl} target="_blank" rel="noopener">Visit {host} <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+    <BkwsClients />
+    <BkwsHeroes />
+    <section class="steps" data-section="How it works" aria-labelledby="steps-title">
+      <p class="kick">{P.price} · {P.timeline}</p>
+      <h2 id="steps-title">{P.title}</h2>
+      <ol>
+        {P.steps.map((st, i) => (
+          <li><span class="n">{String(i + 1).padStart(2, "0")}</span><h3>{st.name}</h3><p>{st.line}</p></li>
+        ))}
+      </ol>
+    </section>
+    <section class="out" data-section="Visit the studio">
+      <a class="big" href={bk.siteUrl} target="_blank" rel="noopener">
+        <span class="k">The rest lives at</span>
+        <span class="h">{host} <span aria-hidden="true">↗</span></span>
+      </a>
+    </section>
+    <SiteFooter />
+  </main>
 </Base>
+
+<style>
+  .bk { background: var(--world-bg); color: var(--world-fg); }
+  .intro {
+    max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; justify-items: start;
+    padding: clamp(44px, 8vh, 80px) max(24px, env(safe-area-inset-right, 0px)) clamp(40px, 8vh, 90px) max(24px, env(safe-area-inset-left, 0px));
+  }
+  .lede { margin: 0; max-width: 34ch; font: 500 clamp(24px, 3vw, 40px)/1.2 var(--font-body); letter-spacing: -0.01em; text-wrap: balance; }
+  /* the facts in a BKWS panel, and an early way to the studio site (the big one waits at the end) */
+  .row { display: flex; flex-wrap: wrap; align-items: stretch; gap: 16px; }
+  .visit {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 20px;
+    background: #d57d3b; color: #1d1a18; text-decoration: none; text-transform: uppercase;
+    font: 400 14px "Silkscreen", ui-monospace, monospace; letter-spacing: 0.04em;
+    border: 2px solid #1d1a18; box-shadow: 4px 4px 0 #2a2f33;
+    transition: translate 120ms var(--ease-out), box-shadow 120ms var(--ease-out), background-color 160ms ease;
+  }
+  .visit:active { translate: 4px 4px; box-shadow: 0 0 0 #2a2f33; }
+  @media (hover: hover) and (pointer: fine) { .visit:hover { background: #e8955a; } }
+  .visit:focus-visible { outline: 2px solid #2e6170; outline-offset: 3px; }
+  .facts { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, auto)); border: 2px solid #1d1a18; background: #f4efe8; box-shadow: 4px 4px 0 #2a2f33; }
+  .facts div { padding: 14px 20px; display: grid; gap: 6px; }
+  .facts div + div { border-left: 2px solid #1d1a18; }
+  .facts dt { font: 500 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: #2e6170; }
+  .facts dd { margin: 0; font: 400 15px "Silkscreen", ui-monospace, monospace; }
+  @media (max-width: 600px) {
+    .facts { grid-template-columns: minmax(0, 1fr); }
+    .facts div + div { border-left: 0; border-top: 2px solid #1d1a18; }
+  }
+
+  /* the four steps: one BKWS panel each, joined like a row of OS windows */
+  .steps {
+    max-width: 1180px; margin: 0 auto; display: grid; gap: 18px;
+    padding: clamp(40px, 8vh, 90px) max(24px, env(safe-area-inset-right, 0px)) clamp(72px, 14vh, 140px) max(24px, env(safe-area-inset-left, 0px));
+  }
+  .steps .kick { margin: 0; font: 400 12px "Silkscreen", ui-monospace, monospace; letter-spacing: 0.06em; text-transform: uppercase; color: #2e6170; }
+  .steps h2 { margin: 0; font: 400 clamp(30px, 4.4vw, 56px)/1 "Silkscreen", ui-monospace, monospace; letter-spacing: -0.01em; text-wrap: balance; }
+  .steps ol { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 2px solid #1d1a18; background: #f4efe8; box-shadow: 6px 6px 0 #2a2f33; }
+  .steps li { display: grid; align-content: start; gap: 10px; padding: 22px 20px 26px; }
+  .steps li + li { border-left: 2px solid #1d1a18; }
+  .steps .n { font: 500 12px var(--font-mono); color: #d57d3b; }
+  .steps h3 { margin: 0; font: 400 18px "Silkscreen", ui-monospace, monospace; }
+  .steps li p { margin: 0; font: 400 15.5px/1.5 var(--font-body); color: color-mix(in srgb, #1d1a18 82%, transparent); }
+  @media (max-width: 860px) {
+    .steps ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .steps li:nth-child(3) { border-left: 0; }
+    .steps li:nth-child(n + 3) { border-top: 2px solid #1d1a18; }
+  }
+
+  /* the way out: one big ember button, BKWS's hard shadow, pressing in */
+  .out { max-width: 1180px; margin: 0 auto; padding: 0 max(24px, env(safe-area-inset-right, 0px)) clamp(90px, 16vh, 170px) max(24px, env(safe-area-inset-left, 0px)); }
+  .big {
+    display: grid; gap: 10px; padding: clamp(28px, 5vw, 56px); text-decoration: none; color: #1d1a18;
+    background: #d57d3b; border: 2px solid #1d1a18; box-shadow: 8px 8px 0 #2a2f33;
+    transition: translate 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background-color 160ms ease;
+  }
+  .big .k { font: 500 12px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
+  .big .h { font: 400 clamp(24px, 5.2vw, 72px)/1 "Silkscreen", ui-monospace, monospace; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+  .big:active { translate: 8px 8px; box-shadow: 0 0 0 #2a2f33; }
+  @media (hover: hover) and (pointer: fine) { .big:hover { background: #e8955a; } }
+  .big:focus-visible { outline: 3px solid #2e6170; outline-offset: 4px; }
+</style>
