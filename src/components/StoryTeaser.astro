@@ -9,15 +9,32 @@ import asmara from "@content/media/images/about/asmara-harnet-avenue.jpg";
 import campus from "@content/media/images/about/uw-tacoma-campus.jpg"; // Seattle itself is the hero's horizon
 import suit from "@content/media/images/about/dressed-up.jpg";
 import snow from "@content/media/images/about/me.jpg";
+import type { ImageMetadata } from "astro";
 
-const CHAPTERS = [
+// Used twice: Home's short version (the default three chapters) and the About page's full line (step 5.2), which
+// passes its chapters, heading and ending from content/site.json (copy.about).
+type Chapter = { id: string; glow: string; tilt?: number; label: string; title: string; line: string; img: ImageMetadata; pos: string; caption?: boolean };
+interface Props {
+  chapters?: Chapter[];
+  heading?: string;
+  section?: string;
+  /** the full story (About): no "read the whole story" link, and the ending's own label and photo */
+  full?: boolean;
+  ending?: { label: string; title: string; img: ImageMetadata };
+}
+
+const DEFAULTS: Chapter[] = [
   { id: "asmara", glow: "#f0a838", tilt: -3, label: "Where it starts", title: "Asmara, Eritrea", line: "Where I was born, and where the line starts.", img: asmara, pos: "50% 50%", caption: true },
   { id: "leap", glow: "#8a6bff", tilt: 2.5, label: "Where it changed", title: "The leap", line: "Told to pick another field. I picked two: Computer Science and Mathematics.", img: campus, pos: "62% 50%" },
   { id: "now", glow: "#e0803c", tilt: -2, label: "Now", title: "BK Web Studios", line: "Freelancing for nonprofits turned into a studio of my own.", img: suit, pos: "50% 30%" },
 ];
+const { chapters = DEFAULTS, heading = "The short version.", section = "The short version", full = false } = Astro.props;
+const ending = Astro.props.ending ?? { label: "Next —", title: "Still being written.", img: snow };
+const TILTS = [-3, 2.5, -2, 3, -2.5, 2];
+const CHAPTERS = chapters.map((c, i) => ({ ...c, tilt: c.tilt ?? TILTS[i % TILTS.length] }));
 ---
-<section class="story" aria-labelledby="story-title" data-story data-section="The short version">
-  <h2 id="story-title" data-reveal data-thread-start><span class="ln"><span>The short version.</span></span></h2>
+<section class:list={["story", { full }]} aria-labelledby="story-title" data-story data-section={section}>
+  <h2 id="story-title" data-reveal data-thread-start><span class="ln"><span>{heading}</span></span></h2>
   <svg class="thread" aria-hidden="true" preserveAspectRatio="none" data-thread>
     <path class="line" data-thread-path />
     <path class="tip" data-thread-tip />
@@ -29,7 +46,7 @@ const CHAPTERS = [
         <div class="card-wrap" data-anchor>
           <div class="card" data-gloss="6">
             <Image src={c.img} alt="" widths={[360, 540, 720]} sizes="(max-width: 700px) 70vw, 340px" style={`object-position: ${c.pos}`} />
-            {"caption" in c && (
+            {c.caption && (
               <div class="caption" aria-hidden="true">
                 <span class="cap-geez" lang="ti">ኣስመራ</span>
                 <span class="cap-coords">15.33° N · 38.93° E</span>
@@ -57,17 +74,17 @@ const CHAPTERS = [
     <li class="chapter right next" data-stop style="--glow: #ff4a3d; --tilt: 2deg">
       <div class="card-wrap" data-anchor>
         <div class="card glitchy" data-gloss="6">
-          <Image src={snow} alt="" widths={[360, 540, 720]} sizes="(max-width: 700px) 70vw, 340px" />
-          <Image class="tear" src={snow} alt="" widths={[360, 540, 720]} sizes="(max-width: 700px) 70vw, 340px" aria-hidden="true" />
+          <Image src={ending.img} alt="" widths={[360, 540, 720]} sizes="(max-width: 700px) 70vw, 340px" />
+          <Image class="tear" src={ending.img} alt="" widths={[360, 540, 720]} sizes="(max-width: 700px) 70vw, 340px" aria-hidden="true" />
         </div>
       </div>
       <div class="text">
-        <span class="label glitch" aria-hidden="true">Next —</span>
+        <span class="label glitch" aria-hidden="true">{ending.label}</span>
         <h3 class="static" data-static>
-          <span class="static-text">Still being written.</span>
-          <span class="static-noise" aria-hidden="true">Still being written.</span>
+          <span class="static-text">{ending.title}</span>
+          <span class="static-noise" aria-hidden="true">{ending.title}</span>
         </h3>
-        <a class="go" href="/about">Read the whole story <span aria-hidden="true">→</span></a>
+        {!full && <a class="go" href="/about">Read the whole story <span aria-hidden="true">→</span></a>}
       </div>
     </li>
   </ol>
@@ -264,6 +281,8 @@ const CHAPTERS = [
   .chapter.right { flex-direction: row-reverse; }
   .chapter + .chapter { margin-top: clamp(32px, 6vh, 64px); }
   @media (min-width: 900px) { .chapter + .chapter { margin-top: -90px; } }
+  /* the full story has longer chapter text, so its cards don't overlap */
+  @media (min-width: 900px) { .story.full .chapter + .chapter { margin-top: clamp(40px, 8vh, 96px); } }
 
   .card-wrap { position: relative; flex: 0 0 auto; width: clamp(220px, 28vw, 340px); rotate: var(--tilt); }
   .card {

@@ -39,7 +39,7 @@ flowchart TD
 
 ## On every page
 
-- **Logo:** your name, which shrank out of the intro. ቡሩኽ becomes the monogram (also the favicon).
+- **Logo:** your name, which shrank out of the intro. ብሩኽ becomes the monogram (also the favicon).
 - **Menu button:** always visible. The menu uses **different sizes and weights**:
   - Big: Work, About, BK Web Studios, Contact
   - Medium: Research

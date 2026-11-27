@@ -29,13 +29,16 @@ const year = new Date().getFullYear();
     <li><a class="pill" href={github} target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a></li>
   </ul>
 
-  <!-- Where the glass ቡሩኽ comes to rest at the end of Home: GlassHero measures this box and brings the name forward into it -->
+  <!-- Where the glass ብሩኽ comes to rest at the end of Home: GlassHero measures this box and brings the name forward into it -->
   <div class="glass-spot" data-glass-spot aria-hidden="true"></div>
 
   <div class="base" data-corners-hide>
     <span>© {year} Buruk Yimesgen</span>
-    <span class="geez" lang="ti" aria-hidden="true">ቡሩኽ</span>
-    <a href="#main" class="top" data-to-top>Back to top <span aria-hidden="true">↑</span></a>
+    <span class="geez" lang="ti" aria-hidden="true">ብሩኽ</span>
+    <span class="base-links">
+      <a href="/?intro" class="top" data-replay-intro>Replay intro</a>
+      <a href="#main" class="top" data-to-top>Back to top <span aria-hidden="true">↑</span></a>
+    </span>
   </div>
 </footer>
 
@@ -61,6 +64,12 @@ const year = new Date().getFullYear();
       }
       clearTimeout(timer);
       timer = window.setTimeout(() => { hint.textContent = "Click to copy"; btn.classList.remove("copied"); }, 2200);
+    });
+    // the intro only runs on a fresh load of Home, so this one skips the page transition and reloads
+    document.querySelector<HTMLAnchorElement>("[data-replay-intro]")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      try { sessionStorage.removeItem("bk-entered"); } catch { /* private mode */ }
+      location.href = "/?intro";
     });
     document.querySelector<HTMLAnchorElement>("[data-to-top]")?.addEventListener("click", (e) => {
       e.preventDefault();
@@ -142,5 +151,6 @@ const year = new Date().getFullYear();
   }
   .geez { font-family: var(--font-geez); font-size: 22px; letter-spacing: 0; text-transform: none; }
   .top { color: inherit; text-decoration: none; }
+  .base-links { display: flex; gap: 22px; }
   .top:focus-visible, .mailto:focus-visible, .pill:focus-visible { outline: 2px solid var(--world-fg); outline-offset: 3px; }
 </style>

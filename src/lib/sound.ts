@@ -174,7 +174,7 @@ const SOUNDS = {
   dissolve: (c, o, t) => { for (let k = 0; k < 18; k++) note(c, o, hz(Math.floor(Math.random() * 10), 5), t + Math.random() * 0.5, 0.02, 0.25); },
   tear: (c, o, t) => { staticBurst(c, o, t, 0.32, 0.08); tone(c, o, "square", 220, 70, t, 0.025, 0.3, 900); },
   glitch: (c, o, t) => { staticBurst(c, o, t, 0.12, 0.06); tone(c, o, "sine", hz(3, 5), hz(3, 5) * 0.94, t, 0.04, 0.15); },
-  // Home hero: flicking each glass letter of ቡሩኽ rings its own note (D, F♯, A)
+  // Home hero: flicking each glass letter of ብሩኽ rings its own note (D, F♯, A)
   glass0: (c, o, t) => note(c, o, hz(0, 5), t, 0.08, 0.9),
   glass1: (c, o, t) => note(c, o, hz(2, 5), t, 0.08, 0.9),
   glass2: (c, o, t) => note(c, o, hz(3, 5), t, 0.08, 0.9),

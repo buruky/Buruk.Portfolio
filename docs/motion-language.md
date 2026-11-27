@@ -44,7 +44,7 @@ Never `ease-in` on interface elements. In GSAP the same curves are registered wi
 
   | Going to | Screen | Text |
   | --- | --- | --- |
-  | Home (morning) | **Sunrise:** the colour rises with a glowing edge | ቡሩኽ flicks through vowel forms; BURUK stretches out |
+  | Home (morning) | **Sunrise:** the colour rises with a glowing edge | ብሩኽ flicks through vowel forms; BURUK stretches out |
   | Work (noon) | **Blinds:** slats flip open like sun through window blinds | letters streak in with a speed stretch |
   | Education, Skills, Resume (afternoon) | **Paper stack:** three sheets slide up | lines rise calmly (visited often) |
   | About (golden hour) | **Long shadow:** a low diagonal sweep | letters drop with long shadows that shorten |
@@ -76,11 +76,11 @@ Glitches never loop forever. The only repeating one is chapter 07, which fires a
 - **Grain** shifts at 12 fps (stepped, like film) with linear timing. It's static with reduced motion.
 - **Light** (the sun glow, horizon light) drifts a little with scroll inside each world, never on a timer.
 - **Night details** (stars, windows) twinkle slowly (3–6 s), only while visible.
-- **The pointer (revised 2026-11-26):** no custom cursor, no glow blob, nothing that needs precise aim, and **nothing that follows the pointer around** (the scene and lights hold still). Since the glass ቡሩኽ hero, **water and glass are the interaction language**: you touch the scene, it answers, and it settles.
+- **The pointer (revised 2026-11-26):** no custom cursor, no glow blob, nothing that needs precise aim, and **nothing that follows the pointer around** (the scene and lights hold still). Since the glass ብሩኽ hero, **water and glass are the interaction language**: you touch the scene, it answers, and it settles.
   | Where | Interaction |
   | --- | --- |
   | Home (built) | **The pond:** click or tap anywhere that isn't a link for a ripple and a quiet water drop; a mouse draws a thin wake; the glass letters bob when rings reach them and can be grabbed and flicked. At the end of Home the name comes out from behind the green veil and rests beside "Let's talk.", where it can be flicked again. |
-  | Every page | **The glass ቡሩኽ travels with you:** the one object that lives through the whole site (the "one asset" idea from the hero picks). Each page decides where it rests and how it reacts. |
+  | Every page | **The glass ብሩኽ travels with you:** the one object that lives through the whole site (the "one asset" idea from the hero picks). Each page decides where it rests and how it reacts. |
   | Research (night) | **Moon on water:** the same pond at night, with the moon's reflection breaking up under ripples (after Hiroshige's moonlit prints) |
   | The leap (dusk) | **Windows answer you:** windows near a tap or click switch on and fade slowly (after teamLab's resonating lamps); decided when 4.4 is built |
   | Chapter 07, 404 (midnight) | **TV static:** text you touch fills with static, colour split and shake |

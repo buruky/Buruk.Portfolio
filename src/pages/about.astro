@@ -1,7 +1,40 @@
 ---
-import Base from "@/layouts/Base.astro";
-import StandIn from "@/components/StandIn.astro";
+// About (Phase 5): golden hour. Built from the WorldPage recipe; the story runs as one red line looping down the page
+// through the chapters (StoryLine, after the August about page in content/inspo). All copy lives in content/site.json → copy.about, so it can be edited there.
+// Still to come: Asmara's world (5.3), the travel maps (5.4), the leap flip (5.5), chapter 07's glitch (5.6), details (5.7).
+import type { ImageMetadata } from "astro";
+import WorldPage from "@/layouts/WorldPage.astro";
+import StoryLine from "@/components/StoryLine.astro";
+import Hobbies from "@/components/Hobbies.astro";
+import site from "@/lib/site";
+import heroPhoto from "@content/media/images/about/asmara-sunset.jpg"; // stand-in hero photo (CC0, see CREDITS.md); swap freely
+
+const imgs = import.meta.glob<{ default: ImageMetadata }>("../../content/media/images/**/*.{png,jpg,jpeg,webp}", { eager: true });
+const img = (path: string) => {
+  const m = imgs[`../../content/media/${path}`];
+  if (!m) throw new Error(`About: missing image content/media/${path}`);
+  return m.default;
+};
+const { chapters, ending } = site.copy.about;
+const story = chapters.map((c) => ({ id: c.id, label: c.label, title: c.title, line: c.line, img: img(c.image), pos: c.position }));
 ---
-<Base title="About">
-  <StandIn lines={["Born in", "Asmara."]} note="Golden hour. Your story line will live here." />
-</Base>
+<WorldPage title="About" photo={heroPhoto} section="About">
+  <Fragment slot="hero">
+    <p class="kicker">About · Asmara to Seattle</p>
+    <h1 id="gh-title" class="title" data-arrive="shadow">My story, so far.</h1>
+    <p class="lede">From Asmara to America, two majors and a studio of my own. The last chapter isn&rsquo;t written yet.</p>
+  </Fragment>
+
+  <StoryLine chapters={story} ending={{ label: ending.label, title: ending.title, img: img(ending.image) }} />
+  <Hobbies />
+</WorldPage>
+
+<style>
+  .kicker { margin: 0; font: 500 12px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+  .title {
+    margin: 6px 0 0; font-family: var(--font-display); font-weight: 900; font-stretch: 122%;
+    font-size: clamp(52px, 8.4vw, 150px); line-height: 0.86; letter-spacing: -0.025em; text-wrap: balance;
+    text-shadow: 0 0.05em 0.5em rgb(0 0 0 / 0.3);
+  }
+  .lede { margin: 14px 0 0; max-width: 44ch; font-size: clamp(16px, 1.4vw, 19px); line-height: 1.5; opacity: 0.92; }
+</style>

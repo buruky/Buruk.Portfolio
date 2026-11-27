@@ -16,7 +16,7 @@ The site is a set of **worlds you travel between**, and since the new hero they 
 
 - **A real photo** for each page (Home is Harnet Avenue in Asmara), softly blurred.
 - **The page's time-of-day colour as a tint** over that photo, not a flat fill. The palette from step 1.2 stays; it just becomes see-through. Each page's light-to-dark change happens inside that page as you scroll (Home already goes from dark into morning green).
-- **The glass ቡሩኽ**: the one object that travels with you through the whole site. It opens the site, floats behind Home, rests beside "Let's talk." at the end, and each page decides where it sits and how it reacts.
+- **The glass ብሩኽ**: the one object that travels with you through the whole site. It opens the site, floats behind Home, rests beside "Let's talk." at the end, and each page decides where it sits and how it reacts.
 - **Water and glass as the way you touch things**: click for ripples, flick the letters. Nothing follows the pointer around ([docs/motion-language.md](docs/motion-language.md) §6).
 
 Your story still runs as a line through time, ending in a glitchy, unfinished chapter. BK Web Studios is still its own world that leads into the real BKWS site. The loud moments are saved for travel: the intro, page transitions, the leap of faith, and chapter 07.
@@ -55,8 +55,8 @@ Your story still runs as a line through time, ending in a glitchy, unfinished ch
 
 ## Phase 3: Home
 
-- [x] **3.1 Intro, for real.** Replaced on 2026-11-25 by the **glass ቡሩኽ intro**: gate ("This is my portfolio, and I'm ቡሩኽ") with a floating photo of you in the water → vowel cycle in glass → BURUK YIMESGEN → the name flies to the header.
-- [x] **3.2 Intro → nav.** The name shrinks into the logo; ቡሩኽ is the monogram.
+- [x] **3.1 Intro, for real.** Replaced on 2026-11-25 by the **glass ብሩኽ intro**: gate ("This is my portfolio, and I'm ብሩኽ") with a floating photo of you in the water → vowel cycle in glass → BURUK YIMESGEN → the name flies to the header.
+- [x] **3.2 Intro → nav.** The name shrinks into the logo; ብሩኽ is the monogram.
 - [x] **3.3 "I build ____."** Now part of the hero lockup under the glass name.
 - [x] **3.4 The rest of Home.** Built: the glass name floating behind every section, the pond (ripples, wake, flick), the short version as photo cards on the red line, "By the numbers", selected work as glow frames (GRACE as a paper-style figure), the BKWS window, and the contact footer, where the glass comes out from behind the veil and rests beside "Let's talk." Left to do:
   - [x] Glass over text: no repositioning while scrolling (tried dodging and per-section moves; both felt distracting). The glass keeps its idle float and only moves once, at the end, to rest beside "Let's talk."
@@ -71,17 +71,17 @@ Every page is built on the same layer, so these come before any new page.
 
 - [x] **4.1 Phone and speed pass.** Automatic quality steps (render resolution 2× → 1.5× → 1.25× → 1×, stepping down when a device can't hold ~45 fps; phones start at 1.5×; kept for the session) and a `?fps` readout. Checked on a real phone 2026-11-26: ~60 fps, no heat, no glitches. Reduced motion: the intro skips to the hero and the water and letters hold still.
 - [x] **4.2 The page recipe.** Built as `src/layouts/WorldPage.astro` (GlassHero in page mode: no intro; the page's words in the hero; photo + the world's tint from `WORLD_DEEP`; the glass rests in the hero, floats behind the page, settles beside "Let's talk."; sections tagged `data-section`). First page: Work, noon over Seattle (`city-bg.jpg`, swap freely), listing all six projects. Approved 2026-11-26; every page uses it.
-- [x] **4.3 Page transitions.** Back to the 1.3 decision (docs/motion-language.md §4): every page arrives its own way, now made of tinted frosted glass ("panes") that close over the page and open onto the next in their own way: sunrise (rises on past the top), blinds (tilt open), paper stack (sheets carry on up), long shadow (sweeps on across), sun iris (sets back down), pixel dissolve (clears cell by cell), screen tear (tears away). BK Web Studios keeps a solid CRT that powers on and off. Text effects come with each page's hero via `data-arrive` (Work: streak, Home: stretch). Shared: the colour split on the corner name, the glass ቡሩኽ dipping and rising, and the cover waiting for the new glass scene. All in src/components/Cover.astro.
+- [x] **4.3 Page transitions.** Back to the 1.3 decision (docs/motion-language.md §4): every page arrives its own way, now made of tinted frosted glass ("panes") that close over the page and open onto the next in their own way: sunrise (rises on past the top), blinds (tilt open), paper stack (sheets carry on up), long shadow (sweeps on across), sun iris (sets back down), pixel dissolve (clears cell by cell), screen tear (tears away). BK Web Studios keeps a solid CRT that powers on and off. Text effects come with each page's hero via `data-arrive` (Work: streak, Home: stretch). Shared: the colour split on the corner name, the glass ብሩኽ dipping and rising, and the cover waiting for the new glass scene. All in src/components/Cover.astro.
 
 ## Phase 5: About, your story
 
-- [ ] **5.1 Story copy.** Draft the chapters from your answers. You edit them in your own voice.
-- [ ] **5.2 The line.** The path that draws as you scroll, with chapters, photos and images for each. Builds on the photo cards from Home; it adds to them, it doesn't repeat them.
-- [ ] **5.3 Asmara.** The origin world, golden hour. Home's hero already uses Harnet Avenue, so this chapter needs different images (Claude asks you for photos).
-- [ ] **5.4 Places (new).** The 3D paper-terrain maps: Asmara → Seattle → Sweden → Japan → Rio, travelled as you scroll.
+- [~] **5.1 Story copy.** Drafted (2026-11-26) in content/site.json → copy.about.chapters. Waiting on your edits and three gaps: when you came to the US, a line for chapter 07, a line per trip.
+- [x] **5.2 The line.** Rebuilt after the August reference (StoryLine.astro): one red line through glass beads, chapters named by phrases (no numbers), floating photos (stand-ins from Unsplash/Commons, see CREDITS.md). Glass "asides" beside the words: Running Start's dipping curve, the leap's turning ×2 seal, a live "10 staff · every day" pill, a BK Web Studios sticker that links to the site, an "in progress" seal at the end.
+- [x] **5.3 Asmara.** Chapter 01's picture is a map of Africa (src/lib/africa.ts, Natural Earth, public domain): the countries faint, Eritrea filling in red, a pin on Asmara and ኤርትራ beside it, drawn in when the line reaches the chapter.
+- [ ] **5.4 Places (new).** Skipped for now (2026-11-26). The 3D paper-terrain maps: Asmara → Seattle → Sweden → Japan → Rio, travelled as you scroll.
 - [ ] **5.5 Leap of faith.** The turning point where the page flips (dusk).
 - [ ] **5.6 Chapter 07.** The line still drawing into a glitchy, time-travel future (midnight).
-- [ ] **5.7 Small details.** Seahawks, superheroes, Eritrea. The stats are already on Home; About adds the detail behind them.
+- [~] **5.7 Small details.** "Off the clock." hobbies section after the story (src/components/Hobbies.astro, copy in site.json → copy.about.hobbies): tilted frosted cards for Seahawks, basketball, movies & shows, travel, spreading into a fan as they scroll in. Waiting on your review and your own one-liners.
 
 ## Phase 6: Work
 
@@ -113,3 +113,4 @@ Home's footer already has "Let's talk.", click-to-copy email, resume, LinkedIn a
 - [ ] **10.1** Full pass on real devices, every page.
 - [ ] **10.2** Accessibility and speed, every page.
 - [ ] **10.3** SEO, share images, launch.
+- [ ] **10.4** Photo credits on the site: some photos (e.g. the UW Quad on About, CC BY-SA) need visible credit, not just content/media/CREDITS.md. Add a small credits line or page.

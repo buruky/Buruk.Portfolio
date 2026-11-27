@@ -27,7 +27,7 @@ Success means a visitor leaves within 30 seconds knowing **Buruk is passionate a
 ## Positioning
 
 The site is built from things only Buruk has:
-- The Tigrinya name **ቡሩኽ** ("blessed"), written in Ge'ez.
+- The Tigrinya name **ብሩኽ** ("blessed"), written in Ge'ez.
 - An origin in Asmara, Eritrea.
 - A real arc: Running Start setbacks → advisors saying to switch fields → falling in love with math → the CS + Math double major → freelancing for nonprofits → founding BK Web Studios.
 - Shipped work across three directions (Salesforce/CRM, full stack, data science research).
@@ -55,7 +55,7 @@ The site is built from things only Buruk has:
 ## Brand Commitments
 
 - **Name and voice:** "Buruk Yimesgen". Buruk wants to come across as **fun, cool, smooth**.
-- **ቡሩኽ** becomes the monogram and favicon.
+- **ብሩኽ** becomes the monogram and favicon.
 - **BK Web Studios** has its own existing brand (warm paper, ember, teal, retro-OS pixel fonts; see `docs/research-notes.md`). The portfolio must feel distinct from it, while the BKWS section leads into that world.
 - **Personal details** to include lightly in About: Eritrea, sports (Seattle Seahawks fan), superheroes, movies and shows.
 

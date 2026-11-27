@@ -149,12 +149,13 @@ const count = String(MENU.length).padStart(2, "0");
   .island {
     top: calc(env(safe-area-inset-top, 0px) + var(--edge-y) - 4px); left: 50%; transform: translateX(-50%);
     display: flex; align-items: center; gap: 2px; padding: 6px 6px 6px 10px; border-radius: 999px; text-shadow: none;
-    background: color-mix(in srgb, var(--world-bg) 30%, rgb(16 22 17 / 0.3));
-    -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+    /* plain frosted glass: no colour, just a faint white frost over a strong blur; the shadowed text keeps it readable */
+    background: rgb(255 255 255 / 0.1);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6) brightness(0.92); backdrop-filter: blur(24px) saturate(1.6) brightness(0.92);
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 0 0 1px rgb(255 255 255 / 0.1), 0 14px 30px -16px rgb(0 0 0 / 0.7);
     transition: opacity 360ms var(--ease-out), transform 460ms var(--ease-out);
   }
-  .island a { color: inherit; text-decoration: none; font: 500 14px var(--font-body); padding: 9px 13px; border-radius: 999px; opacity: 0.85; transition: background-color var(--t-hover) ease, opacity var(--t-hover) ease; }
+  .island a { color: inherit; text-decoration: none; font: 600 15px var(--font-body); letter-spacing: 0.005em; padding: 9px 14px; border-radius: 999px; opacity: 1; text-shadow: 0 1px 8px rgb(0 0 0 / 0.45); transition: background-color var(--t-hover) ease, opacity var(--t-hover) ease; }
   @media (hover: hover) and (pointer: fine) { .island a:hover { opacity: 1; background: rgb(255 255 255 / 0.1); } }
   .island a[aria-current="page"] { opacity: 1; box-shadow: inset 0 -2px 0 var(--thread); border-radius: 0; padding-inline: 2px; margin-inline: 11px; }
   .i-snd { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: none; border: 0; color: inherit; cursor: pointer; }
@@ -163,7 +164,11 @@ const count = String(MENU.length).padStart(2, "0");
   .i-snd[aria-pressed="true"] .wave i:nth-child(2) { animation-delay: -0.3s; }
   .i-snd[aria-pressed="true"] .wave i:nth-child(3) { animation-delay: -0.6s; }
   .i-snd[aria-pressed="true"] .wave i:nth-child(4) { animation-delay: -0.15s; }
-  .i-menu { padding: 10px 18px; border-radius: 999px; border: 0; cursor: pointer; background: var(--world-fg); color: var(--world-bg); font: 600 14px var(--font-body); }
+  .i-menu {
+    padding: 10px 18px; border-radius: 999px; border: 0; cursor: pointer; color: inherit; font: 700 15px var(--font-body);
+    background: rgb(255 255 255 / 0.18); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35); text-shadow: 0 1px 8px rgb(0 0 0 / 0.45);
+  }
+  @media (hover: hover) and (pointer: fine) { .i-menu:hover { background: rgb(255 255 255 / 0.26); } }
   .island :focus-visible { outline-offset: 2px; }
   /* scrolled past the hero (or the menu is open): the island lifts away and the corners take over */
   .hdr.scrolled .island, :global(html.menu-open) .island { opacity: 0; transform: translate(-50%, -14px) scale(0.96); pointer-events: none; visibility: hidden; transition: opacity 260ms var(--ease-out), transform 360ms var(--ease-out), visibility 0s 360ms; }
@@ -208,6 +213,8 @@ const count = String(MENU.length).padStart(2, "0");
     :global(html.menu-open) .hdr > :is(.snd, .sub) { opacity: 0; }
   }
   .hdr { transition: color var(--t-panel) var(--ease-drawer); }
+  /* over a page's darkened hero photo the header is light, whatever the world's own text colour (About, Education…) */
+  :global(html:has(#glass-hero.page):not(.menu-open)) .hdr:not(.scrolled) { color: #f7f3ea; }
 
   @media (max-width: 600px) {
     .name { font-size: 17px; }

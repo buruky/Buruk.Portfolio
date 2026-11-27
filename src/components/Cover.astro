@@ -3,7 +3,7 @@
 // Each destination has its own screen effect, drawn from its time of day; its hero can add a text effect by marking an
 // element with data-arrive="streak" | "stretch" (more arrive with their pages). Shared by all: about a second, the same
 // curves, a 120 ms colour split on the corner name, and the direction rule (going later in the day comes from the top,
-// earlier from the bottom). The glass ቡሩኽ is the thread between pages: it dips as you leave (GlassHero listens for
+// earlier from the bottom). The glass ብሩኽ is the thread between pages: it dips as you leave (GlassHero listens for
 // bk:sink) and rises into its spot on arrival (GlassHero reads html.surfacing). Persists across pages.
 // Reduced motion: a 200 ms colour crossfade.
 ---
@@ -214,6 +214,13 @@
       splitChars(el).forEach((c, i) => c.animate(
         [{ transform: "translateX(-.6em)", fontStretch: "150%", opacity: 0 }, { transform: "none", fontStretch: rest, opacity: 1 }],
         { duration: 480, delay: i * 18, easing: EO, fill: "backwards" },
+      ));
+    },
+    // About: letters drop in with long golden-hour shadows that shorten as they land
+    shadow: (el) => {
+      splitChars(el).forEach((c, i) => c.animate(
+        [{ transform: "translateY(-35%)", opacity: 0, textShadow: "26px 10px 0 rgba(120,60,0,.38)" }, { transform: "none", opacity: 1, textShadow: "5px 2px 0 rgba(120,60,0,.16)" }],
+        { duration: 620, delay: i * 24, easing: EO, fill: "backwards" },
       ));
     },
     // Home: the words stretch out from narrow

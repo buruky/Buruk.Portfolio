@@ -353,7 +353,102 @@
       "body": "Open to entry-level roles. Email is the fastest way to reach me."
     },
     "about": {
-      "description": "Education, background, and contact details for Buruk Yimesgen."
+      "description": "Education, background, and contact details for Buruk Yimesgen.",
+      "chapters": [
+        {
+          "id": "asmara",
+          "label": "where it starts",
+          "title": "Asmara, Eritrea",
+          "line": "I was born in Asmara, Eritrea, and came to America when I was young. My name, ብሩኽ, means \"blessed\" in Tigrinya.",
+          "image": "images/about/asmara-harnet-avenue.jpg",
+          "position": "50% 50%",
+          "glow": "#f0a838",
+          "caption": true
+        },
+        {
+          "id": "running-start",
+          "label": "the first hard lesson",
+          "title": "Running Start",
+          "line": "School always came easy, so I jumped into Running Start expecting more of the same. It caught me off guard, and it taught me that being smart and doing the work aren't the same thing.",
+          "image": "images/about/desk-at-night.jpg",
+          "position": "55% 45%",
+          "glow": "#e8b04a"
+        },
+        {
+          "id": "pick-another-field",
+          "label": "where it almost stopped",
+          "title": "\"Pick another field\"",
+          "line": "I wanted to study computer science. My GPA said otherwise, and advisors told me to pick something else.",
+          "image": "images/about/empty-hallway.jpg",
+          "position": "50% 60%",
+          "glow": "#c97b3c"
+        },
+        {
+          "id": "leap",
+          "label": "where it changed",
+          "title": "The leap",
+          "line": "I didn't switch. I retook the prerequisites, fell in love with math along the way, and came out with two majors: Computer Science and Mathematics at the University of Washington. 3.6 GPA, Dean's List, class of 2026.",
+          "image": "images/about/uw-quad-blossoms.jpg",
+          "position": "50% 45%",
+          "glow": "#8a6bff"
+        },
+        {
+          "id": "nonprofits",
+          "label": "the first real work",
+          "title": "Building for people",
+          "line": "I freelanced for nonprofits. The biggest was a case management app for Eritrean Community Connections. I built it twice, and now 10 staff use it every day.",
+          "image": "images/about/light-work.jpg",
+          "position": "80% 55%",
+          "glow": "#4f8cff"
+        },
+        {
+          "id": "bkws",
+          "label": "now",
+          "title": "BK Web Studios",
+          "line": "Freelancing turned into a studio of my own. BK Web Studios designs and builds websites for small businesses.",
+          "image": "images/about/dressed-up.jpg",
+          "position": "50% 30%",
+          "glow": "#e0803c"
+        }
+      ],
+      "ending": {
+        "label": "what's next",
+        "title": "Still being written.",
+        "image": "images/about/me.jpg"
+      },
+      "hobbies": {
+        "heading": "Off the clock.",
+        "items": [
+          {
+            "id": "football",
+            "title": "Seahawks",
+            "line": "Go Hawks. Sundays are spoken for.",
+            "image": "images/about/hobby-stadium.jpg",
+            "position": "50% 60%"
+          },
+          {
+            "id": "basketball",
+            "title": "Basketball",
+            "line": "Always down for a game.",
+            "image": "images/about/hobby-hoop.jpg",
+            "position": "60% 45%"
+          },
+          {
+            "id": "screen",
+            "title": "Movies & shows",
+            "line": "A good movie or a series worth staying up for.",
+            "image": "images/about/hobby-cinema.jpg",
+            "position": "50% 40%"
+          },
+          {
+            "id": "travel",
+            "title": "Travel",
+            "line": "Sweden, Japan, Brazil, and counting.",
+            "image": "images/about/hobby-plane.jpg",
+            "position": "45% 50%"
+          }
+        ]
+      }
     },
     "notFound": {
       "heading": "This page wandered off.",
