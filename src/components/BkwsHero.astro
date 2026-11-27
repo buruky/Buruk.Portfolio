@@ -1,0 +1,63 @@
+---
+// BK Web Studios' first screen (step 7.1, simplified 2026-11-26: the glass-to-pixels swap was cut as unneeded).
+// You land straight on BKWS's world: "BKWS" in Silkscreen pixel blocks, ember with hard dune shadows, on BKWS paper
+// with scanlines; the name and tagline below; a scroll cue. Plain HTML and CSS, no 3D. Night: BKWS's night colour.
+import "@fontsource/silkscreen/latin-400.css";
+import site from "@/lib/site";
+
+// "BKWS" in Silkscreen, one character per pixel (read once from the font; Silkscreen caps are 5 pixels tall)
+const BKWS = [
+  "###...#..#..#...#...###",
+  "#..#..#.#...#.#.#..#...",
+  "####..##....#.#.#...##.",
+  "#..#..#.#...#.#.#.....#",
+  "###...#..#...#.#...###.",
+];
+const bk = site.bkWebStudios;
+---
+<section class="bkhero" data-section="BK Web Studios" aria-labelledby="bk-title">
+  <div class="blocks" aria-hidden="true" style={`--cols:${BKWS[0].length}`}>
+    {BKWS.flatMap((row) => [...row]).map((c) => <i class:list={{ on: c === "#" }}></i>)}
+  </div>
+  <div class="scan" aria-hidden="true"></div>
+  <div class="cap">
+    <h1 id="bk-title">{bk.name}</h1>
+    <p>{bk.tagline}</p>
+  </div>
+  <a class="cue" href="#studio">Scroll <span aria-hidden="true">▾</span></a>
+</section>
+
+<style>
+  .bkhero {
+    position: relative; height: 84svh; min-height: 520px; overflow: hidden;
+    --paper: #ede7dd; --ink: #1d1a18; --dune: #2a2f33; --line: rgb(29 26 24 / 0.07);
+    background: var(--paper); color: var(--ink);
+  }
+  :global(html[data-night="on"]) .bkhero { --paper: #0f0d0c; --ink: #f4efe8; --dune: #000; --line: rgb(244 239 232 / 0.05); }
+  .scan {
+    position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 3px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent); mask-image: linear-gradient(to bottom, #000 70%, transparent); /* fades into the page, no seam */
+  }
+  .blocks {
+    position: absolute; left: 50%; top: 44%; translate: -50% -50%;
+    width: min(62vw, 760px); display: grid; grid-template-columns: repeat(var(--cols), 1fr);
+  }
+  .blocks i { aspect-ratio: 1; }
+  .blocks i.on { margin: 4%; background: #d57d3b; box-shadow: 0.35vw 0.35vw 0 var(--dune), inset 0.18vw 0.18vw 0 rgb(255 255 255 / 0.22), inset -0.18vw -0.18vw 0 rgb(0 0 0 / 0.16); }
+  .cap {
+    position: absolute; left: 0; right: 0; top: 64%; display: grid; justify-items: center; gap: 10px; text-align: center;
+    padding: 0 max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px));
+  }
+  .cap h1 { margin: 0; font: 400 clamp(20px, 2.6vw, 30px)/1.1 "Silkscreen", ui-monospace, monospace; letter-spacing: 0.02em; }
+  .cap p { margin: 0; font: 400 13px/1.4 var(--font-mono); color: color-mix(in srgb, var(--ink) 75%, transparent); }
+  .cue {
+    position: absolute; left: 50%; bottom: 22px; translate: -50% 0; display: inline-flex; gap: 8px; align-items: center;
+    padding: 8px 12px; color: var(--ink); text-decoration: none; font: 400 12px "Silkscreen", ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .cue span { animation: cue-blink 1.2s steps(2, jump-none) infinite; }
+  @keyframes cue-blink { 50% { opacity: 0; } }
+  .cue:focus-visible { outline: 2px solid #2e6170; outline-offset: 2px; }
+  @media (max-width: 600px) { .blocks { width: 86vw; } }
+  @media (prefers-reduced-motion: reduce) { .cue span { animation: none; } }
+</style>

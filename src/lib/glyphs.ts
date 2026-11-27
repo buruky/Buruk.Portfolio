@@ -1,5 +1,5 @@
 // The glass ብሩኽ's letter outlines, read from Abyssinica SIL at build time so the browser gets only the shapes it
-// needs. Used by GlassHero (every page's glass) and BkwsSwap (where the glass turns into BKWS). Build-time only.
+// needs. Used by GlassHero (every page's glass). Build-time only.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import * as opentype from "opentype.js";
@@ -31,5 +31,3 @@ function outline(cp: number): Glyph {
 
 /** Every vowel form of each letter (the intro cycles through them). */
 export const glyphs = { upm, families: FAMILIES.map((f) => ({ t: f.t, lat: f.lat, forms: f.forms.map(outline) })) };
-/** Just the name as written: ብሩኽ. */
-export const nameGlyphs = { upm, letters: FAMILIES.map((f) => outline(f.forms[f.t])) };

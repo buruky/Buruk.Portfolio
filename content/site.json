@@ -749,6 +749,153 @@
     "notFound": {
       "heading": "This page wandered off.",
       "body": "The page you're looking for doesn't exist, or it moved. Head back home or check out the projects."
+    },
+    "contactPage": {
+      "kicker": "Contact · Seattle, WA",
+      "title": "Say hi.",
+      "body": "Open to entry-level roles. Email is the fastest way to reach me.",
+      "openTo": [
+        "Software Engineer",
+        "Data Science",
+        "Salesforce / CRM Developer"
+      ],
+      "closing": "Thanks for coming.",
+      "replay": "Start the day again"
+    },
+    "research": {
+      "kicker": "Research · 2 papers",
+      "title": "Research, after dark.",
+      "lede": "Two papers from the math side of my degree: filling the gaps in NASA's satellite water data, and how a quantum computer searches.",
+      "papers": [
+        {
+          "slug": "nasa-grace-climate-research",
+          "n": "01",
+          "title": "Missing Data Imputation for GRACE Data Derived from Terrestrial Water Storage (TWS): Statistical and Machine Learning Approaches",
+          "short": "Filling the gaps in NASA's water data",
+          "authors": "Jenna Weldon and Buruk Yimesgen",
+          "advisors": "Advisor: Tamer Elbayoumi · Mentor: Brett Hunter",
+          "where": "NC A&T Data Science Research Program, Greensboro, NC · July 2024",
+          "facts": [
+            {
+              "big": "2",
+              "small": "of 62 watersheds: São Francisco (tropical) and Saudi Arabia (dry)"
+            },
+            {
+              "big": "2002–20",
+              "small": "monthly satellite readings, April to April"
+            },
+            {
+              "big": "5",
+              "small": "methods compared: mean, median, GLM, DNN, XGBoost"
+            },
+            {
+              "big": "XGBoost",
+              "small": "lowest error in both basins"
+            }
+          ],
+          "figureNote": "XGBoost came out lowest in both basins. That surprised us: most earlier work we read expected deep neural networks to win.",
+          "pages": [
+            {
+              "n": 1,
+              "img": "images/papers/nasa-grace-climate-research-01.jpg",
+              "cap": "Title and abstract"
+            },
+            {
+              "n": 5,
+              "img": "images/papers/nasa-grace-climate-research-05.jpg",
+              "cap": "The 62 watersheds GRACE covers"
+            },
+            {
+              "n": 7,
+              "img": "images/papers/nasa-grace-climate-research-07.jpg",
+              "cap": "Water storage over time, both basins"
+            },
+            {
+              "n": 10,
+              "img": "images/papers/nasa-grace-climate-research-10.jpg",
+              "cap": "The missing months"
+            },
+            {
+              "n": 20,
+              "img": "images/papers/nasa-grace-climate-research-20.jpg",
+              "cap": "Our analysis, as a flowchart"
+            },
+            {
+              "n": 25,
+              "img": "images/papers/nasa-grace-climate-research-25.jpg",
+              "cap": "Every model, compared"
+            },
+            {
+              "n": 28,
+              "img": "images/papers/nasa-grace-climate-research-28.jpg",
+              "cap": "XGBoost's confidence intervals"
+            }
+          ]
+        },
+        {
+          "slug": "quantum-computing-research",
+          "n": "02",
+          "title": "Exploring the Possibilities Through Quantum Computing",
+          "short": "How a quantum computer searches",
+          "authors": "Malaya Jove and Buruk Yimesgen",
+          "advisors": "Advisor: Dr. Ryan Card",
+          "where": null,
+          "covers": [
+            {
+              "name": "The double slit",
+              "line": "Why particles act like waves until you look."
+            },
+            {
+              "name": "Four postulates",
+              "line": "The rules quantum mechanics runs on, written for computing."
+            },
+            {
+              "name": "Circuits",
+              "line": "Qubits, wires, the Hadamard and CNOT gates, and measurement."
+            },
+            {
+              "name": "Teleportation",
+              "line": "Moving a qubit's state using entanglement, something no classical computer can do."
+            },
+            {
+              "name": "Grover's algorithm",
+              "line": "Searching N unsorted items in about √N steps instead of N."
+            }
+          ],
+          "pages": [
+            {
+              "n": 1,
+              "img": "images/papers/quantum-computing-research-01.jpg",
+              "cap": "Title and abstract"
+            },
+            {
+              "n": 4,
+              "img": "images/papers/quantum-computing-research-04.jpg",
+              "cap": "The double slit experiment"
+            },
+            {
+              "n": 11,
+              "img": "images/papers/quantum-computing-research-11.jpg",
+              "cap": "Gates and measurement"
+            },
+            {
+              "n": 15,
+              "img": "images/papers/quantum-computing-research-15.jpg",
+              "cap": "Grover's algorithm as a circuit"
+            },
+            {
+              "n": 16,
+              "img": "images/papers/quantum-computing-research-16.jpg",
+              "cap": "One Grover iteration"
+            },
+            {
+              "n": 19,
+              "img": "images/papers/quantum-computing-research-19.jpg",
+              "cap": "Grover's search, drawn as a rotation"
+            }
+          ]
+        }
+      ]
     }
   }
 }

@@ -50,6 +50,11 @@ const W = site.bkWebStudios.work;
     max-width: 1180px; margin: 0 auto; display: grid; gap: clamp(36px, 6vw, 72px);
     padding: clamp(40px, 8vh, 90px) max(24px, env(safe-area-inset-right, 0px)) clamp(72px, 14vh, 140px) max(24px, env(safe-area-inset-left, 0px));
   }
+  /* night (step 9.2): bone on BKWS night; the devices stay black, with a faint edge so they don't vanish */
+  :global(html[data-night="on"]) .clients { --ink: #f4efe8; --dune: #000; --bone: #1d1a18; --teal: #7fb3c2; }
+  :global(html[data-night="on"]) .clients :is(.lid, .phone) { background: #000; box-shadow: 0 0 0 1.5px #3a3532, 6px 6px 0 #000; }
+  :global(html[data-night="on"]) .clients .base { background: #2a2622; border-color: #3a3532; }
+  :global(html[data-night="on"]) .clients .base::before { background: #000; }
   .head { display: grid; gap: 14px; max-width: 62ch; }
   .kick { margin: 0; font: 400 12px var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--teal); }
   h2 { margin: 0; font: 400 clamp(30px, 4.4vw, 56px)/1 var(--pixel); letter-spacing: -0.01em; text-wrap: balance; }

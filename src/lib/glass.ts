@@ -1,5 +1,5 @@
 // The glass ብሩኽ's shared recipe (browser side), so every scene's glass is the same glass:
-// GlassHero (Home and every WorldPage) and BkwsSwap (where it turns into BKWS). Tweak it here, it changes everywhere.
+// GlassHero (Home and every WorldPage). Tweak it here, it changes everywhere.
 import * as THREE from "three";
 
 /** The glass itself: clear, thick, a warm tint, a clear coat and a faint rainbow at the edges. */

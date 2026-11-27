@@ -43,7 +43,7 @@ flowchart TD
 - **Menu button:** always visible. The menu uses **different sizes and weights**:
   - Big: Work, About, BK Web Studios, Contact
   - Medium: Research
-  - Smaller: Education, Skills, Resume
+  - Smaller: Resume (Education and Skills are sections of it since Phase 8)
   - Hovering a link previews that page. On phones, the previews show as you tap through.
 - **Sound toggle** and, on Home, **skip intro**.
 - **Footer:** giant sign-off, click-to-copy email, resume, LinkedIn and GitHub. **No "book a call" on the portfolio.**
@@ -64,9 +64,9 @@ flowchart TD
 | **/research/quantum-computing** | Full: the paper explained visually, plus a paper reader. Co-authors and advisor credited. | /research, Work |
 | **/research/nasa-grace** | Full: the research, an interactive data chart, plus a paper reader. NCA&T summer. Co-authors and mentors credited. | /research, Work, About |
 | **/bk-web-studios** | The world swap. What BKWS is and does, client sites in device mockups (**not linked**), and a big "Visit the site" button. | bkwebstudios.com |
-| **/education** | UW, double major CS + Math, Dean's List, GPA, graduated June 2026. Course facilitator, NCA&T research program, ICPC. | /research |
-| **/skills** | Skill groups. Each skill shows which projects used it. | Project pages |
-| **/resume** | Resume shown in the page, plus a download. | |
+| **/education** | Since Phase 8: a section of /resume (redirects to /resume#education). | |
+| **/skills** | Since Phase 8: a section of /resume (redirects to /resume#skills). Each skill links to the projects that use it. | Project pages |
+| **/resume** | The resume as a page: Experience, Education, Skills, Activities, plus a download. | Project pages |
 | **/contact** | Copy email, LinkedIn, GitHub, resume. | |
 | **404** | A small glitch page that sends people home. | Home |
 

@@ -54,7 +54,5 @@ export const MENU: Array<{ href: string; label: string; size: "big" | "mid" | "s
   { href: "/bk-web-studios", label: "BK Web Studios", size: "big" },
   { href: "/contact", label: "Contact", size: "big" },
   { href: "/research", label: "Research", size: "mid" },
-  { href: "/education", label: "Education", size: "small" },
-  { href: "/skills", label: "Skills", size: "small" },
   { href: "/resume", label: "Resume", size: "small" },
 ];

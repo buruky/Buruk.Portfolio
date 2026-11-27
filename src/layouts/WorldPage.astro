@@ -5,6 +5,7 @@
 //   3. the glass ብሩኽ, resting in the hero's spot, floating behind the page as you scroll, and settling beside
 //      "Let's talk." at the end
 //   4. sections tagged with data-section="…" so the header's bottom-right corner can say where you are
+//   (slot "end" sits after the veil, over the bare glass layer; footer={false} drops the "Let's talk." footer)
 //
 // Usage:
 //   <WorldPage title="Work" photo={img} section="Work">
@@ -23,18 +24,23 @@ interface Props {
   photo: ImageMetadata;
   /** label for the hero in the header's "where you are" corner */
   section?: string;
+  /** false: the page ends its own way (Contact) instead of with the "Let's talk." footer */
+  footer?: boolean;
+  /** photo sharpness, 0 (the usual soft focus) to 1 (nearly sharp); see GlassHero */
+  soft?: number;
 }
-const { title, description, photo, section = title } = Astro.props;
+const { title, description, photo, section = title, footer = true, soft = 0 } = Astro.props;
 const world = worldFor(Astro.url.pathname);
 ---
 <Base title={title} description={description}>
   <main id="main">
-    <GlassHero mode="page" photo={photo} deep={WORLD_DEEP[world]} section={section}>
+    <GlassHero mode="page" photo={photo} deep={WORLD_DEEP[world]} section={section} soft={soft}>
       <slot name="hero" />
     </GlassHero>
     <div class="hillside">
       <div class="veiled"><slot /></div>
-      <SiteFooter />
+      <slot name="end" />
+      {footer && <SiteFooter />}
     </div>
   </main>
 </Base>

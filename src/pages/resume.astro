@@ -1,7 +1,165 @@
 ---
-import Base from "@/layouts/Base.astro";
-import StandIn from "@/components/StandIn.astro";
+// Resume (Phase 8, approved 2026-11-26 as ONE page instead of three thin ones): the resume as a web page, on the
+// WorldPage recipe in the afternoon world over the UW Tacoma campus. Experience, Education (#education), Skills
+// (#skills: each skill links to the projects that use it), Activities, and the PDF to download, top and bottom.
+// /education and /skills land on their sections here (astro.config redirects). Data: content/site.json.
+import WorldPage from "@/layouts/WorldPage.astro";
+import site from "@/lib/site";
+import { projects } from "@/lib/projects";
+import campus from "@content/media/images/about/uw-tacoma-campus.jpg"; // public domain (CREDITS.md)
+import resumeUrl from "@content/media/resume.pdf?url";
+
+const { education: ed, experience, skillGroups, activities } = site;
+const short = (slug: string) => projects.find((p) => p.slug === slug)?.short;
+// a skill links to every project whose stack names it ("HTML" also matches "HTML5 Canvas")
+const usedBy = (skill: string) => projects.filter((p) => p.techStack.some((t) => {
+  const a = t.toLowerCase(), b = skill.toLowerCase();
+  return a === b || a.startsWith(b + " ") || a.startsWith(b + "5");
+}));
+const file = "Buruk-Yimesgen-Resume.pdf";
+// short tags for the skill rows (the long names crowd them)
+const TAG: Record<string, string> = { "ecc-salesforce-case-management": "ECC", "nasa-grace-climate-research": "NASA GRACE", "quantum-computing-research": "Quantum" };
+const tag = (p: { slug: string; short: string }) => TAG[p.slug] ?? p.short;
 ---
-<Base title="Resume">
-  <StandIn lines={["Resume."]} note="Afternoon." />
-</Base>
+<WorldPage title="Resume" photo={campus} section="Resume" description="Buruk Yimesgen's resume: experience, education and skills, with a PDF to download.">
+  <Fragment slot="hero">
+    <p class="kicker">Resume · {ed.school}, {ed.graduation.split(" ")[1]}</p>
+    <h1 id="gh-title" class="title">Resume.</h1>
+    <p class="lede">Computer Science and Mathematics at UW. Salesforce, full-stack and data science work, all on one page.</p>
+    <a class="dl" href={resumeUrl} download={file}>Download PDF <span aria-hidden="true">↓</span></a>
+  </Fragment>
+
+  <div class="cv"><div class="sheet">
+    <section class="part" id="experience" data-section="Experience" aria-labelledby="h-exp">
+      <h2 id="h-exp">Experience</h2>
+      <ol class="jobs">
+        {experience.map((j) => (
+          <li class="job">
+            <div class="when"><span>{j.start}</span><span aria-hidden="true">–</span><span>{j.end}</span></div>
+            <div class="what">
+              <h3>{j.role}</h3>
+              <p class="org">{j.org} · {j.location}</p>
+              <ul>{j.points.map((pt) => <li>{pt}</li>)}</ul>
+              {j.project && short(j.project) && <a class="see" href={`/work/${j.project}`}>See {short(j.project)} <span aria-hidden="true">→</span></a>}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="part" id="education" data-section="Education" aria-labelledby="h-edu">
+      <h2 id="h-edu">Education</h2>
+      <div class="school">
+        <div class="when"><span>Graduated {ed.graduation}</span></div>
+        <div class="what">
+          <h3>{ed.school}</h3>
+          <p class="org">{ed.campus} · {ed.degree}</p>
+          <dl class="marks">
+            <div><dt>GPA</dt><dd>{ed.gpa}</dd></div>
+            <div><dt>Honors</dt><dd>{ed.honors}</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="part" id="skills" data-section="Skills" aria-labelledby="h-skills">
+      <h2 id="h-skills">Skills</h2>
+      <p class="hint">Where a skill was used in a project, it links there.</p>
+      <div class="groups">
+        {skillGroups.map((g) => (
+          <div class="group">
+            <h3>{g.category}</h3>
+            <ul class="skills">
+              {g.skills.map((s) => {
+                const ps = usedBy(s);
+                return (
+                  <li>
+                    <span class="s">{s}</span>
+                    {ps.length > 0 && <span class="in">{ps.map((p) => <a href={`/work/${p.slug}`}>{tag(p)}</a>)}</span>}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="part" id="activities" data-section="Activities" aria-labelledby="h-act">
+      <h2 id="h-act">Activities</h2>
+      <ul class="acts">{activities.map((a) => <li><h3>{a.name}</h3><p>{a.description}</p></li>)}</ul>
+    </section>
+
+    <p class="again"><a class="dl" href={resumeUrl} download={file}>Download the PDF <span aria-hidden="true">↓</span></a></p>
+  </div></div>
+</WorldPage>
+
+<style>
+  /* hero words (same scale as Work) */
+  .kicker { margin: 0; font: 500 12px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+  .title { margin: 10px 0 0; font-family: var(--font-display); font-weight: 900; font-stretch: 120%; font-size: clamp(56px, 10vw, 150px); line-height: 0.88; letter-spacing: -0.02em; }
+  .lede { margin: 14px 0 0; max-width: 44ch; font-size: clamp(16px, 1.4vw, 19px); line-height: 1.5; opacity: 0.92; text-shadow: 0 1px 12px rgb(0 0 0 / 0.4); }
+  .dl {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 48px; margin-top: 22px; padding: 0 22px; border-radius: 999px;
+    color: #16210f; background: #f3f6ea; text-decoration: none; font: 600 15px var(--font-body);
+    box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.12), 0 14px 30px -14px rgb(0 0 0 / 0.6);
+    transition: translate 140ms var(--ease-out), background-color 160ms ease;
+  }
+  .dl:active { translate: 0 1px; }
+  @media (hover: hover) and (pointer: fine) { .dl:hover { background: #fff; } }
+  .dl:focus-visible { outline: 2px solid #f3f6ea; outline-offset: 3px; }
+
+  /* the resume: a sheet of paper (the afternoon world arrives as a paper stack), a label column and the entries */
+  .cv { padding: clamp(40px, 8vh, 90px) max(16px, env(safe-area-inset-right, 0px)) clamp(80px, 14vh, 150px) max(16px, env(safe-area-inset-left, 0px)); }
+  .sheet {
+    --ink: #1d2a14; --paper: #f4f6ec; --line: rgb(29 42 20 / 0.14); --hover: #2c3f20;
+    max-width: 1180px; margin: 0 auto; display: grid; gap: clamp(48px, 8vh, 88px); color: var(--ink);
+    padding: clamp(28px, 5vw, 72px); border-radius: 6px; background: var(--paper);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 50px 90px -40px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(0 0 0 / 0.05);
+  }
+  .part { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 16px clamp(24px, 5vw, 72px); scroll-margin-top: 90px; }
+  .part > h2 { margin: 0; font-family: var(--font-display); font-weight: 900; font-stretch: 112%; font-size: clamp(26px, 2.6vw, 36px); line-height: 1; }
+  .part > :not(h2) { grid-column: 2; }
+  .hint { margin: 0; font-size: 14px; opacity: 0.75; }
+
+  .jobs { list-style: none; margin: 0; padding: 0; display: grid; gap: 44px; }
+  .job, .school { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 10px 28px; }
+  .when { display: flex; flex-wrap: wrap; align-content: start; gap: 0 6px; font: 500 12px/1.6 var(--font-mono); letter-spacing: 0.04em; opacity: 0.75; padding-top: 6px; }
+  .what { display: grid; gap: 6px; min-width: 0; }
+  h3 { margin: 0; font: 700 clamp(19px, 1.6vw, 22px)/1.25 var(--font-body); }
+  .org { margin: 0; font-size: 15px; opacity: 0.8; }
+  .what ul { margin: 8px 0 0; padding-left: 1.1em; display: grid; gap: 8px; font-size: 16px; line-height: 1.55; }
+  .what li::marker { color: var(--thread); }
+  .see { justify-self: start; margin-top: 6px; color: inherit; font-weight: 600; text-underline-offset: 3px; }
+
+  .marks { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 12px; }
+  .marks div { padding: 12px 16px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 5%, transparent); box-shadow: inset 0 0 0 1px var(--line); }
+  .marks dt { font: 500 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+  .marks dd { margin: 4px 0 0; font: 700 18px var(--font-body); }
+
+  .groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 40px; }
+  .group { display: grid; gap: 12px; align-content: start; }
+  .group h3 { font: 500 12px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+  .skills { list-style: none; margin: 0; padding: 0; display: grid; }
+  .skills li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .skills .s { font: 600 16px var(--font-body); }
+  .skills .in { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .skills .in a { color: inherit; font: 500 12px var(--font-mono); opacity: 0.8; text-underline-offset: 3px; }
+  @media (hover: hover) and (pointer: fine) { .skills .in a:hover, .see:hover { opacity: 1; text-decoration-thickness: 2px; } }
+
+  .acts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .acts p { margin: 0; font-size: 16px; opacity: 0.85; }
+  .again { margin: 0; }
+  .again .dl { margin-top: 0; color: var(--paper); background: var(--ink); }
+  @media (hover: hover) and (pointer: fine) { .again .dl:hover { background: var(--hover); } }
+  /* night: the same sheet with the lamp off */
+  :global(html[data-night="on"]) .sheet { --ink: #e2ead3; --paper: #182114; --line: rgb(226 234 211 / 0.15); --hover: #f4f6ec; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.06), 0 50px 90px -40px rgb(0 0 0 / 0.8); }
+  :is(.see, .skills .in a, .again .dl):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  @media (max-width: 860px) {
+    .part { grid-template-columns: minmax(0, 1fr); }
+    .part > :not(h2) { grid-column: 1; }
+    .job, .school { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .groups { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

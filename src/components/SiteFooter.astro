@@ -43,40 +43,8 @@ const year = new Date().getFullYear();
 </footer>
 
 <script>
-  import { play } from "@/lib/sound";
-
-  function init() {
-    const btn = document.querySelector<HTMLButtonElement>("[data-copy-email]");
-    if (!btn || btn.dataset.bound) return;
-    btn.dataset.bound = "1";
-    const hint = btn.querySelector<HTMLElement>("[data-copy-hint]")!;
-    let timer = 0;
-    btn.addEventListener("click", async () => {
-      const email = btn.dataset.copyEmail!;
-      try {
-        await navigator.clipboard.writeText(email);
-        hint.textContent = "Copied";
-        btn.classList.add("copied");
-        play("copy");
-      } catch {
-        location.href = `mailto:${email}`; // no clipboard access: fall back to the mail app
-        return;
-      }
-      clearTimeout(timer);
-      timer = window.setTimeout(() => { hint.textContent = "Click to copy"; btn.classList.remove("copied"); }, 2200);
-    });
-    // the intro only runs on a fresh load of Home, so this one skips the page transition and reloads
-    document.querySelector<HTMLAnchorElement>("[data-replay-intro]")?.addEventListener("click", (e) => {
-      e.preventDefault();
-      try { sessionStorage.removeItem("bk-entered"); } catch { /* private mode */ }
-      location.href = "/?intro";
-    });
-    document.querySelector<HTMLAnchorElement>("[data-to-top]")?.addEventListener("click", (e) => {
-      e.preventDefault();
-      scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-    });
-  }
-  document.addEventListener("astro:page-load", init);
+  import { bindSignOff } from "@/lib/sign-off";
+  document.addEventListener("astro:page-load", bindSignOff);
 </script>
 
 <style>

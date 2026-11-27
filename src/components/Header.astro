@@ -7,6 +7,7 @@
 // middle with the main pages, sound and Menu. Scrolling past the hero lifts it away and the corners take over.
 // Phones keep the corners throughout (no room for the capsule beside the name).
 import { MENU } from "@/lib/worlds";
+import SunMoon from "@/components/SunMoon.astro";
 const count = String(MENU.length).padStart(2, "0");
 ---
 <header class="hdr" transition:persist="site-header">
@@ -17,20 +18,28 @@ const count = String(MENU.length).padStart(2, "0");
   <button type="button" class="menu-btn" data-menu-button aria-expanded="false" aria-controls="site-menu">
     <span data-menu-label>Menu</span><sup aria-hidden="true">({count})</sup>
   </button>
-  <button type="button" class="snd" data-sound-toggle aria-pressed="false">
-    <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-sound-label>Sound off</span>
-  </button>
+  <div class="bl">
+    <button type="button" class="snd" data-sound-toggle aria-pressed="false">
+      <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-sound-label>Sound off</span>
+    </button>
+    <!-- Day / Night (step 9.2): a sun that turns into a crescent moon (SunMoon.astro) -->
+    <button type="button" class="nite" data-night-toggle aria-pressed="false">
+      <span class="orb"><SunMoon id="corner" /></span><span data-night-label>Day</span>
+    </button>
+  </div>
   <p class="where" data-where aria-hidden="true" hidden><span data-where-n></span><b data-where-name></b></p>
   <nav class="island" aria-label="Main pages">
     {[["/work", "Work"], ["/about", "About"], ["/bk-web-studios", "Studio"], ["/contact", "Contact"]].map(([href, label]) => <a href={href} data-island-link>{label}</a>)}
     <span class="ind" aria-hidden="true" data-island-ind></span>
     <button type="button" class="i-snd" data-sound-alt aria-pressed="false" aria-label="Sound"><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
+    <button type="button" class="i-snd i-nite" data-night-alt aria-pressed="false" aria-label="Night mode"><span class="orb"><SunMoon id="island" /></span></button>
     <button type="button" class="i-menu" data-menu-alt aria-controls="site-menu">Menu</button>
   </nav>
 </header>
 
 <script>
   import { isSoundOn, setSound, onSoundChange, play } from "@/lib/sound";
+  import { isNight, setNight, syncThemeColor } from "@/lib/night";
 
   const hdr = document.querySelector<HTMLElement>(".hdr")!;
   const btn = document.querySelector<HTMLButtonElement>("[data-sound-toggle]")!;
@@ -51,6 +60,23 @@ const count = String(MENU.length).padStart(2, "0");
   };
   btn.addEventListener("click", toggleSound);
   alt.addEventListener("click", toggleSound);
+  // Day / Night: both buttons (corner and island) show the same state; the new light spreads from the one you press
+  const nights = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-night-toggle], [data-night-alt]"));
+  const nightLabel = document.querySelector<HTMLElement>("[data-night-label]")!;
+  const renderNight = () => {
+    const n = isNight();
+    nights.forEach((b) => b.setAttribute("aria-pressed", String(n)));
+    nightLabel.textContent = n ? "Night" : "Day";
+    syncThemeColor();
+  };
+  renderNight();
+  document.addEventListener("bk:night", renderNight);
+  document.addEventListener("astro:page-load", renderNight);
+  nights.forEach((b) => b.addEventListener("click", () => {
+    const r = (b.querySelector(".orb") ?? b).getBoundingClientRect();
+    setNight(!isNight(), { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    play("toggle");
+  }));
   // the island's Menu opens the same menu (the corner button is the one the menu manages, and it shows CLOSE)
   document.querySelector<HTMLButtonElement>("[data-menu-alt]")!.addEventListener("click", () => document.querySelector<HTMLButtonElement>("[data-menu-button]")?.click());
   // the page you're on is underlined in the island
@@ -135,8 +161,8 @@ const count = String(MENU.length).padStart(2, "0");
   .hdr.scrolled.at-end::after { opacity: 0; }
   :global(html.menu-open) .hdr::before, :global(html.menu-open) .hdr::after { opacity: 0; }
   .logo, .menu-btn { top: calc(env(safe-area-inset-top, 0px) + var(--edge-y)); }
-  .snd, .where { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge-y)); }
-  .logo, .snd { left: max(var(--edge-x), env(safe-area-inset-left, 0px)); }
+  .bl, .where { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge-y)); }
+  .logo, .bl { left: max(var(--edge-x), env(safe-area-inset-left, 0px)); }
   .menu-btn, .where { right: max(var(--edge-x), env(safe-area-inset-right, 0px)); }
 
   /* top left: the name */
@@ -144,7 +170,7 @@ const count = String(MENU.length).padStart(2, "0");
   .name { font: 900 22px/0.95 var(--font-display); font-stretch: 122%; text-transform: uppercase; letter-spacing: -0.02em; }
   .sub { font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
 
-  /* top right: MENU (08) */
+  /* top right: MENU with the page count */
   .menu-btn {
     display: flex; gap: 4px; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit;
     font: 900 22px/1 var(--font-display); font-stretch: 122%; text-transform: uppercase; letter-spacing: -0.02em;
@@ -185,14 +211,15 @@ const count = String(MENU.length).padStart(2, "0");
     background: rgb(255 255 255 / 0.18); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35); text-shadow: 0 1px 8px rgb(0 0 0 / 0.45);
   }
   @media (hover: hover) and (pointer: fine) { .i-menu:hover { background: rgb(255 255 255 / 0.26); } }
+  .i-nite .orb { width: 17px; height: 17px; }
   .island :focus-visible { outline-offset: 2px; }
   /* scrolled past the hero (or the menu is open): the island lifts away and the corners take over */
   .hdr.scrolled .island, :global(html.menu-open) .island { opacity: 0; transform: translate(-50%, -14px) scale(0.96); pointer-events: none; visibility: hidden; transition: opacity 260ms var(--ease-out), transform 360ms var(--ease-out), visibility 0s 360ms; }
-  .hdr:not(.scrolled) > :is(.menu-btn, .snd) { opacity: 0; pointer-events: none; }
+  .hdr:not(.scrolled) > :is(.menu-btn, .bl) { opacity: 0; pointer-events: none; }
   :global(html.menu-open) .hdr > .menu-btn { opacity: 1; pointer-events: auto; }
   @media (max-width: 900px) {
     .island { display: none; }
-    .hdr:not(.scrolled) > :is(.menu-btn, .snd) { opacity: 1; pointer-events: auto; }
+    .hdr:not(.scrolled) > :is(.menu-btn, .bl) { opacity: 1; pointer-events: auto; }
   }
 
   /* bottom left: sound, a waveform that moves while it's on */
@@ -207,13 +234,21 @@ const count = String(MENU.length).padStart(2, "0");
   .snd[aria-pressed="true"] .wave i:nth-child(3) { animation-delay: -0.6s; }
   .snd[aria-pressed="true"] .wave i:nth-child(4) { animation-delay: -0.15s; }
   @keyframes hdr-wave { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+  .bl { display: flex; align-items: center; gap: 22px; }
+
+  /* Day / Night, beside sound: a disc that a shadow slides across into a crescent */
+  .nite {
+    display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit;
+    font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; -webkit-tap-highlight-color: transparent;
+  }
+  .orb { width: 14px; height: 14px; flex: none; display: block; }
 
   /* bottom right: where you are */
   .where { text-align: right; font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
   .where b { display: block; margin-top: 2px; font: 900 17px var(--font-display); font-stretch: 122%; letter-spacing: -0.02em; }
 
-  .hdr > :is(.snd, .where) { transition: opacity var(--t-ui) var(--ease-out); }
-  .hdr.at-end > :is(.snd, .where) { opacity: 0; pointer-events: none; }
+  .hdr > :is(.bl, .where) { transition: opacity var(--t-ui) var(--ease-out); }
+  .hdr.at-end > :is(.bl, .where) { opacity: 0; pointer-events: none; }
 
   :focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
 
@@ -222,11 +257,11 @@ const count = String(MENU.length).padStart(2, "0");
   :global(html.menu-open) .menu-btn { color: var(--world-bg); text-shadow: none; }
   .menu-btn { transition: color var(--t-panel) var(--ease-drawer), opacity 360ms ease; }
   :global(html.menu-open) .hdr > .where { opacity: 0; }
-  :global(html.menu-open) .hdr > .snd { filter: blur(6px); opacity: 0.45; }
-  .snd { transition: filter var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out); }
+  :global(html.menu-open) .hdr > .bl { filter: blur(6px); opacity: 0.45; }
+  .bl { transition: filter var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out); }
   @media (max-width: 640px) {
     :global(html.menu-open) .hdr { color: var(--world-bg); text-shadow: none; }
-    :global(html.menu-open) .hdr > :is(.snd, .sub) { opacity: 0; }
+    :global(html.menu-open) .hdr > :is(.bl, .sub) { opacity: 0; }
   }
   .hdr { transition: color var(--t-panel) var(--ease-drawer); }
   /* over a page's darkened hero photo the header is light, whatever the world's own text colour (About, Education…) */

@@ -119,6 +119,10 @@ const n = (i: number) => String(i + 1).padStart(2, "0");
     max-width: 1180px; margin: 0 auto; display: grid; gap: clamp(28px, 4vw, 48px);
     padding: clamp(40px, 8vh, 90px) max(24px, env(safe-area-inset-right, 0px)) clamp(72px, 14vh, 140px) max(24px, env(safe-area-inset-left, 0px));
   }
+  /* night (step 9.2): bone on BKWS night; the chosen tab keeps dark text on ember, the phone stays black */
+  :global(html[data-night="on"]) .heroes { --ink: #f4efe8; --dune: #000; --bone: #1d1a18; --linen: #2a2622; --teal: #7fb3c2; }
+  :global(html[data-night="on"]) .heroes .tabs button[aria-selected="true"] { color: #1d1a18; }
+  :global(html[data-night="on"]) .heroes .phone { background: #000; box-shadow: 0 0 0 1.5px #3a3532, 6px 6px 0 #000; }
   .head { display: grid; gap: 14px; max-width: 62ch; }
   .kick { margin: 0; font: 400 12px var(--pixel); letter-spacing: 0.06em; text-transform: uppercase; color: var(--teal); }
   h2 { margin: 0; font: 400 clamp(30px, 4.4vw, 56px)/1 var(--pixel); letter-spacing: -0.01em; text-wrap: balance; }

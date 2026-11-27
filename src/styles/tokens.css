@@ -44,6 +44,20 @@
 [data-world="midnight"]  { --world-bg: #070612; --world-fg: #ecebff; --world-accent: #ff4a3d; }  /* Chapter 07, 404 */
 [data-world="bkws"]      { --world-bg: #ede7dd; --world-fg: #1d1a18; --world-accent: #d57d3b; }  /* BK Web Studios: its own brand */
 
+/* Night (step 9.2, the menu's Day / Night switch): each world at its nighttime. Same hue, the lights down.
+   Research and Chapter 07 are night already. BK Web Studios goes to its own brand's night colour. */
+[data-night="on"][data-world="morning"]   { --world-bg: #0f2418; --world-fg: #e3efdc; --world-accent: #e9cf74; }
+[data-night="on"][data-world="noon"]      { --world-bg: #0a1a44; --world-fg: #eaf0ff; --world-accent: #eaf0ff; }
+[data-night="on"][data-world="afternoon"] { --world-bg: #172012; --world-fg: #e2ead3; --world-accent: #e2ead3; }
+[data-night="on"][data-world="golden"]    { --world-bg: #26160a; --world-fg: #f6e6cc; --world-accent: #f2b25a; }
+[data-night="on"][data-world="dusk"]      { --world-bg: #1c1440; --world-fg: #f0ecff; --world-accent: #ff8a6b; }
+[data-night="on"][data-world="sunset"]    { --world-bg: #2a0f12; --world-fg: #ffe9e4; --world-accent: #ffb3a6; }
+[data-night="on"][data-world="bkws"]      { --world-bg: #0f0d0c; --world-fg: #f4efe8; --world-accent: #e8955a; }
+[data-night="on"] { color-scheme: dark; }
+
+/* the switch's reveal: only the circle (src/lib/night.ts), no page-wide cross-fade */
+html.night-flip::view-transition-old(root), html.night-flip::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --t-reveal: 200ms;
