@@ -444,7 +444,11 @@ const TOPICS = [
     }
     function placeLatin(t: number) {
       if (!buruk || !yimesgen) return;
-      const narrow = W / H < 1, s = narrow ? 0.5 : Math.min(1, (W / H) / 1.6), y = narrow ? -0.2 : -0.6;
+      const narrow = W / H < 1, y = narrow ? -0.2 : -0.6;
+      // never wider than ~88% of the screen at this depth, so tall, narrow phones don't cut the name off at the edges
+      const visW = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.position.z + 1.6) * camera.aspect;
+      const fit = (visW * 0.88) / (buruk.userData.w + 0.35 + yimesgen.userData.w);
+      const s = Math.min(narrow ? 0.5 : Math.min(1, (W / H) / 1.6), fit);
       buruk.scale.setScalar(s); yimesgen.scale.setScalar(s);
       const bw = buruk.userData.w * s, yw = yimesgen.userData.w * s, gap = 0.35 * s, total = bw + gap + yw;
       const bx1 = -total / 2 + bw / 2, yx1 = total / 2 - yw / 2;
