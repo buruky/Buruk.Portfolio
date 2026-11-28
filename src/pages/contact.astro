@@ -6,9 +6,9 @@
 // this page is the sign-off. Copy: content/site.json → copy.contactPage.
 import WorldPage from "@/layouts/WorldPage.astro";
 import site from "@/lib/site";
-import sunset from "@content/media/images/contact-sunset.jpg"; // PattayaPatrol, CC BY-SA 4.0 (CREDITS.md)
+import sunset from "@content/media/images/contact-dusk.png"; // the owner's pick, 2026-11-27: city lights at dusk (source: see CREDITS.md)
 // where the photo's horizon and sun are, as fractions of its height and width: the drawn horizon and the glass follow them
-const PHOTO = { horizon: 0.47, sunX: 0.522, aspect: sunset.width / sunset.height };
+const PHOTO = { horizon: 0.522, sunX: 0.5, aspect: sunset.width / sunset.height }; // no sun in this one: the glow's middle
 import resumeUrl from "@content/media/resume.pdf?url";
 
 const { email, linkedin, github } = site.profile;
@@ -69,7 +69,28 @@ const year = new Date().getFullYear();
     const y = (0.5 + (Number(el.dataset.photoHorizon) - 0.5) * ry) * H, x = (0.5 + (Number(el.dataset.photoSun) - 0.5) * rx) * W;
     stage.style.setProperty("--h", `${y.toFixed(1)}px`); stage.style.setProperty("--sx", `${x.toFixed(1)}px`);
   }
-  document.addEventListener("astro:page-load", () => { bindSignOff(); placeHorizon(); });
+  // Stop partway through the sunset (on the way down) for a moment (0.4 s) and it finishes for you: the glass sets and
+  // "Thanks for coming." appears. Never after scrolling up, so it can't drag you back down.
+  function autoFinish() {
+    const el = document.querySelector<HTMLElement>("[data-glass-set]");
+    if (!el) return;
+    const ac = new AbortController();
+    document.addEventListener("astro:before-swap", () => ac.abort(), { once: true });
+    let lastY = scrollY, down = false, idle = 0;
+    addEventListener("scroll", () => {
+      down = scrollY > lastY; lastY = scrollY;
+      clearTimeout(idle);
+      idle = window.setTimeout(() => {
+        const r = el.getBoundingClientRect(), span = el.offsetHeight - innerHeight;
+        const p = -r.top / Math.max(1, span); // same progress the glass reads (GlassHero measureSet)
+        if (!down || p <= 0.02 || p >= 0.98) return;
+        const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        scrollTo({ top: scrollY - r.top + span, behavior: reduce ? "auto" : "smooth" }); // a wheel or touch interrupts it
+      }, 400);
+    }, { passive: true, signal: ac.signal });
+    ac.signal.addEventListener("abort", () => clearTimeout(idle));
+  }
+  document.addEventListener("astro:page-load", () => { bindSignOff(); placeHorizon(); if (location.pathname.startsWith("/contact")) autoFinish(); });
   addEventListener("resize", placeHorizon);
 </script>
 
@@ -102,7 +123,7 @@ const year = new Date().getFullYear();
   /* what I'm open to */
   .open {
     max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 16px clamp(24px, 5vw, 72px); color: #fff;
-    padding: clamp(64px, 12vh, 130px) max(24px, env(safe-area-inset-right, 0px)) clamp(64px, 12vh, 130px) max(24px, env(safe-area-inset-left, 0px));
+    padding: clamp(64px, 12vh, 130px) max(24px, env(safe-area-inset-right, 0px)) clamp(24px, 4vh, 48px) max(24px, env(safe-area-inset-left, 0px));
   }
   .open h2 { margin: 0; font: 500 12px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; padding-top: 12px; }
   .open ul { list-style: none; margin: 0; padding: 0; display: grid; }
@@ -110,7 +131,7 @@ const year = new Date().getFullYear();
 
   /* the ending: a pinned sunset. The glass (on the canvas behind) sinks under the horizon; the water drawn here,
      frosted and tinted, covers it as it goes. --p (0 → 1) is the scroll progress, written by GlassHero. */
-  .sunset { position: relative; height: 240svh; color: #fff; }
+  .sunset { position: relative; height: 170svh; /* 70svh of pinned scroll: the glass sets, then the goodbye (was 240svh: too long a wait) */ color: #fff; }
   .stage { position: sticky; top: 0; height: 100svh; overflow: hidden; --h: 47%; --sx: 50%; } /* set by the script to the photo's own waterline and sun */
   .horizon { position: absolute; left: 0; right: 0; top: var(--h); height: 2px; translate: 0 -1px;
     background: linear-gradient(90deg, transparent, rgb(255 226 196 / 0.95) 30%, rgb(255 240 220) 50%, rgb(255 226 196 / 0.95) 70%, transparent); }
@@ -127,7 +148,8 @@ const year = new Date().getFullYear();
     background: radial-gradient(closest-side, rgb(255 196 140 / 0.6), rgb(255 140 100 / 0.15) 60%, transparent); opacity: calc(0.3 + var(--p, 1) * 0.7); }
 
   .bye {
-    position: absolute; left: 0; right: 0; top: calc(var(--h) + 7%); display: grid; justify-items: center; gap: 14px; text-align: center;
+    /* in the sky above the waterline (it sat out in the water before, which read as too low) */
+    position: absolute; left: 0; right: 0; bottom: calc(100% - var(--h) + clamp(48px, 12vh, 140px)); display: grid; justify-items: center; gap: 14px; text-align: center;
     padding: 0 max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px));
     opacity: clamp(0, calc((var(--p, 1) - 0.8) * 6), 1);
   }

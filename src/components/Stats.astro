@@ -1,7 +1,7 @@
 ---
 // "By the numbers" (after stanzza.design's About section): three tiles, one lit at a time. The first is lit when the
 // section comes into view; hovering (or tapping, or tabbing to) another lights it instead, and it stays lit after the
-// pointer leaves. The lit tile fills with its photo (revealed from the bottom). All three numbers count up together
+// pointer leaves. Every tile shows its photo in grey; the lit one turns to full colour. All three numbers count up together
 // when the section first comes into view.
 // Without JS it's a plain grid with every photo showing. Reduced motion: no count-up, the photo just appears.
 import { Image } from "astro:assets";
@@ -112,22 +112,23 @@ const STATS = [
     cursor: default; outline: none;
   }
   .tile:focus-visible { box-shadow: 0 0 0 2px var(--world-fg); }
-  .label { font: 600 clamp(15px, 1.3vw, 19px) var(--font-body); opacity: 0.55; transition: opacity 500ms var(--ease-out); }
+  .label { font: 600 clamp(15px, 1.3vw, 19px) var(--font-body); opacity: 0.8; transition: opacity 500ms var(--ease-out); }
   .note { margin-top: 4px; font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0; transition: opacity 500ms var(--ease-out); }
   .num {
     margin-top: auto; font-family: var(--font-display); font-weight: 900; font-stretch: 112%;
     font-size: clamp(72px, 11vw, 190px); line-height: 0.8; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
-    opacity: 0.5; transition: opacity 500ms var(--ease-out); /* the headline now, so never too faint */
+    opacity: 0.8; transition: opacity 500ms var(--ease-out); /* the headline now, so never too faint */
   }
 
   /* The photo: hidden below the tile, rises into place when the tile is active, darkened so the text stays readable */
-  .photo { position: absolute; inset: 0; z-index: -1; clip-path: inset(100% 0 0 0); transition: clip-path 800ms var(--ease-in-out); }
+  /* every tile shows its photo, so none reads as an empty box: unlit ones in quiet grey, the lit one in full colour */
+  .photo { position: absolute; inset: 0; z-index: -1; opacity: 0.38; filter: grayscale(1); transition: opacity 700ms var(--ease-out), filter 700ms var(--ease-out); }
   .photo :global(img) { width: 100%; height: 100%; object-fit: cover; scale: 1.12; transition: scale 1200ms var(--ease-out); }
   .photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(10 24 14 / 0.55), rgb(10 24 14 / 0.15) 40%, rgb(10 24 14 / 0.7)); }
 
   .tile.on, .stats:not(.interactive) .tile { box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.6); }
   .tile.on { translate: 0 -6px; } /* the lit tile lifts slightly */
-  .tile.on .photo, .stats:not(.interactive) .photo { clip-path: inset(0 0 0 0); }
+  .tile.on .photo, .stats:not(.interactive) .photo { opacity: 1; filter: none; }
   .tile.on .photo :global(img), .stats:not(.interactive) .photo :global(img) { scale: 1; }
   .tile.on :is(.label, .note, .num), .stats:not(.interactive) .tile :is(.label, .note, .num) { opacity: 1; }
   .tile.on .num, .stats:not(.interactive) .num { text-shadow: 0 0.06em 0.3em rgb(0 0 0 / 0.35); }

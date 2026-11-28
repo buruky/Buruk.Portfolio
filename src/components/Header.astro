@@ -8,6 +8,8 @@
 // Phones keep the corners throughout (no room for the capsule beside the name).
 import { MENU } from "@/lib/worlds";
 import SunMoon from "@/components/SunMoon.astro";
+import site from "@/lib/site";
+const { linkedin, github } = site.profile;
 const count = String(MENU.length).padStart(2, "0");
 ---
 <header class="hdr" transition:persist="site-header">
@@ -18,6 +20,17 @@ const count = String(MENU.length).padStart(2, "0");
   <button type="button" class="menu-btn" data-menu-button aria-expanded="false" aria-controls="site-menu">
     <span data-menu-label>Menu</span><sup aria-hidden="true">({count})</sup>
   </button>
+  <!-- top right of the hero: GitHub and LinkedIn; they leave as you scroll (the menu has them from then on) -->
+  <p class="social">
+    <a href={github} target="_blank" rel="noopener" aria-label="GitHub (opens in a new tab)">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span class="s-label">GitHub</span>
+    </a>
+    <a href={linkedin} target="_blank" rel="noopener" aria-label="LinkedIn (opens in a new tab)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+      <span class="s-label">LinkedIn</span>
+    </a>
+  </p>
   <div class="bl">
     <button type="button" class="snd" data-sound-toggle aria-pressed="false">
       <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-sound-label>Sound off</span>
@@ -135,10 +148,31 @@ const count = String(MENU.length).padStart(2, "0");
     stop = () => { removeEventListener("scroll", onScrollWhere); removeEventListener("resize", onScrollWhere); cancelAnimationFrame(raf); endIo.disconnect(); hdr.classList.remove("at-end"); };
   }
   document.addEventListener("astro:page-load", watch);
-  // past the first screen, soft fades at the top and bottom edges keep the corners readable over the page
-  const onScroll = () => hdr.classList.toggle("scrolled", scrollY > innerHeight * 0.6);
-  addEventListener("scroll", onScroll, { passive: true });
-  document.addEventListener("astro:page-load", onScroll);
+  // Past the first screen the island hands over to the corners. On desktop it's one move: the island drifts toward
+  // the top right as it fades, and the corner MENU flies out of the island's Menu pill into its place (and back into
+  // the pill when you return to the top).
+  const island = hdr.querySelector<HTMLElement>(".island")!, pill = hdr.querySelector<HTMLElement>(".i-menu")!;
+  const cornerMenu = hdr.querySelector<HTMLElement>("[data-menu-button]")!;
+  const wide = matchMedia("(min-width: 901px)"), still = matchMedia("(prefers-reduced-motion: reduce)");
+  let scrolled = hdr.classList.contains("scrolled");
+  function sync(fly: boolean) {
+    const now = scrollY > innerHeight * 0.6;
+    if (now === scrolled) return;
+    scrolled = now;
+    if (fly && wide.matches && !still.matches && !html.classList.contains("menu-open")) {
+      // from layout, not the screen: the island may be mid-flight (transformed) when this runs
+      const islandLeft = innerWidth / 2 - island.offsetWidth / 2;
+      const px = islandLeft + pill.offsetLeft + pill.offsetWidth / 2, py = island.offsetTop + pill.offsetTop + pill.offsetHeight / 2;
+      const b = cornerMenu.getBoundingClientRect(), bx = b.left + b.width / 2, by = b.top + b.height / 2;
+      island.style.setProperty("--fly-x", `${(bx - innerWidth / 2).toFixed(0)}px`);
+      const inPill = { transform: `translate(${(px - bx).toFixed(0)}px, ${(py - by).toFixed(0)}px) scale(0.72)`, opacity: 0 }, home = { transform: "none", opacity: 1 };
+      cornerMenu.animate(now ? [inPill, home] : [home, inPill], { duration: 560, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
+    }
+    hdr.classList.toggle("scrolled", now);
+  }
+  const html = document.documentElement;
+  addEventListener("scroll", () => sync(true), { passive: true });
+  document.addEventListener("astro:page-load", () => sync(false)); // a new page: just set it, no flight
 </script>
 
 <style>
@@ -150,16 +184,7 @@ const count = String(MENU.length).padStart(2, "0");
     text-shadow: 0 1px 14px rgb(0 0 0 / 0.35); /* the corners sit on photos and pages, so they carry a little shade */
   }
   .hdr > * { position: absolute; pointer-events: auto; margin: 0; }
-  /* No bar: just a soft fade in the page's own colour behind the top and bottom corners, once you've scrolled */
-  .hdr::before, .hdr::after {
-    content: ""; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none;
-    opacity: 0; transition: opacity var(--t-ui) var(--ease-out);
-  }
-  .hdr::before { top: 0; height: calc(env(safe-area-inset-top, 0px) + 150px); background: linear-gradient(to bottom, color-mix(in srgb, var(--world-bg) 94%, transparent) 0, color-mix(in srgb, var(--world-bg) 80%, transparent) 40%, transparent); }
-  .hdr::after { bottom: 0; height: calc(env(safe-area-inset-bottom, 0px) + 100px); background: linear-gradient(to top, color-mix(in srgb, var(--world-bg) 78%, transparent), transparent); }
-  .hdr.scrolled::before, .hdr.scrolled::after { opacity: 1; }
-  .hdr.scrolled.at-end::after { opacity: 0; }
-  :global(html.menu-open) .hdr::before, :global(html.menu-open) .hdr::after { opacity: 0; }
+  /* No bar and no fade: the corners float clear over the page (the owner wants it clear, 2026-11-27) */
   .logo, .menu-btn { top: calc(env(safe-area-inset-top, 0px) + var(--edge-y)); }
   .bl, .where { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge-y)); }
   .logo, .bl { left: max(var(--edge-x), env(safe-area-inset-left, 0px)); }
@@ -227,14 +252,28 @@ const count = String(MENU.length).padStart(2, "0");
   @media (hover: hover) and (pointer: fine) { .i-menu:hover { background: rgb(255 255 255 / 0.26); } }
   .i-nite .orb { width: 17px; height: 17px; }
   .island :focus-visible { outline-offset: 2px; }
-  /* scrolled past the hero (or the menu is open): the island lifts away and the corners take over */
-  .hdr.scrolled .island, :global(html.menu-open) .island { opacity: 0; transform: translate(-50%, -14px) scale(0.96); pointer-events: none; visibility: hidden; transition: opacity 260ms var(--ease-out), transform 360ms var(--ease-out), visibility 0s 360ms; }
+  /* scrolled past the hero (or the menu is open): the island shrinks off toward the top right (--fly-x, set by the
+     script) while the corner MENU flies out of its Menu pill */
+  .hdr.scrolled .island, :global(html.menu-open) .island { opacity: 0; transform: translate(calc(-50% + var(--fly-x, 0px)), -6px) scale(0.6); pointer-events: none; visibility: hidden; transition: opacity 260ms var(--ease-out), transform 360ms var(--ease-out), visibility 0s 360ms; }
   .hdr:not(.scrolled) > :is(.menu-btn, .bl) { opacity: 0; pointer-events: none; }
   :global(html.menu-open) .hdr > .menu-btn { opacity: 1; pointer-events: auto; }
   @media (max-width: 900px) {
     .island { display: none; }
     .hdr:not(.scrolled) > :is(.menu-btn, .bl) { opacity: 1; pointer-events: auto; }
   }
+
+  /* top right of the hero: GitHub and LinkedIn, in the corners' mono; gone once you scroll (or open the menu) */
+  .social { top: calc(env(safe-area-inset-top, 0px) + var(--edge-y)); right: max(var(--edge-x), env(safe-area-inset-right, 0px)); display: flex; gap: 6px; transition: opacity 360ms var(--ease-out), transform 460ms var(--ease-out); }
+  .social a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 10px; color: inherit; text-decoration: none; font: 500 10.5px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
+  .social svg { width: 16px; height: 16px; flex: none; filter: drop-shadow(0 1px 6px rgb(0 0 0 / 0.35)); }
+  .social .s-label { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; padding-bottom: 2px; transition: background-size var(--t-ui) var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) { .social a:hover .s-label { background-size: 100% 1px; } }
+  .hdr.scrolled .social, :global(html.menu-open) .social { opacity: 0; transform: translateY(-14px); pointer-events: none; visibility: hidden; transition: opacity 260ms var(--ease-out), transform 360ms var(--ease-out), visibility 0s 360ms; }
+  /* the island sits in the middle up to here; below 1100px there isn't room for the words, just the marks */
+  @media (max-width: 1100px) { .social .s-label { display: none; } .social a { padding: 0 8px; } }
+  /* phones: MENU holds the top right corner, so the marks sit just left of it.
+     shortcut: fixed offset for the width of "MENU (06)" at 18px; measure it if that label changes */
+  @media (max-width: 900px) { .social { right: calc(max(var(--edge-x), env(safe-area-inset-right, 0px)) + 104px); gap: 0; } }
 
   /* bottom left: sound, a waveform that moves while it's on */
   .snd {
@@ -270,7 +309,7 @@ const count = String(MENU.length).padStart(2, "0");
      everything, so the whole header flips. The bottom-right corner steps away. */
   :global(html.menu-open) .menu-btn { color: #fbf8f2; text-shadow: none; }
   .menu-btn { transition: color var(--t-panel) var(--ease-drawer), opacity 360ms ease; }
-  :global(html.menu-open) .hdr > .where { opacity: 0; }
+  :global(html.menu-open) .hdr > .where { opacity: 0; pointer-events: none; } /* invisible, but it sat over the menu's GitHub link */
   :global(html.menu-open) .hdr > .bl { filter: blur(6px); opacity: 0.45; }
   .bl { transition: filter var(--t-ui) var(--ease-out), opacity var(--t-ui) var(--ease-out); }
   @media (max-width: 640px) {

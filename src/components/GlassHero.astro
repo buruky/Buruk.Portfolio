@@ -342,6 +342,7 @@ const TOPICS = [
     document.addEventListener("bk:night", (e) => { nightT = (e as CustomEvent).detail.on ? 1 : 0; }, on);
     const setBg = (t: number) => { bgLevel = t; };
     let imgAspect = 1.5;
+    let photoReady = false; // the page transition waits for this, so the cover never opens onto a black scene
     {
       const img = new Image();
       img.onload = () => {
@@ -362,7 +363,9 @@ const TOPICS = [
         if (src === img) step(w); // already the right size: still copy it once, so there is a canvas to draw from
         const tex = new THREE.CanvasTexture(big); tex.colorSpace = THREE.SRGBColorSpace;
         bgMat.uniforms.tPhoto.value = tex; imgAspect = big.width / big.height; fitBackground();
+        r3.initTexture(tex); photoReady = true; // upload it now, under the cover, not mid-transition
       };
+      img.onerror = () => { photoReady = true; };
       img.src = root.dataset.photo ?? "";
     }
 
@@ -889,8 +892,8 @@ const TOPICS = [
       name.rotation.set(0, 0, 0); void tilt; // the scene holds still under the pointer; only the light follows it
 
       r3.render(scene, camera);
-      // the first frame compiles the shaders (a long frame): tell the page transition it's safe to drain the water now
-      if (!html.dataset.glassReady) requestAnimationFrame(() => { html.dataset.glassReady = "1"; document.dispatchEvent(new CustomEvent("bk:glass-ready")); });
+      // the first frame compiles the shaders (a long frame), and the photo must be in: then it's safe to drain the water
+      if (!html.dataset.glassReady && photoReady) requestAnimationFrame(() => { html.dataset.glassReady = "1"; document.dispatchEvent(new CustomEvent("bk:glass-ready")); });
     });
 
     ac.signal.addEventListener("abort", () => {

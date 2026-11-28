@@ -20,3 +20,22 @@ img, svg, video, canvas { display: block; max-width: 100%; }
 .ln { display: block; overflow: hidden; padding-bottom: 0.04em; }
 .ln > span { display: inline-block; }
 html { -webkit-tap-highlight-color: transparent; }
+
+/* Night: the headlines and big numbers turn to dark ink in the world's own night colour, each lit by a soft glow of
+   its light colour (moonlight); small text stays light, since a glow turns small words to mush. The page heroes (h1,
+   over their photos) stay light. Chosen 2026-11-27 after the Home trial. */
+html[data-night="on"]:not([data-world="bkws"]) main :is(h2, h3, .giant, .num, .stat b, .row .name, .open li):not( /* BK Web Studios keeps its own type */
+  .open h2, .pj .body h2,                    /* Contact, project pages: 12px mono labels */
+  [data-world="afternoon"] main h3,          /* Resume: job and school titles are body-size text */
+  [data-world="night"] main h3               /* Research: its h3s are all mono labels */
+) {
+  color: color-mix(in srgb, var(--world-bg) 82%, #000);
+  text-shadow:
+    0 0 1px color-mix(in srgb, var(--world-fg) 90%, transparent),
+    0 0 12px color-mix(in srgb, var(--world-fg) 70%, transparent),
+    0 0 30px color-mix(in srgb, var(--world-fg) 40%, transparent) !important;
+}
+/* Narrower screens: Home's "Selected work" heading shrinks to a 12px label */
+@media (max-width: 1000px) { html[data-night="on"] .featured h2 { color: inherit; text-shadow: none !important; } }
+/* the line reveal clips its line box; give the glow room to spill out sideways (and a little up and down) */
+html[data-night="on"] .ln { padding: 0.12em 40px 0.16em; margin: -0.12em -40px -0.12em; }

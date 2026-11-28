@@ -1,16 +1,16 @@
 ---
-// The menu, rebuilt 2026-11-27 as a map of the worlds. Each row is a page with its time of day; pointing at one (or
-// focusing it) turns the whole panel into that world: its own photo, blurred, under its time-of-day colour, just as
-// the page itself looks. The name stretches wider (Anybody's width axis, the site's "stretch"). At the bottom: the
+// The menu, rebuilt 2026-11-27 as a map of the worlds. Each row is a page with its time of day. At rest the panel is
+// foggy glass over the page (the owner's call, 2026-11-27); pointing at a row (or focusing it) turns the whole panel
+// into that world: its own photo, blurred, under its time-of-day colour, just as the page itself looks. The name stretches wider (Anybody's width axis, the site's "stretch"). At the bottom: the
 // email to copy, LinkedIn and GitHub. Persists across pages. Phones: the panel covers the screen; no hover, so it
-// rests on the page you're on.
+// stays foggy.
 import { getImage } from "astro:assets";
 import type { ImageMetadata } from "astro";
 import { MENU, worldFor, WORLD_BG, type World } from "@/lib/worlds";
 import site from "@/lib/site";
 import work from "@content/media/images/city-bg.jpg";
 import about from "@content/media/images/about/asmara-sunset.jpg";
-import contact from "@content/media/images/contact-sunset.jpg";
+import contact from "@content/media/images/contact-dusk.png";
 import research from "@content/media/images/research-moon.jpg";
 import resume from "@content/media/images/about/uw-tacoma-campus.jpg";
 
@@ -79,11 +79,9 @@ const { email, linkedin, github } = site.profile;
   function focusables() { return Array.from(menu.querySelectorAll<HTMLElement>("a, button")); }
   function pageLinks() { return Array.from(menu.querySelectorAll<HTMLAnchorElement>("[data-world-link]")); }
 
-  // the world showing behind the panel: the one pointed at, else the page you're on
-  let here = "";
+  // the world showing behind the panel: only the one pointed at; otherwise the panel stays foggy glass
   function show(href: string | null) {
-    const target = href ?? here;
-    layers.forEach((l) => l.classList.toggle("on", l.dataset.worldLayer === target));
+    layers.forEach((l) => l.classList.toggle("on", !!href && l.dataset.worldLayer === href));
     pageLinks().forEach((a) => a.classList.toggle("lit", !!href && a.dataset.worldLink === href));
   }
   pageLinks().forEach((a) => {
@@ -122,14 +120,13 @@ const { email, linkedin, github } = site.profile;
   // Close when a navigation starts (fired by the transition engine).
   document.addEventListener("bk:navigate", () => setOpen(false, { silent: true }));
 
-  // Mark the current page, and make it the world the panel rests on.
+  // Mark the current page.
   document.addEventListener("astro:page-load", () => {
     const path = location.pathname.replace(/\/+$/, "") || "/";
-    here = "";
     pageLinks().forEach((a) => {
       const url = new URL(a.href), target = url.pathname.replace(/\/+$/, "") || "/";
       const cur = !url.hash && (target === path || path.startsWith(target + "/"));
-      if (cur) { a.setAttribute("aria-current", "page"); here = a.dataset.worldLink!; } else a.removeAttribute("aria-current");
+      if (cur) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     show(null);
   });
@@ -139,7 +136,8 @@ const { email, linkedin, github } = site.profile;
   .menu {
     position: fixed; inset: 0 0 0 auto; width: min(640px, 100%); z-index: 80; overflow: hidden;
     display: grid; grid-template-rows: minmax(0, 1fr) auto; color: #fbf8f2;
-    background: #121214; /* under the worlds: Home, and anywhere without a photo */
+    /* at rest: fogged glass, the page blurred through it, a little dark so the light words read on any page */
+    background: rgb(14 14 16 / 0.4); -webkit-backdrop-filter: blur(28px) saturate(1.3); backdrop-filter: blur(28px) saturate(1.3);
     box-shadow: -40px 0 80px -40px rgb(0 0 0 / 0.6);
     transform: translateX(100%); visibility: hidden;
     transition: transform var(--t-panel) var(--ease-drawer), visibility 0s linear var(--t-panel);

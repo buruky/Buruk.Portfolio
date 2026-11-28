@@ -85,10 +85,12 @@
         { transform: "scaleX(1) scaleY(1)", filter: "brightness(1)" },
       ], { duration: 460, easing: EIO, fill: "forwards" });
     },
-    // Contact · sun iris: a frosted circle grows from the horizon
+    // Contact · sun iris: a frosted disc grows from the horizon. A real circle that scales (on the GPU), born at zero
+    // size: animating clip-path on a blurred pane flashed the whole pane for a frame or two before the clip took hold.
     sunset: (bg) => {
-      const d = pane("inset:0", bg);
-      return A(d, [{ clipPath: "circle(0% at 50% 100%)" }, { clipPath: "circle(150% at 50% 100%)" }], { duration: 640, easing: EIO, fill: "forwards" });
+      const R = Math.ceil(Math.hypot(innerWidth / 2, innerHeight) * 1.04); // reaches the far top corners from the bottom middle
+      const d = pane(`left:calc(50% - ${R}px);top:calc(100% - ${R}px);width:${2 * R}px;height:${2 * R}px;border-radius:50%;transform:scale(0)`, bg, "pane iris");
+      return A(d, [{ transform: "scale(0)" }, { transform: "scale(1)" }], { duration: 640, easing: EIO, fill: "forwards" });
     },
     // Research · pixel dissolve: frosted glass appears cell by cell, like stars coming out
     night: (bg) => {
@@ -153,7 +155,7 @@
       { transform: "scaleX(0) scaleY(.006)", filter: "brightness(3)" },
     ], { duration: 420, easing: EIO, fill: "forwards" }))),
     // Contact: the sun sets back into the horizon
-    sunset: () => Promise.all(all(".pane").map((d) => A(d, [{ clipPath: "circle(150% at 50% 100%)" }, { clipPath: "circle(0% at 50% 100%)" }], { duration: 640, easing: EIO, fill: "forwards" }))),
+    sunset: () => Promise.all(all(".iris").map((d) => A(d, [{ transform: "scale(1)" }, { transform: "scale(0)" }], { duration: 640, easing: EIO, fill: "forwards" }))),
     // Research: the glass clears cell by cell
     night: () => {
       const d = all(".cells")[0];
@@ -252,9 +254,9 @@
     if (cover.hidden) return;
     const done = () => { cover.getAnimations({ subtree: true }).forEach((a) => a.cancel()); cover.replaceChildren(); cover.hidden = true; html.classList.remove("surfacing"); delete html.dataset.arriving; };
     // keep the screen covered until the new page's glass scene has drawn its first (slow, shader-compiling) frame,
-    // so that hitch happens out of sight; pages without the scene, or a slow device, go after 900 ms at most
+    // and its photo is in, so that hitch happens out of sight; pages without the scene, or a slow device, go after 1.4 s at most
     if (!reduce() && document.querySelector("[data-glass-scene]") && !html.dataset.glassReady) {
-      await new Promise<void>((res) => { const t = setTimeout(res, 900); document.addEventListener("bk:glass-ready", () => { clearTimeout(t); res(); }, { once: true }); });
+      await new Promise<void>((res) => { const t = setTimeout(res, 1400); document.addEventListener("bk:glass-ready", () => { clearTimeout(t); res(); }, { once: true }); });
     }
     await frames(2);
     html.classList.add("surfacing"); // the glass rises into its spot

@@ -54,6 +54,18 @@ const year = new Date().getFullYear();
     display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 3vh, 32px); align-content: start;
   }
   .sign-off > * { min-width: 0; }
+  /* The page's veil thins out here, so the words get their own shade of the world's colour (dark ink on About's
+     orange or Resume's green was lost on the bare photo). Desktop: only the left, the glass name rests uncovered on
+     the right. Phones: one even shade, light enough for the glass to show through. */
+  .sign-off::before {
+    content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+    background: color-mix(in srgb, var(--world-bg) 62%, transparent);
+    /* fades in over the top, so there's no edge where the page's veil hands over */
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 180px); mask-image: linear-gradient(to bottom, transparent, #000 180px);
+  }
+  @media (min-width: 900px) {
+    .sign-off::before { background: linear-gradient(to top, color-mix(in srgb, var(--world-bg) 80%, transparent) 0, transparent 110px), linear-gradient(to right, color-mix(in srgb, var(--world-bg) 82%, transparent) 0, color-mix(in srgb, var(--world-bg) 70%, transparent) 45%, transparent 72%); }
+  }
   /* Room for the glass name, which leaves the background and settles here, uncovered */
   .glass-spot { min-height: clamp(150px, 26vh, 240px); touch-action: pan-y; }
   .glass-spot.can-grab { cursor: grab; }
