@@ -11,6 +11,8 @@ import Header from "@/components/Header.astro";
 import Menu from "@/components/Menu.astro";
 import Cover from "@/components/Cover.astro";
 import Depth from "@/components/Depth.astro";
+import Analytics from "@vercel/analytics/astro";
+import SpeedInsights from "@vercel/speed-insights/astro";
 
 interface Props {
   title?: string;
@@ -76,5 +78,7 @@ const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.me
         else if (away) { document.title = away; away = ""; }
       });
     </script>
+    <Analytics />
+    <SpeedInsights />
   </body>
 </html>
