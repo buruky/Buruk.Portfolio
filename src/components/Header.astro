@@ -87,8 +87,9 @@ const count = String(MENU.length).padStart(2, "0");
   document.addEventListener("astro:page-load", renderNight);
   nights.forEach((b) => b.addEventListener("click", () => {
     const r = (b.querySelector(".orb") ?? b).getBoundingClientRect();
-    setNight(!isNight(), { x: r.left + r.width / 2, y: r.top + r.height / 2 });
-    play("toggle");
+    const toNight = !isNight();
+    setNight(toNight, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    play(toNight ? "nightfall" : "daybreak");
   }));
   // the island's Menu opens the same menu (the corner button is the one the menu manages, and it shows CLOSE)
   document.querySelector<HTMLButtonElement>("[data-menu-alt]")!.addEventListener("click", () => document.querySelector<HTMLButtonElement>("[data-menu-button]")?.click());
@@ -319,6 +320,16 @@ const count = String(MENU.length).padStart(2, "0");
   .hdr { transition: color var(--t-panel) var(--ease-drawer); }
   /* over a page's darkened hero photo the header is light, whatever the world's own text colour (About, Education…) */
   :global(html:has(#glass-hero.page):not(.menu-open)) .hdr:not(.scrolled) { color: #f7f3ea; }
+  /* Night: the big corner words (the name, MENU, the page name bottom right) turn to dark ink lit by the world's light
+     colour, like the headlines (base.css). The small mono words stay light: a glow turns them to mush. Not with the
+     menu open (its panel is light) and not on BK Web Studios (its own brand). */
+  :global(html[data-night="on"]:not(.menu-open):not([data-world="bkws"])) .hdr :is(.logo .name, .menu-btn, .where b) {
+    color: color-mix(in srgb, var(--world-bg) 82%, #000);
+    text-shadow:
+      0 0 1px color-mix(in srgb, var(--world-fg) 90%, transparent),
+      0 0 6px color-mix(in srgb, var(--world-fg) 75%, transparent),
+      0 0 16px color-mix(in srgb, var(--world-fg) 40%, transparent);
+  }
 
   @media (max-width: 600px) {
     .name { font-size: 17px; }

@@ -6,6 +6,10 @@ import type { ImageMetadata } from "astro";
 import site from "@/lib/site";
 
 const shots = import.meta.glob<{ default: ImageMetadata }>("../../content/media/images/screenshots/*.{png,jpg,jpeg,webp}", { eager: true });
+// wide crops for the "Next project" band, cut to the part that reads at that shape: content/media/images/next/<slug>.png
+const bands = import.meta.glob<{ default: ImageMetadata }>("../../content/media/images/next/*.png", { eager: true });
+// white charts: shown inverted (light lines on the dark band)
+const BAND_INVERT = new Set(["quantum-computing-research", "nasa-grace-climate-research"]);
 const videos = import.meta.glob<string>("../../content/media/videos/*.{mp4,webm}", { eager: true, query: "?url", import: "default" });
 const papers = import.meta.glob<string>("../../content/media/papers/*.pdf", { eager: true, query: "?url", import: "default" });
 const media = <T>(map: Record<string, T>, path?: string | null) => (path ? map[`../../content/media/${path}`] : undefined);
@@ -32,6 +36,8 @@ export const projects = (site.projects as Raw[]).map((p, i) => ({
   line: (p.summary ?? p.description).split(/(?<=\.)\s/)[0],
   img: media(shots, p.screenshot.src)?.default,
   contain: p.screenshot.fit === "contain",
+  band: media(bands, `images/next/${p.slug}.png`)?.default ?? media(shots, p.screenshot.src)?.default,
+  bandInvert: BAND_INVERT.has(p.slug),
   lane: LANE[p.lane] ?? { key: "other", label: p.lane },
   stat: STAT[p.slug],
   video: media(videos, p.previewVideo ?? `videos/${p.slug}.mp4`),

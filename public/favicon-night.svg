@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- the favicon at night (src/lib/night.ts swaps it in): Research's night navy, moonlit letter, moon-yellow dot -->
+  <rect width="32" height="32" rx="7" fill="#0b1433"/>
+  <g transform="translate(-1 0)">
+    <path fill="#f3f0d8" d="M8 6H17a4.75 4.75 0 0 1 0 9.5H8ZM8 15H18a5.5 5.5 0 0 1 0 11H8Z"/>
+    <path fill="#0b1433" d="M13 9.5H16.5a1.25 1.25 0 0 1 0 2.5H13ZM13 18.5H17.5a2 2 0 0 1 0 4H13Z"/>
+  </g>
+  <circle cx="26" cy="23.5" r="2.5" fill="#f3d77a"/>
+</svg>

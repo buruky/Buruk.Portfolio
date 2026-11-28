@@ -20,10 +20,13 @@ img, svg, video, canvas { display: block; max-width: 100%; }
 .ln { display: block; overflow: hidden; padding-bottom: 0.04em; }
 .ln > span { display: inline-block; }
 html { -webkit-tap-highlight-color: transparent; }
+/* body text: no lone word left on a paragraph's last line (headings use balance where they need it) */
+p, li, figcaption { text-wrap: pretty; }
 
 /* Night: the headlines and big numbers turn to dark ink in the world's own night colour, each lit by a soft glow of
-   its light colour (moonlight); small text stays light, since a glow turns small words to mush. The page heroes (h1,
-   over their photos) stay light. Chosen 2026-11-27 after the Home trial. */
+   its light colour (moonlight); small text stays light, since a glow turns small words to mush. The page heroes' big
+   titles (#gh-title: "I build", "Things I've built."…) switch too. Chosen 2026-11-27 after the Home trial. */
+html[data-night="on"]:not([data-world="bkws"]) #gh-title,
 html[data-night="on"]:not([data-world="bkws"]) main :is(h2, h3, .giant, .num, .stat b, .row .name, .open li):not( /* BK Web Studios keeps its own type */
   .open h2, .pj .body h2,                    /* Contact, project pages: 12px mono labels */
   [data-world="afternoon"] main h3,          /* Resume: job and school titles are body-size text */

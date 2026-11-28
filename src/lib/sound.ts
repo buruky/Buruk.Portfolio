@@ -39,6 +39,7 @@ export function unlock(): AudioContext | null {
     comp.threshold.value = -18;
     comp.ratio.value = 3;
     master.connect(comp).connect(ctx.destination);
+    loadDrop(ctx);
   }
   if (ctx.state === "suspended") void ctx.resume();
   return ctx;
@@ -160,6 +161,11 @@ const SOUNDS = {
   menuClose: (c, o, t) => { note(c, o, hz(5), t, 0.05, 0.2); note(c, o, hz(3), t + 0.06, 0.05, 0.3); },
   copy: (c, o, t) => [0, 2, 3].forEach((i, k) => note(c, o, hz(i, 5), t + k * 0.06, 0.06, 0.4)),
   toggle: (c, o, t) => note(c, o, hz(0, 5), t, 0.06, 0.3),
+  // hovering a page in the open menu: a barely-there tick, a random note of the key so a sweep down the list plays a run
+  hover: (c, o, t) => note(c, o, hz(5 + Math.floor(Math.random() * 5), 5), t, 0.014, 0.09),
+  // the Day / Night switch, following the sweep: night falls (whoosh down, notes step down), day rises (up, up)
+  nightfall: (c, o, t) => { whoosh(c, o, t, 0.7, 1800, 350, 0.03); note(c, o, hz(3, 4), t + 0.08, 0.025, 0.5); note(c, o, hz(0, 4), t + 0.22, 0.06, 0.9); },
+  daybreak: (c, o, t) => { whoosh(c, o, t, 0.7, 350, 2400, 0.03); note(c, o, hz(0, 5), t + 0.08, 0.025, 0.5); note(c, o, hz(3, 5), t + 0.22, 0.06, 0.9); },
   sunrise: (c, o, t) => { whoosh(c, o, t, 0.6, 300, 2600, 0.04); [0, 1, 2, 3, 4].forEach((i, k) => note(c, o, hz(i), t + 0.08 + k * 0.08, 0.05, 0.6)); },
   blinds: (c, o, t) => { for (let k = 0; k < 8; k++) note(c, o, hz(k % 2 ? 3 : 4, 5), t + k * 0.035, 0.03, 0.1); },
   paper: (c, o, t) => { for (let k = 0; k < 3; k++) whoosh(c, o, t + k * 0.07, 0.18, 4500, 1800, 0.035); },
@@ -178,15 +184,33 @@ const SOUNDS = {
   glass0: (c, o, t) => note(c, o, hz(0, 5), t, 0.08, 0.9),
   glass1: (c, o, t) => note(c, o, hz(2, 5), t, 0.08, 0.9),
   glass2: (c, o, t) => note(c, o, hz(3, 5), t, 0.08, 0.9),
-  // Home: a click on the page drops a ripple. A soft water drop: one quiet tone dipping slightly in pitch, low-passed.
-  drop: (c, o, t) => {
-    const f = hz(Math.floor(Math.random() * 5), 5), os = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
-    os.type = "sine"; os.frequency.setValueAtTime(f * 1.06, t); os.frequency.exponentialRampToValueAtTime(f * 0.94, t + 0.18);
-    lp.type = "lowpass"; lp.frequency.value = 1400;
-    env(g, t, 0.012, 0.022, 0.31);
-    os.connect(lp).connect(g).connect(o); os.start(t); os.stop(t + 0.4);
-  },
 } satisfies Record<string, Recipe>;
+
+/* ---------- the water drop: a recorded drip (public/sounds/drop.mp3), repitched ---------- */
+let dropBuf: AudioBuffer | null = null, dropLoading = false;
+function loadDrop(c: AudioContext) {
+  if (dropBuf || dropLoading) return;
+  dropLoading = true;
+  fetch("/sounds/drop.mp3").then((r) => r.arrayBuffer()).then((b) => c.decodeAudioData(b))
+    .then((buf) => { dropBuf = buf; }, () => { dropLoading = false; }); // failed: try again on the next drop
+}
+
+/** Home: a click on the page drops a ripple. Like the old synth drop, each drip lands on a random note of the
+ *  D major pentatonic (the recording repitched), so drops never clash. */
+export function playDrop(): void {
+  if (!read() || !ctx || !master) return;
+  const c = ctx, out = master;
+  if (!dropBuf) { loadDrop(c); return; } // the very first drop only starts the download
+  const steps = [0, 2, 4, 7, 9]; // semitones above the recording's own pitch
+  const st = steps[Math.floor(Math.random() * steps.length)];
+  const go = () => {
+    const src = c.createBufferSource(), g = c.createGain();
+    src.buffer = dropBuf; src.playbackRate.value = Math.pow(2, st / 12);
+    g.gain.value = 0.15; // the recording is near full scale; the synth sounds peak far lower
+    src.connect(g).connect(out); src.start(c.currentTime + 0.01);
+  };
+  if (c.state === "running") go(); else void c.resume().then(go);
+}
 
 export type SoundName = keyof typeof SOUNDS;
 

@@ -1,7 +1,6 @@
 ---
 // Home: selected work, with the same proof-mark covers as /work (ShotCover). Each project's real screenshot sits in
-// its crop marks; when the project reaches the middle of the screen, its clip (if it has one) starts in the same box
-// after a short delay, like the Work hover. Frames grow into place as they scroll in (CSS scroll-driven animation
+// its crop marks; hovering a project plays its clip (if it has one) in the same box, like the Work hover. Frames grow into place as they scroll in (CSS scroll-driven animation
 // where supported; static otherwise).
 import ShotCover from "@/components/ShotCover.astro";
 import { projects } from "@/lib/projects";
@@ -54,9 +53,8 @@ const pad = (n: number) => String(n).padStart(2, "0");
 </section>
 
 <script>
-  // The counter in the sticky column follows whichever project is in the middle of the screen, and that project's
-  // clip starts (after CLIP_DELAY, fading in once it's playing) while the others stop and rewind.
-  const CLIP_DELAY = 700;
+  // The counter in the sticky column follows whichever project is in the middle of the screen. A project's clip plays
+  // only while it's hovered (fading in once it's playing) and stops and rewinds when the pointer leaves.
   function init() {
     const items = Array.from(document.querySelectorAll<HTMLElement>("[data-work-item]"));
     const now = document.querySelector<HTMLElement>("[data-work-now]");
@@ -64,25 +62,26 @@ const pad = (n: number) => String(n).padStart(2, "0");
     if (!items.length || !now || now.dataset.bound) return;
     now.dataset.bound = "1";
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let clipTimer = 0;
     const io = new IntersectionObserver((es) => {
       for (const e of es) {
         if (!e.isIntersecting) continue;
         const i = items.indexOf(e.target as HTMLElement);
         now.textContent = String(i + 1).padStart(2, "0");
         dots.forEach((d, k) => d.classList.toggle("on", k === i));
-        clearTimeout(clipTimer);
-        items.forEach((it, k) => {
-          const v = it.querySelector("video");
-          if (!v) return;
-          if (k === i && !reduce) {
-            clipTimer = window.setTimeout(() => { v.addEventListener("playing", () => v.classList.add("live"), { once: true }); void v.play().catch(() => {}); }, CLIP_DELAY);
-          } else if (k !== i) { v.pause(); v.classList.remove("live"); v.currentTime = 0; }
-        });
       }
     }, { rootMargin: "-50% 0px -50% 0px" });
     items.forEach((it) => io.observe(it));
-    document.addEventListener("astro:before-swap", () => { clearTimeout(clipTimer); io.disconnect(); }, { once: true });
+    if (!reduce) items.forEach((it) => {
+      const v = it.querySelector("video");
+      if (!v) return;
+      it.addEventListener("pointerenter", (e) => {
+        if (e.pointerType === "touch") return; // touch has no hover: the cover stays
+        v.addEventListener("playing", () => v.classList.add("live"), { once: true });
+        void v.play().catch(() => {});
+      });
+      it.addEventListener("pointerleave", () => { v.pause(); v.classList.remove("live"); v.currentTime = 0; });
+    });
+    document.addEventListener("astro:before-swap", () => io.disconnect(), { once: true });
   }
   document.addEventListener("astro:page-load", init);
 </script>

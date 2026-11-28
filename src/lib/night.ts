@@ -12,8 +12,10 @@ export function preferredNight(): boolean {
   return matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-/** The browser's bar colour follows the world's colour, day or night. */
+/** The browser's bar colour follows the world's colour, day or night; the tab's icon follows day or night. */
 export function syncThemeColor() {
+  const icon = document.querySelector<HTMLLinkElement>("[data-favicon]");
+  if (icon) icon.href = isNight() ? "/favicon-night.svg" : "/favicon.svg";
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   const bg = getComputedStyle(document.documentElement).getPropertyValue("--world-bg").trim();
   if (meta && bg) meta.content = bg;

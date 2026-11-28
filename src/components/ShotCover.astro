@@ -4,7 +4,6 @@
 // sheet; the site's mono labels sit around it. Sized in cqi (1% of the cover's width) so one cover reads the same from
 // a phone thumb to a hero. MOCKUP: shown at /covers-preview, not wired into any page yet.
 import type { Project } from "@/lib/projects";
-import eccPipeline from "@content/media/images/screenshots/ecc-cover-pipeline.png"; // demo video 26.5 s, captions cropped
 
 // bare: just the proof, as big as the cover allows (the Work row already shows the labels and name).
 // clip: the project's looping clip, played inside the same proof box as the screenshot so nothing changes size.
@@ -12,8 +11,6 @@ import eccPipeline from "@content/media/images/screenshots/ecc-cover-pipeline.pn
 interface Props { p: Project; bare?: boolean; clip?: string; autoplay?: boolean }
 const { p, bare = false, clip, autoplay = false } = Astro.props;
 
-// ECC's listed screenshot carries overlays, so its cover uses a clean frame from the demo video; the rest use their own.
-const SHOT: Record<string, typeof eccPipeline> = { "ecc-salesforce-case-management": eccPipeline };
 // The mark: a real logo once there is one; until then the shortest name people would say.
 const MARK: Record<string, string> = {
   "ecc-salesforce-case-management": "ECC",
@@ -22,17 +19,19 @@ const MARK: Record<string, string> = {
 };
 // The slug line under the proof: what the screenshot shows.
 const CAPTION: Record<string, string> = {
-  "ecc-salesforce-case-management": "Supervisor view · Case pipeline",
+  "ecc-salesforce-case-management": "System health · Case pipeline",
   fabriq: "Landing page",
   "between-worlds": "In game",
   "quantum-computing-research": "Grover's search circuit",
   "nasa-grace-climate-research": "Actual vs predicted · São Francisco",
   "beaches-and-barrels": "In game",
 };
-const shot = SHOT[p.slug] ?? p.img;
+const shot = p.img;
+// a screenshot much wider than the clip's 16:10 box (ECC's dashboard) keeps its own shape instead of being cropped
+const wide = !!shot && shot.width / shot.height > 1.75;
 const mark = MARK[p.slug] ?? p.short;
 ---
-<figure class:list={["sc", { bare, clip: !!clip }]} aria-label={`${p.short} cover`}>
+<figure class:list={["sc", { bare, clip: !!clip, wide }]} aria-label={`${p.short} cover`}>
   {shot && (
     <div class="box">
       <img src={shot.src} width={shot.width} height={shot.height} alt="" />
@@ -59,6 +58,7 @@ const mark = MARK[p.slug] ?? p.short;
   .bare .box img { max-width: 84cqi; max-height: 50cqi; }
   /* with a clip, the proof is the clip's 16:10 box: the screenshot fills it, and the clip fades in over it in place */
   .clip .box img { width: 80cqi; height: 50cqi; object-fit: cover; object-position: 0 0; }
+  .clip.wide .box img { height: auto; } /* the whole screenshot, centred; the clip covers the same box */
   .box video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 400ms var(--ease-out); }
   .box video.live, .box video[autoplay] { opacity: 1; }
 

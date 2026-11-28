@@ -223,7 +223,7 @@
       "paperUrl": null,
       "demoVideo": "videos/ecc-demo.mp4",
       "screenshot": {
-        "src": "images/screenshots/ecc-my-cases.png",
+        "src": "images/screenshots/ecc-system-health.png",
         "fit": "cover",
         "position": "center",
         "aspect": null
@@ -772,6 +772,7 @@
           "n": "01",
           "title": "Missing Data Imputation for GRACE Data Derived from Terrestrial Water Storage (TWS): Statistical and Machine Learning Approaches",
           "short": "Filling the gaps in NASA's water data",
+          "label": "NASA water data",
           "authors": "Jenna Weldon and Buruk Yimesgen",
           "advisors": "Advisor: Tamer Elbayoumi · Mentor: Brett Hunter",
           "where": "NC A&T Data Science Research Program, Greensboro, NC · July 2024",
@@ -837,6 +838,7 @@
           "n": "02",
           "title": "Exploring the Possibilities Through Quantum Computing",
           "short": "How a quantum computer searches",
+          "label": "Quantum search",
           "authors": "Malaya Jove and Buruk Yimesgen",
           "advisors": "Advisor: Dr. Ryan Card",
           "where": null,

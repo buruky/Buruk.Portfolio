@@ -75,6 +75,8 @@ const { email, linkedin, github } = site.profile;
   const layers = Array.from(menu.querySelectorAll<HTMLElement>("[data-world-layer]"));
   let open = false;
   bindSignOff();
+  // a quiet tick as the pointer moves onto each page in the list (mouse/trackpad only; sound plays only if it's on)
+  if (matchMedia("(hover: hover) and (pointer: fine)").matches) menu.querySelectorAll("[data-world-link]").forEach((a) => a.addEventListener("pointerenter", () => play("hover")));
 
   function focusables() { return Array.from(menu.querySelectorAll<HTMLElement>("a, button")); }
   function pageLinks() { return Array.from(menu.querySelectorAll<HTMLAnchorElement>("[data-world-link]")); }

@@ -98,7 +98,7 @@ const TOPICS = [
   import * as THREE from "three";
   import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
   import { navigate } from "astro:transitions/client";
-  import { play, unlock, setSound } from "@/lib/sound";
+  import { play, playDrop, unlock, setSound } from "@/lib/sound";
   import { createKeepsakes, type KeepsakeVariant } from "@/lib/keepsakes";
   import { glassMaterial, shapes, EO, EIO } from "@/lib/glass";
 
@@ -655,7 +655,7 @@ const TOPICS = [
       }
       pending.push({ u: uv.x, v: uv.y, s: reduce ? 0.6 : 1.4, r: 0.018 });
       drops.push({ u: uv.x, v: uv.y, s: reduce ? 0.6 : 1.4, step0: simStep, id: dropId++ }); if (drops.length > 24) drops.shift();
-      play("drop");
+      playDrop();
     }, on);
     if (fine && !reduce) {
       addEventListener("pointermove", (e) => {
@@ -757,7 +757,7 @@ const TOPICS = [
         if (uv) {
           pending.push({ u: uv.x, v: uv.y, s: reduce ? 0.6 : 1.6, r: 0.03 });
           drops.push({ u: uv.x, v: uv.y, s: reduce ? 0.6 : 1.6, step0: simStep, id: dropId++ }); if (drops.length > 24) drops.shift();
-          play("drop");
+          playDrop();
         }
       } else if (setDepth < 0.02) setDipped = false;
       return smooth(p / 0.35);
@@ -773,7 +773,8 @@ const TOPICS = [
       showFps(rawDt); watchSpeed(rawDt);
       if (document.hidden) return;
       if (atGate) {
-        if (canvas.clientWidth !== W || canvas.clientHeight !== H) layout(); // styles arrived late: size up properly
+        // styles arrived late: size up properly, and re-place the floating photo too (it was laid out on the wrong size)
+        if (canvas.clientWidth !== W || canvas.clientHeight !== H) { layout(); ksLayout(); }
         placeHello();
       }
       const heroH = root.offsetHeight || H;

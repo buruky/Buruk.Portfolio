@@ -35,7 +35,7 @@ const ld = papers.map((p) => ({
 
   <div class="papers">
     {papers.map((p) => (
-      <article class="paper" id={p.slug} data-section={p.short} aria-labelledby={`t-${p.slug}`}>
+      <article class="paper" id={p.slug} data-section={p.label ?? p.short} aria-labelledby={`t-${p.slug}`}>
         <header class="head">
           <p class="num">Paper {p.n}</p>
           <h2 id={`t-${p.slug}`}>{p.short}.</h2>

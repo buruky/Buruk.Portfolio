@@ -4,6 +4,8 @@ import "@/styles/fonts.css";
 import "@/styles/tokens.css";
 import "@/styles/base.css";
 import site from "@/lib/site";
+// the display face (the name, every title): fetched early so it doesn't arrive late and swap in. Same file fonts.css uses.
+import anybody from "@fontsource-variable/anybody/files/anybody-latin-standard-normal.woff2?url";
 import { worldFor, WORLD_BG, type World } from "@/lib/worlds";
 import Header from "@/components/Header.astro";
 import Menu from "@/components/Menu.astro";
@@ -14,9 +16,11 @@ interface Props {
   title?: string;
   description?: string;
   world?: World;
+  /** link-preview card, a path in public/ (project pages pass their own: public/og/<slug>.jpg) */
+  image?: string;
 }
 
-const { title, description = site.meta.description } = Astro.props;
+const { title, description = site.meta.description, image = "/og.jpg" } = Astro.props;
 const world = Astro.props.world ?? worldFor(Astro.url.pathname);
 const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.meta.title;
 ---
@@ -27,6 +31,20 @@ const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.me
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <link rel="preload" href={anybody} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" data-favicon />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- link previews in messages and social apps -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.meta.siteName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
+    <meta property="og:image" content={new URL(image, Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={image !== "/og.jpg" && title ? `${title}, a project by Buruk Yimesgen` : "Buruk Yimesgen, software engineer in Seattle"} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content={WORLD_BG[world]} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <ClientRouter fallback="none" />
@@ -35,7 +53,7 @@ const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.me
       (function () {
         var on; try { var v = localStorage.getItem("bk-night"); if (v) on = v === "on"; } catch (e) {}
         if (on === undefined) on = matchMedia("(prefers-color-scheme: dark)").matches;
-        if (on) document.documentElement.dataset.night = "on";
+        if (on) { document.documentElement.dataset.night = "on"; var fi = document.querySelector("[data-favicon]"); if (fi) fi.href = "/favicon-night.svg"; }
         // page swaps replace <html>'s attributes: carry night over to each new page
         if (window.__bkNight) return; window.__bkNight = 1;
         document.addEventListener("astro:before-swap", function (ev) {
@@ -51,5 +69,13 @@ const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.me
     <Cover />
     <slot />
     <Depth />
+    <script>
+      // While the tab is in the background its title says so; it comes back as you return. Runs once (ClientRouter).
+      let away = "";
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) { away = document.title; document.title = "ብሩኽ · come back"; }
+        else if (away) { document.title = away; away = ""; }
+      });
+    </script>
   </body>
 </html>
