@@ -1,6 +1,6 @@
 # Image credits
 
-Photos and images on this site that weren't made by Buruk (this list is also shown at /credits).
+Photos and images on this site that weren't made by Buruk. None of them needs a visible credit on the site (CC0, public domain or the Unsplash License); keep it that way, or add a credits line if a CC BY photo is ever used.
 
 | File | Source | Author | License |
 | --- | --- | --- | --- |
@@ -10,7 +10,7 @@ Photos and images on this site that weren't made by Buruk (this list is also sho
 | `images/about/suzzallo-library.jpg` | [Wikimedia Commons: Suzzallo Library - Thought Inspiration and Mastery.jpg](https://commons.wikimedia.org/wiki/File:Suzzallo_Library_-_Thought_Inspiration_and_Mastery.jpg) | Guywelch2000 | CC0 |
 | `images/about/grace-fo-launch.jpg` | [Wikimedia Commons: GRACE-FO Launch (NHQ201805220017)](https://commons.wikimedia.org/wiki/File:GRACE-FO_Launch_(NHQ201805220017).jpg) | Bill Ingalls | Public domain |
 | `images/about/asmara-sunset.jpg` | [Wikimedia Commons: Piccola Roma (Asmara)](https://commons.wikimedia.org/wiki/File:Piccola_Roma_(Asmara).jpg) | Awet Amine | CC0 (no attribution required) |
-| `images/about/uw-quad-blossoms.jpg` | [Wikimedia Commons: University of Washington Quad cherry blossoms 2014 - 12](https://commons.wikimedia.org/wiki/File:University_of_Washington_Quad_cherry_blossoms_2014_-_12_(13347852885).jpg) | Joe Mabel | CC BY-SA 3.0 (credit must be shown on the site) |
+| `images/about/uw-quad-blossoms.jpg` | [Unsplash: UW Quad cherry blossoms in front of the gothic halls](https://unsplash.com/photos/wTBc6waE5hI) | Junru Pu | Unsplash License |
 | `images/about/light-work.jpg` | [Wikimedia Commons: Light Work (Unsplash)](https://commons.wikimedia.org/wiki/File:Light_Work_(Unsplash).jpg) | Émile Perron | CC0 |
 | `images/about/empty-hallway.jpg` | [Unsplash: A long, empty hallway with sunlight streaming in](https://unsplash.com/photos/a-long-empty-hallway-with-sunlight-streaming-in-EGWZEKy6YeA) | Spencer Plouzek | Unsplash License |
 | `images/about/desk-at-night.jpg` | [Unsplash: A dimly lit desk with a laptop and monitor](https://unsplash.com/photos/a-dimly-lit-desk-with-a-laptop-and-monitor-IUKdnYUlDco) | Zoshua Colah | Unsplash License |
@@ -20,5 +20,4 @@ Photos and images on this site that weren't made by Buruk (this list is also sho
 | `images/about/hobby-plane.jpg` | [Unsplash: Airplane wing and clouds seen from a window](https://unsplash.com/photos/airplane-wing-and-clouds-seen-from-a-window-ezyImh0IxOU) | Lawrence Krowdeed | Unsplash License |
 | `images/bkws/heroes/*.png` | Screenshots of bkwebstudios.com's five hero styles (`?style=flash, summit, minimal, retro, collage`), taken 2026-11-26 | Buruk Yimesgen (own site) | Own work. The photos inside them keep the credits the site gives: Cinematic "Photo: Katie Lowe"; Collage, The Met Open Access |
 | `images/bkws/clients/*.png` | Screenshots of client sites built by BK Web Studios (Always with Compassion, Isaiah Café, Simret Consulting & Coaching, Galilee AFH), taken 2026-11-26 | Buruk Yimesgen | Own work; shown, never linked |
-| `images/contact-sunset.jpg` | [Wikimedia Commons: DSC 8210 Golden sun sinking into a calm sea…](https://commons.wikimedia.org/wiki/File:DSC_8210_Golden_sun_sinking_into_a_calm_sea_painting_the_horizon_with_fiery_orange_and_peaceful_silhouettes.jpg) (resized to 2600 px) | PattayaPatrol | CC BY-SA 4.0 (credit must be shown on the site) |
 | `images/research-moon.jpg` | [Unsplash: Full moon reflected on the ocean surface at night](https://unsplash.com/photos/full-moon-reflected-on-the-ocean-surface-at-night-Q0z5iaxls3M), cropped and widened to landscape (sides filled from its own edge colours) | photographer on the Unsplash page (name to confirm) | Unsplash License |

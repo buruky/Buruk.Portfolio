@@ -18,7 +18,7 @@ const { p, next } = Astro.props as { p: Project; next: Project };
 <Base title={p.short} description={p.line} image={`/og/${p.slug}.jpg`}>
   <main id="main" class="pj">
     <section class="stage" data-section={p.short} aria-labelledby="pj-title">
-      <div class:list={["media", { contain: p.contain && !p.video, soft: p.video }]} aria-hidden="true">
+      <div class:list={["media", { contain: p.contain && !p.video, soft: p.video, "long-title": p.short.length > 30 }]} aria-hidden="true">
         {p.img && <Image src={p.img} alt="" widths={p.video ? [640] : [960, 1600, 2200]} sizes={p.video ? "640px" : "100vw"} loading="eager" />}
       </div>
       {p.video && (
@@ -103,7 +103,7 @@ const { p, next } = Astro.props as { p: Project; next: Project };
   .media { position: absolute; inset: 0; background: #0d1526; }
   .media :global(img), .media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0%; }
   .media.contain { background: #f4f1ea; }
-  .media.contain :global(img) { object-fit: contain; padding: 6vh 6vw 30vh; }
+  .media.contain :global(img) { object-fit: contain; object-position: center; padding: 6vh 6vw 30vh; }
   .media.soft :global(img) { filter: blur(28px) saturate(1.2) brightness(0.8); scale: 1.15; }
   /* top right, clear of the title: its long second line starts about halfway down */
   .proof { position: absolute; z-index: 1; right: max(16px, env(safe-area-inset-right, 0px)); top: max(100px, 13vh); width: min(38vw, 960px); }
@@ -169,5 +169,10 @@ const { p, next } = Astro.props as { p: Project; next: Project };
   @media (max-width: 760px) {
     .cols { grid-template-columns: minmax(0, 1fr); }
     .media.contain :global(img) { padding: 14vh 6vw 40vh; }
+    /* a wide screenshot filling a tall phone screen showed only its middle fifth (Fabriq: "ABRI"): show it whole,
+       centred above the title, like the fitted ones */
+    .media:not(.contain):not(.soft) :global(img) { object-fit: contain; object-position: center; padding: 14vh 0 40vh; }
+    /* a long title (NASA GRACE: six lines on a phone) climbs higher, so its image stays at the top, clear of it */
+    .media.long-title :global(img) { object-position: 50% 0%; padding-top: 10vh; }
   }
 </style>

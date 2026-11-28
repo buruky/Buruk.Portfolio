@@ -261,6 +261,8 @@ const count = String(MENU.length).padStart(2, "0");
   @media (max-width: 900px) {
     .island { display: none; }
     .hdr:not(.scrolled) > :is(.menu-btn, .bl) { opacity: 1; pointer-events: auto; }
+    /* …but not during the intro: the whole header waits until you enter (GlassHero), here as on wider screens */
+    :global(html.intro-logo-hidden) .hdr > :is(.menu-btn, .bl) { opacity: 0; pointer-events: none; }
   }
 
   /* top right of the hero: GitHub and LinkedIn, in the corners' mono; gone once you scroll (or open the menu) */
@@ -275,6 +277,8 @@ const count = String(MENU.length).padStart(2, "0");
   /* phones: MENU holds the top right corner, so the marks sit just left of it.
      shortcut: fixed offset for the width of "MENU (06)" at 18px; measure it if that label changes */
   @media (max-width: 900px) { .social { right: calc(max(var(--edge-x), env(safe-area-inset-right, 0px)) + 104px); gap: 0; } }
+  /* phones: no room beside the name and MENU, so the marks live in the menu only (its GitHub and LinkedIn links) */
+  @media (max-width: 640px) { .social { display: none; } }
 
   /* bottom left: sound, a waveform that moves while it's on */
   .snd {

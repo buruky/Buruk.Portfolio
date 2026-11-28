@@ -220,6 +220,7 @@ const { email, linkedin, github } = site.profile;
     nav { padding-left: max(22px, env(safe-area-inset-left, 0px)); padding-right: max(22px, env(safe-area-inset-right, 0px)); }
     .reach { padding-left: max(22px, env(safe-area-inset-left, 0px)); padding-right: max(22px, env(safe-area-inset-right, 0px)); }
     .meta .what { display: none; }
+    .long .meta { display: none; } /* "BK Web Studios" fills the row on a phone; its time-of-day label ran into it */
   }
   @media (prefers-reduced-motion: reduce) {
     .menu, .menu.open, li, .open li, .world, .world::before, .label, .meta { transition-duration: 0ms !important; transition-delay: 0ms !important; }

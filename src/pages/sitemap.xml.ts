@@ -2,7 +2,7 @@
 import type { APIRoute } from "astro";
 import { projects } from "@/lib/projects";
 
-const PAGES = ["/", "/work", "/about", "/bk-web-studios", "/research", "/resume", "/contact", "/credits"];
+const PAGES = ["/", "/work", "/about", "/bk-web-studios", "/research", "/resume", "/contact"];
 
 export const GET: APIRoute = ({ site }) => {
   const urls = [...PAGES, ...projects.map((p) => `/work/${p.slug}`)].map((path) => new URL(path, site).href);

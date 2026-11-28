@@ -467,7 +467,8 @@ const TOPICS = [
       intro.y = narrow ? 0.9 : 0.45; intro.s = narrow ? 0.62 : Math.min(1.05, (W / H) / 1.45);
       fitBackground(); measureSlot(); placeLatin(latinT); placeHello();
     }
-    addEventListener("resize", layout, on);
+    // only when the canvas really changes size (rotation, a desktop window): a phone's address bar fires resize too
+    addEventListener("resize", () => { if (canvas.clientWidth !== W || canvas.clientHeight !== H) layout(); }, on);
     const ro = new ResizeObserver(() => measureSlot()); ro.observe($<HTMLElement>("[data-build]"));
     ac.signal.addEventListener("abort", () => ro.disconnect());
     layout();
@@ -779,9 +780,12 @@ const TOPICS = [
       }
       const heroH = root.offsetHeight || H;
       const pr = Math.min(1, Math.max(0, (scrollY / heroH - 0.12) / 0.7)), target = pr * pr * (3 - 2 * pr);
-      away += (target - away) * (reduce ? 1 : Math.min(1, dt * 4));
+      // touch screens: the finger already scrolls smoothly, so follow the page exactly (eased, the glass trailed behind a
+      // fast swipe and stepped through iOS's first few uneven scroll updates). Mouse and trackpad keep the soft follow.
+      const follow = reduce || !fine;
+      away += (target - away) * (follow ? 1 : Math.min(1, dt * 4));
       const endTarget = atGate ? 0 : setEl && horizonEl ? measureSet() : measureEnd();
-      endT += (endTarget - endT) * (reduce ? 1 : Math.min(1, dt * 3.5));
+      endT += (endTarget - endT) * (follow ? 1 : Math.min(1, dt * 3.5));
       const menuOpen = html.classList.contains("menu-open") && W > 640; // on phones the drawer covers everything
       const em = reduce ? 1 : Math.min(1, dt * 4.5);
       menuT += ((menuOpen ? 1 : 0) - menuT) * em;
@@ -926,7 +930,10 @@ const TOPICS = [
     background: #000; color: var(--world-fg);
   }
   /* the 3D layer stays fixed behind the whole page; after the hero the glass floats behind the sections */
-  .gl { position: fixed; inset: 0; z-index: -3; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+  /* lvh: the tallest the screen gets. On phones the address bar slides in and out as you scroll; sized to the screen
+     as it is, the canvas (and the letters with it) resized on every slide. This way it never changes; the bar just
+     covers its bottom edge for a moment. */
+  .gl { position: fixed; inset: 0 0 auto 0; z-index: -3; width: 100%; height: 100%; height: 100lvh; display: block; touch-action: pan-y; }
   .gh.can-grab .gl, .gh.can-grab { cursor: grab; }
   .gh.grabbing, .gh.grabbing .gl { cursor: grabbing; }
   .shade {
@@ -947,7 +954,9 @@ const TOPICS = [
   :global(html.intro-active) { overflow: hidden; }
   /* During the intro the header waits. When the flying name lands, the name in the corner swaps in on the same frame
      (no fade, so it never dips or doubles), and the other corners fade in around it. */
-  :global(html.intro-logo-hidden .hdr > *) { opacity: 0; pointer-events: none; }
+  /* visibility too: the header's own `.hdr > * { pointer-events: auto }` outranks this, so without it the hidden
+     corners (GitHub, LinkedIn, the pill) stayed clickable and focusable during the intro */
+  :global(html.intro-logo-hidden .hdr > *) { opacity: 0; pointer-events: none; visibility: hidden; }
   :global(.hdr > :not(.logo)) { transition: opacity 600ms ease, filter var(--t-ui) var(--ease-out); }
 
   /* gate */
