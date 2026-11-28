@@ -1,0 +1,28 @@
+---
+// Photo credits, shown on the site (some photos are CC BY-SA and need visible credit). The list itself lives in
+// content/media/CREDITS.md, so adding a photo there adds it here. Linked from both footers.
+import Base from "@/layouts/Base.astro";
+import { Content } from "@content/media/CREDITS.md";
+---
+<Base title="Credits" world="midnight" description="Credits for the photos on Buruk Yimesgen's portfolio.">
+  <main id="main" class="credits">
+    <a class="back" href="/">← Home</a>
+    <div class="md"><Content /></div>
+  </main>
+</Base>
+
+<style>
+  .credits {
+    max-width: 1100px; margin: 0 auto;
+    padding: calc(env(safe-area-inset-top, 0px) + 140px) max(24px, env(safe-area-inset-right, 0px)) 120px max(24px, env(safe-area-inset-left, 0px));
+  }
+  .back { font: 500 12px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: inherit; }
+  .md :global(h1) { margin: 24px 0 12px; font-family: var(--font-display); font-weight: 900; font-stretch: 118%; font-size: clamp(44px, 7vw, 96px); line-height: 0.92; }
+  .md :global(p) { margin: 0 0 32px; opacity: 0.8; }
+  .md :global(table) { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .md :global(th) { text-align: left; font: 500 11px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; padding: 0 12px 10px 0; }
+  .md :global(td) { padding: 12px 12px 12px 0; border-top: 1px solid color-mix(in srgb, var(--world-fg) 18%, transparent); vertical-align: top; }
+  .md :global(td code) { font: 12px var(--font-mono); opacity: 0.8; }
+  .md :global(a) { color: inherit; text-underline-offset: 0.2em; }
+  @media (max-width: 700px) { .md :global(table) { display: block; overflow-x: auto; } }
+</style>

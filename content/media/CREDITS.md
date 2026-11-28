@@ -1,6 +1,6 @@
 # Image credits
 
-Images in this folder that weren't made by Buruk.
+Photos and images on this site that weren't made by Buruk (this list is also shown at /credits).
 
 | File | Source | Author | License |
 | --- | --- | --- | --- |
