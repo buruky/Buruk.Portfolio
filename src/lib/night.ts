@@ -1,15 +1,15 @@
 // Day / Night (step 9.2). Night turns every world to its nighttime: html[data-night] switches the world colours
 // (tokens.css), the glass scenes dim and pick up moonlight (they listen for "bk:night"), and light surfaces (the
-// resume sheet, BKWS paper) go dark. It starts from the device's light/dark setting and remembers the visitor's
+// resume sheet, BKWS paper) go dark. It starts in day and remembers the visitor's
 // choice. Base.astro sets it before the first paint; this module flips it.
 const KEY = "bk-night";
 
 export const isNight = () => document.documentElement.dataset.night === "on";
 
-/** Saved choice, else the device setting. Also used inline in Base.astro (keep the two in step). */
+/** Saved choice, else day. Also used inline in Base.astro (keep the two in step). */
 export function preferredNight(): boolean {
   try { const v = localStorage.getItem(KEY); if (v) return v === "on"; } catch { /* private mode */ }
-  return matchMedia("(prefers-color-scheme: dark)").matches;
+  return false; // first visit opens in day, whatever the device setting
 }
 
 /** The browser's bar colour follows the world's colour, day or night; the tab's icon follows day or night. */

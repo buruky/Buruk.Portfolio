@@ -48,11 +48,10 @@ const fullTitle = title ? site.meta.titleTemplate.replace("%s", title) : site.me
     <meta name="theme-color" content={WORLD_BG[world]} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <ClientRouter fallback="none" />
-    <!-- Day / Night (src/lib/night.ts): set before the first paint, from the saved choice or the device setting -->
+    <!-- Day / Night (src/lib/night.ts): set before the first paint, from the saved choice, else day -->
     <script is:inline>
       (function () {
         var on; try { var v = localStorage.getItem("bk-night"); if (v) on = v === "on"; } catch (e) {}
-        if (on === undefined) on = matchMedia("(prefers-color-scheme: dark)").matches;
         if (on) { document.documentElement.dataset.night = "on"; var fi = document.querySelector("[data-favicon]"); if (fi) fi.href = "/favicon-night.svg"; }
         // page swaps replace <html>'s attributes: carry night over to each new page
         if (window.__bkNight) return; window.__bkNight = 1;
